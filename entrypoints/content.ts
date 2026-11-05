@@ -1,5 +1,5 @@
 import { browser } from "wxt/browser";
-import { defaultTheme, ENABLED_KEY, isTheme, THEME_KEY } from "../lib/theme";
+import { ENABLED_KEY, isTheme, THEME_KEY } from "../lib/theme";
 
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
@@ -12,11 +12,11 @@ export default defineContentScript({
     async function apply() {
       const state = await browser.storage.local.get([THEME_KEY, ENABLED_KEY]);
       if (ctx.isInvalid) return;
-      if (state[ENABLED_KEY] === false) {
+      if (state[ENABLED_KEY] === false || !isTheme(state[THEME_KEY])) {
         style.textContent = "";
         return;
       }
-      const theme = isTheme(state[THEME_KEY]) ? state[THEME_KEY] : defaultTheme;
+      const theme = state[THEME_KEY];
       const c = theme.colors;
       // User CSS follows the base rules and can reuse the exported variables.
       // These base rules are a starting point, not automatic site recoloring.
@@ -31,11 +31,17 @@ export default defineContentScript({
         ${theme.css}
       `;
     }
-    browser.storage.onChanged.addListener(apply);
+    const onChanged: Parameters<
+      typeof browser.storage.onChanged.addListener
+    >[0] = (changes, area) => {
+      if (area === "local" && (THEME_KEY in changes || ENABLED_KEY in changes))
+        void apply();
+    };
+    browser.storage.onChanged.addListener(onChanged);
     ctx.onInvalidated(() => {
       // WXT invalidates this context during development reloads.
       style.remove();
-      browser.storage.onChanged.removeListener(apply);
+      browser.storage.onChanged.removeListener(onChanged);
     });
     await apply();
   },

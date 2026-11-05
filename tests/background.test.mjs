@@ -1,0 +1,146 @@
+import { expect, mock, test } from "bun:test";
+
+const state = { sourceMode: "file" };
+let themeUpdated;
+const firefoxPalette = {
+  colors: {
+    ntp_background: "#111318",
+    ntp_text: "#e1e2e9",
+    popup: "#1d2024",
+    icons: "#a8c8ff",
+  },
+  properties: { color_scheme: "dark" },
+};
+let receive;
+let control;
+let disconnected;
+const commands = [];
+const changeListeners = [];
+const port = {
+  disconnect: () => disconnected(),
+  postMessage: (command) => commands.push(command),
+  onMessage: {
+    addListener: (listener) => {
+      receive = listener;
+    },
+  },
+  onDisconnect: {
+    addListener: (listener) => {
+      disconnected = listener;
+    },
+  },
+};
+mock.module("wxt/browser", () => ({
+  browser: {
+    theme: {
+      getCurrent: async () => firefoxPalette,
+      onUpdated: {
+        addListener: (listener) => {
+          themeUpdated = listener;
+        },
+      },
+    },
+    runtime: {
+      id: "duxreader-test",
+      connectNative: () => port,
+      onMessage: {
+        addListener: (listener) => {
+          control = listener;
+        },
+      },
+    },
+    storage: {
+      local: {
+        get: async () => ({ ...state }),
+        remove: async (keys) => {
+          const changes = {};
+          for (const key of keys) {
+            delete state[key];
+            changes[key] = { newValue: undefined };
+          }
+          for (const listener of changeListeners) listener(changes, "local");
+        },
+        set: async (values) => {
+          const changes = {};
+          for (const [key, value] of Object.entries(values)) {
+            if (state[key] !== value) changes[key] = { newValue: value };
+          }
+          Object.assign(state, values);
+          for (const listener of changeListeners) listener(changes, "local");
+        },
+      },
+      onChanged: { addListener: (listener) => changeListeners.push(listener) },
+    },
+    alarms: { create: async () => {}, onAlarm: { addListener: () => {} } },
+  },
+}));
+globalThis.defineBackground = (callback) => callback();
+const settle = async () => {
+  for (let i = 0; i < 8; i++) await Promise.resolve();
+};
+
+test("the background retains a native selection without an open popup and preserves it on cancellation", async () => {
+  await import("../entrypoints/background.ts");
+  await settle();
+  const sender = { id: "duxreader-test" };
+  state.bridgeError = "Stale first-run file error";
+  receive({ type: "idle", source: "", path: "/tmp/default-theme.json" });
+  await settle();
+  expect(state.bridgeStatus).toBe("idle");
+  expect(state.bridgeError).toBe("");
+  expect(await control({ type: "pickFile" }, sender)).toEqual({ ok: true });
+  expect(commands.at(-1)).toEqual({ type: "pickFile" });
+  expect(state.pickerStatus).toBe("opening");
+  // There is no popup listener: persistence must be handled by the background.
+  receive({ type: "picked", path: "/tmp/matugen-theme.json", error: null });
+  await settle();
+  expect(state.sourcePath).toBe("/tmp/matugen-theme.json");
+  expect(commands.at(-1)).toEqual({
+    type: "watch",
+    path: "/tmp/matugen-theme.json",
+  });
+  receive({ type: "picked", path: null, error: null });
+  await settle();
+  expect(state.pickerStatus).toBe("cancelled");
+  expect(state.sourcePath).toBe("/tmp/matugen-theme.json");
+  expect(
+    control({ type: "pickFile" }, { ...sender, tab: { id: 1 } }),
+  ).toBeUndefined();
+  disconnected();
+  await settle();
+  expect(state.pickerStatus).toBe("idle");
+  expect(state.bridgeStatus).toBe("disconnected");
+});
+
+test("Pywalfox browser themes update pages without a native host and file mode stays independent", async () => {
+  const { browser } = await import("wxt/browser");
+  await browser.storage.local.set({ sourceMode: "browser" });
+  await settle();
+  expect(state.bridgeStatus).toBe("following-browser");
+  expect(state.theme.colors).toEqual({
+    background: "#111318",
+    surface: "#1d2024",
+    foreground: "#e1e2e9",
+    accent: "#a8c8ff",
+  });
+  const count = commands.length;
+  themeUpdated({
+    theme: {
+      ...firefoxPalette,
+      colors: { ...firefoxPalette.colors, icons: "#ff0000" },
+    },
+  });
+  await settle();
+  expect(state.theme.colors.accent).toBe("#ff0000");
+  expect(commands.length).toBe(count);
+  themeUpdated({ theme: {} });
+  await settle();
+  expect(state.bridgeStatus).toBe("waiting-browser");
+  expect(state.theme).toBeUndefined();
+  await browser.storage.local.set({ sourceMode: "file" });
+  await settle();
+  themeUpdated({ theme: firefoxPalette });
+  await settle();
+  expect(state.bridgeStatus).not.toBe("following-browser");
+  expect(state.theme).toBeUndefined();
+});

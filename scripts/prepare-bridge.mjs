@@ -8,22 +8,34 @@ const { values } = parseArgs({
     css: { type: "string" },
   },
 });
-if (!values.theme) throw new Error("--theme PATH is required");
 if (values["chrome-id"] && !/^[a-p]{32}$/.test(values["chrome-id"]))
   throw new Error("Invalid Chrome extension ID");
 const binary = resolve("target/release/duxreader-bridge");
 await access(binary);
 // Quote every argument for /bin/sh, including paths containing apostrophes.
 const quote = (value) => "'" + value.replaceAll("'", "'\\''") + "'";
-const command = [binary, "--theme", resolve(values.theme)];
+// The popup can select a source later; an optional CLI path sets the default.
+const command = [binary];
+if (values.theme) command.push("--theme", resolve(values.theme));
 if (values.css) command.push("--css", resolve(values.css));
 const output = resolve(".output/native");
 await mkdir(output, { recursive: true });
 const launcher = resolve(output, "duxreader-host");
+// Preserve Nix's portal library path for browsers launched outside nix develop.
+const nativeLibraries = process.env.DUXREADER_LIBRARY_PATH;
+const libraryExport = nativeLibraries
+  ? "export LD_LIBRARY_PATH=" +
+    quote(nativeLibraries) +
+    "${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\n"
+  : "";
 // Forward browser-provided arguments unchanged to the native host.
 await writeFile(
   launcher,
-  "#!/bin/sh\nexec " + command.map(quote).join(" ") + ' "$@"\n',
+  "#!/bin/sh\n" +
+    libraryExport +
+    "exec " +
+    command.map(quote).join(" ") +
+    ' "$@"\n',
   { mode: 0o755 },
 );
 const browsers = {

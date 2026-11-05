@@ -18,6 +18,7 @@ const child = spawn(resolve("target/release/duxreader-bridge"), [
   cssPath,
 ]);
 const messages = [];
+const errors = [];
 let buffer = Buffer.alloc(0);
 child.stdout.on("data", (chunk) => {
   buffer = Buffer.concat([buffer, chunk]);
@@ -25,7 +26,9 @@ child.stdout.on("data", (chunk) => {
     const length =
       endianness() === "LE" ? buffer.readUInt32LE() : buffer.readUInt32BE();
     if (buffer.length < length + 4) break;
-    messages.push(JSON.parse(buffer.subarray(4, length + 4).toString()));
+    const message = JSON.parse(buffer.subarray(4, length + 4).toString());
+    if (message.type === "theme") messages.push(message.theme);
+    if (message.type === "error") errors.push(message);
     buffer = buffer.subarray(length + 4);
   }
 });
@@ -57,9 +60,40 @@ try {
     count,
     "Invalid JSON must not replace the valid theme",
   );
+  await waitFor(() => errors.length > 0);
+  // Restoring identical content must clear the reported file error as well.
+  await writeFile(themePath, JSON.stringify(theme));
+  await waitFor(() => messages.length > count);
   theme.colors.accent = "#00ff00";
   await writeFile(themePath, JSON.stringify(theme));
   await waitFor(() => messages.at(-1)?.colors.accent === "#00ff00");
+  const selected = join(directory, "selected.json");
+  theme.colors.accent = "#123456";
+  await writeFile(selected, JSON.stringify(theme));
+  function select(path) {
+    const payload = Buffer.from(JSON.stringify({ type: "watch", path }));
+    const header = Buffer.alloc(4);
+    if (endianness() === "LE") header.writeUInt32LE(payload.length);
+    else header.writeUInt32BE(payload.length);
+    child.stdin.write(Buffer.concat([header, payload]));
+  }
+  select(selected);
+  await waitFor(() => messages.at(-1)?.colors.accent === "#123456");
+  const selectedCount = messages.length;
+  theme.colors.accent = "#654321";
+  await writeFile(themePath, JSON.stringify(theme));
+  await delay(300);
+  assert.equal(
+    messages.length,
+    selectedCount,
+    "Old source must no longer publish updates",
+  );
+  select(join(directory, "missing.json"));
+  await waitFor(() => errors.at(-1)?.source.endsWith("missing.json"));
+  await writeFile(join(directory, "missing.json"), JSON.stringify(theme));
+  await waitFor(() => messages.at(-1)?.colors.accent === "#654321");
+  select(null);
+  await waitFor(() => messages.length > selectedCount + 1);
   child.stdin.end();
   await waitFor(() => child.exitCode === 0);
   console.log(

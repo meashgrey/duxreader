@@ -10,7 +10,11 @@
         let pkgs = import nixpkgs { inherit system; };
         in {
           default = pkgs.mkShell {
-            packages = with pkgs; [ bun cargo rustc rustfmt clippy rust-analyzer git ];
+            # rfd loads libdbus dynamically for the desktop portal on Linux.
+            DUXREADER_LIBRARY_PATH = pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux
+              (pkgs.lib.makeLibraryPath [ pkgs.dbus ]);
+            packages = with pkgs; [ bun cargo rustc rustfmt clippy rust-analyzer git pkg-config ]
+              ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.wayland ];
             shellHook = ''
               echo "Duxreader: bun install --frozen-lockfile, then bun run dev or bun run dev:firefox"
             '';

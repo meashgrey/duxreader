@@ -1,0 +1,5 @@
+# Merge this section into the Matugen configuration used by dux-shell.
+# Replace input_path with the absolute path to this repository's template.
+[templates.duxreader]
+input_path = "/absolute/path/to/duxreader/examples/matugen/duxreader.json"
+output_path = "~/.config/duxreader/theme.json"
