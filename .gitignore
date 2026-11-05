@@ -1,0 +1,9 @@
+.temp/
+node_modules/
+.wxt/
+.output/
+.direnv/
+result
+__pycache__/
+*.pyc
+target/

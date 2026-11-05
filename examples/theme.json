@@ -1,0 +1,9 @@
+{
+  "mode": "dark",
+  "colors": {
+    "background": "#181818",
+    "surface": "#242424",
+    "foreground": "#dddddd",
+    "accent": "#89b4fa"
+  }
+}

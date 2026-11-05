@@ -1,0 +1,8 @@
+[run]
+# Run dependency CLIs with Bun even when their shebang specifies Node.js.
+# This also applies to WXT lifecycle scripts and nested `bun run` commands.
+bun = true
+
+# Formatting is available with `bun fmt` and `bun fmt --check` in Bun 1.4.4+.
+# The Bun version in the Nix shell supports both commands.
+# Rust sources use `cargo fmt`; bun fmt handles web source and documentation.

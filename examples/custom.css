@@ -1,0 +1,4 @@
+/* External CSS is applied globally. Use selectors appropriate for your sites. */
+body {
+  border-top: 2px solid var(--dux-accent);
+}

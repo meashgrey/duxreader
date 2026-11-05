@@ -1,0 +1,48 @@
+:root {
+  font-family: system-ui, sans-serif;
+  color: #e4e4e7;
+  background: #18181b;
+}
+body {
+  margin: 0;
+  width: 320px;
+}
+main {
+  padding: 24px;
+}
+h1 {
+  margin: 8px 0;
+  font-size: 28px;
+}
+p {
+  color: #a1a1aa;
+  line-height: 1.6;
+}
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #89b4fa;
+}
+label {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 24px 0;
+}
+input {
+  accent-color: #89b4fa;
+}
+.palette {
+  display: flex;
+  gap: 8px;
+}
+.palette span {
+  width: 48px;
+  height: 32px;
+  border: 1px solid #52525b;
+  border-radius: 6px;
+}
+.status {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
