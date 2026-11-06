@@ -1,3 +1,7 @@
+import {
+  createStylesheetReader,
+  READ_STYLESHEET,
+} from "../lib/stylesheet-source";
 import { browser } from "wxt/browser";
 import {
   HOST_NAME,
@@ -14,6 +18,7 @@ import {
 } from "../lib/firefox-theme";
 
 export default defineBackground(() => {
+  const readStylesheet = createStylesheetReader();
   let port: ReturnType<typeof browser.runtime.connectNative> | undefined;
   let source = "";
   const themeAPI = (browser as unknown as { theme?: FirefoxThemeAPI }).theme;
@@ -211,7 +216,13 @@ export default defineBackground(() => {
   });
   // Restrict control messages to extension pages, never website content scripts.
   browser.runtime.onMessage.addListener((message, sender) => {
-    if (sender.id !== browser.runtime.id || sender.tab) return;
+    if (sender.id !== browser.runtime.id) return;
+    if (message?.type === READ_STYLESHEET) {
+      if (!sender.tab || !sender.url || !/^https?:\/\//.test(sender.url))
+        return;
+      return readStylesheet(message.url);
+    }
+    if (sender.tab) return;
     if (message?.type === "pickFile") {
       if (mode !== "file")
         return Promise.resolve({

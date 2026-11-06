@@ -27,6 +27,7 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: "Duxreader",
     description: "Bring your desktop palette to the web.",
+    host_permissions: ["http://*/*", "https://*/*"],
     permissions: [
       "storage",
       "nativeMessaging",

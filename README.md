@@ -31,8 +31,11 @@ Reload the extension, then select **Choose file**. The native chooser requires a
 
 ```sh
 bun run check
+bun run test:browser # Requires Firefox
 bun run build
 bun run build:firefox
 ```
 
-Page styling currently covers basic backgrounds, text, links, and custom CSS.
+Page colors map directly to the Pywalfox/Matugen palette, with continuous DOM and style monitoring. Custom CSS remains supported. See [rendering notes](docs/rendering.md).
+
+Performance measurements and reproduction commands: [benchmarks](docs/performance.md).

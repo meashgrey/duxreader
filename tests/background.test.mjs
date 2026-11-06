@@ -144,3 +144,30 @@ test("Pywalfox browser themes update pages without a native host and file mode s
   expect(state.bridgeStatus).not.toBe("following-browser");
   expect(state.theme).toBeUndefined();
 });
+
+test("stylesheet reads require an owned HTTP content script and never grant page control messages", async () => {
+  const { READ_STYLESHEET } = await import("../lib/stylesheet-source.ts");
+  const message = { type: READ_STYLESHEET, url: "file:///tmp/theme.css" };
+  expect(
+    control(message, {
+      id: "other-extension",
+      tab: { id: 1 },
+      url: "https://example.org",
+    }),
+  ).toBeUndefined();
+  expect(control(message, { id: "duxreader-test" })).toBeUndefined();
+  expect(
+    control(message, {
+      id: "duxreader-test",
+      tab: { id: 1 },
+      url: "about:blank",
+    }),
+  ).toBeUndefined();
+  expect(
+    await control(message, {
+      id: "duxreader-test",
+      tab: { id: 1 },
+      url: "https://example.org",
+    }),
+  ).toMatchObject({ ok: false });
+});

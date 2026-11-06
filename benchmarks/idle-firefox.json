@@ -1,0 +1,836 @@
+{
+  "description": "Static page, 400 elements; color-transition feedback regression; one fresh Firefox profile per case; eight-second warmup and eight-second observation",
+  "cpuInterpretation": "Process-family CPU includes Firefox background activity, not just the extension. 100% equals one logical core. Compare against the no-transition control.",
+  "reports": {
+    "idle-control": {
+      "label": "idle-control",
+      "seconds": 16,
+      "warmup": 8,
+      "created": "2026-11-06T08:43:47.935Z",
+      "cpuMethod": "Linux /proc process family; 100% equals one core; warmup excluded",
+      "steadyCPUPercent": 11.171746988508042,
+      "transition": false,
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "samples": [
+        {
+          "second": 1,
+          "reads": 411,
+          "frames": 4,
+          "transitionEnds": 0
+        },
+        {
+          "second": 2,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 3,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 4,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 5,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 6,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 7,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 8,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 9,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 10,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 11,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 12,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 13,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 14,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 15,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 16,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        }
+      ],
+      "cpuSamples": [
+        {
+          "startSecond": 0.0011326850000000378,
+          "endSecond": 0.233059076,
+          "cpuPercent": 172.4685139432882
+        },
+        {
+          "startSecond": 0.233059076,
+          "endSecond": 0.7338621619999999,
+          "cpuPercent": 217.6504159960389
+        },
+        {
+          "startSecond": 0.7338621619999999,
+          "endSecond": 1.234775905,
+          "cpuPercent": 23.95622034271078
+        },
+        {
+          "startSecond": 1.234775905,
+          "endSecond": 1.735514836,
+          "cpuPercent": 27.958680927886558
+        },
+        {
+          "startSecond": 1.735514836,
+          "endSecond": 2.2363186689999996,
+          "cpuPercent": 85.86196264196724
+        },
+        {
+          "startSecond": 2.2363186689999996,
+          "endSecond": 2.737264808,
+          "cpuPercent": 105.79979737103031
+        },
+        {
+          "startSecond": 2.737264808,
+          "endSecond": 3.2383211239999996,
+          "cpuPercent": 47.89880744662645
+        },
+        {
+          "startSecond": 3.2383211239999996,
+          "endSecond": 3.7396804399999994,
+          "cpuPercent": 39.89154955684518
+        },
+        {
+          "startSecond": 3.7396804399999994,
+          "endSecond": 4.2408663550000005,
+          "cpuPercent": 29.929013467986227
+        },
+        {
+          "startSecond": 4.2408663550000005,
+          "endSecond": 4.742429039,
+          "cpuPercent": 25.918993606789115
+        },
+        {
+          "startSecond": 4.742429039,
+          "endSecond": 5.243352019,
+          "cpuPercent": 37.9299827690077
+        },
+        {
+          "startSecond": 5.243352019,
+          "endSecond": 5.745485784,
+          "cpuPercent": 49.78753022115535
+        },
+        {
+          "startSecond": 5.745485784,
+          "endSecond": 6.246619366999999,
+          "cpuPercent": 129.7059351139116
+        },
+        {
+          "startSecond": 6.246619366999999,
+          "endSecond": 6.747907589,
+          "cpuPercent": 13.96402247807051
+        },
+        {
+          "startSecond": 6.747907589,
+          "endSecond": 7.248722900999999,
+          "cpuPercent": 7.9869762448477255
+        },
+        {
+          "startSecond": 7.248722900999999,
+          "endSecond": 7.7502576219999995,
+          "cpuPercent": 29.90819851932046
+        },
+        {
+          "startSecond": 7.7502576219999995,
+          "endSecond": 8.251527414,
+          "cpuPercent": 11.969602189792413
+        },
+        {
+          "startSecond": 8.251527414,
+          "endSecond": 8.752561309999999,
+          "cpuPercent": 51.8926966969118
+        },
+        {
+          "startSecond": 8.752561309999999,
+          "endSecond": 9.253743793,
+          "cpuPercent": 9.976406138679822
+        },
+        {
+          "startSecond": 9.253743793,
+          "endSecond": 9.754940821999998,
+          "cpuPercent": 13.966563237548668
+        },
+        {
+          "startSecond": 9.754940821999998,
+          "endSecond": 10.256164791,
+          "cpuPercent": 7.980464318137978
+        },
+        {
+          "startSecond": 10.256164791,
+          "endSecond": 10.757800448,
+          "cpuPercent": 5.980436115608895
+        },
+        {
+          "startSecond": 10.757800448,
+          "endSecond": 11.25878539,
+          "cpuPercent": 7.984271910511848
+        },
+        {
+          "startSecond": 11.25878539,
+          "endSecond": 11.760240549999999,
+          "cpuPercent": 3.988392501534936
+        },
+        {
+          "startSecond": 11.760240549999999,
+          "endSecond": 12.261529824,
+          "cpuPercent": 5.9845685028560895
+        },
+        {
+          "startSecond": 12.261529824,
+          "endSecond": 12.762538351,
+          "cpuPercent": 7.983896050535683
+        },
+        {
+          "startSecond": 12.762538351,
+          "endSecond": 13.263660457,
+          "cpuPercent": 27.937302769876172
+        },
+        {
+          "startSecond": 13.263660457,
+          "endSecond": 13.764918157999999,
+          "cpuPercent": 5.984945456229525
+        },
+        {
+          "startSecond": 13.764918157999999,
+          "endSecond": 14.265817852,
+          "cpuPercent": 5.9892230638894945
+        },
+        {
+          "startSecond": 14.265817852,
+          "endSecond": 14.767250136,
+          "cpuPercent": 3.988574457244172
+        },
+        {
+          "startSecond": 14.767250136,
+          "endSecond": 15.268664712,
+          "cpuPercent": 5.98307297712062
+        },
+        {
+          "startSecond": 15.268664712,
+          "endSecond": 15.770494688000001,
+          "cpuPercent": 1.9927067888029035
+        },
+        {
+          "startSecond": 15.770494688000001,
+          "endSecond": 16.271615237,
+          "cpuPercent": 7.982111306315651
+        }
+      ]
+    },
+    "idle-before": {
+      "label": "idle-before",
+      "seconds": 16,
+      "warmup": 8,
+      "created": "2026-11-06T08:44:06.037Z",
+      "cpuMethod": "Linux /proc process family; 100% equals one core; warmup excluded",
+      "steadyCPUPercent": 18.099105203288484,
+      "transition": true,
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "samples": [
+        {
+          "second": 1,
+          "reads": 12151,
+          "frames": 32,
+          "transitionEnds": 23368
+        },
+        {
+          "second": 2,
+          "reads": 17124,
+          "frames": 43,
+          "transitionEnds": 34400
+        },
+        {
+          "second": 3,
+          "reads": 17156,
+          "frames": 44,
+          "transitionEnds": 35200
+        },
+        {
+          "second": 4,
+          "reads": 17989,
+          "frames": 45,
+          "transitionEnds": 36000
+        },
+        {
+          "second": 5,
+          "reads": 17772,
+          "frames": 45,
+          "transitionEnds": 36000
+        },
+        {
+          "second": 6,
+          "reads": 18874,
+          "frames": 47,
+          "transitionEnds": 37600
+        },
+        {
+          "second": 7,
+          "reads": 18284,
+          "frames": 46,
+          "transitionEnds": 36800
+        },
+        {
+          "second": 8,
+          "reads": 16305,
+          "frames": 41,
+          "transitionEnds": 32800
+        },
+        {
+          "second": 9,
+          "reads": 18202,
+          "frames": 46,
+          "transitionEnds": 36800
+        },
+        {
+          "second": 10,
+          "reads": 17527,
+          "frames": 44,
+          "transitionEnds": 35200
+        },
+        {
+          "second": 11,
+          "reads": 17647,
+          "frames": 45,
+          "transitionEnds": 36000
+        },
+        {
+          "second": 12,
+          "reads": 17531,
+          "frames": 44,
+          "transitionEnds": 35200
+        },
+        {
+          "second": 13,
+          "reads": 8677,
+          "frames": 22,
+          "transitionEnds": 17600
+        },
+        {
+          "second": 14,
+          "reads": 16215,
+          "frames": 41,
+          "transitionEnds": 32800
+        },
+        {
+          "second": 15,
+          "reads": 5890,
+          "frames": 15,
+          "transitionEnds": 12000
+        },
+        {
+          "second": 16,
+          "reads": 19157,
+          "frames": 48,
+          "transitionEnds": 38400
+        }
+      ],
+      "cpuSamples": [
+        {
+          "startSecond": 0.0009473970000001373,
+          "endSecond": 0.3931148210000001,
+          "cpuPercent": 211.6443001650234
+        },
+        {
+          "startSecond": 0.3931148210000001,
+          "endSecond": 0.8941801840000001,
+          "cpuPercent": 123.73635173820628
+        },
+        {
+          "startSecond": 0.8941801840000001,
+          "endSecond": 1.394982096,
+          "cpuPercent": 33.94555730050808
+        },
+        {
+          "startSecond": 1.394982096,
+          "endSecond": 1.896361209,
+          "cpuPercent": 47.86796932244763
+        },
+        {
+          "startSecond": 1.896361209,
+          "endSecond": 2.397391112,
+          "cpuPercent": 59.87666568476252
+        },
+        {
+          "startSecond": 2.397391112,
+          "endSecond": 2.898127068,
+          "cpuPercent": 49.92651256703443
+        },
+        {
+          "startSecond": 2.898127068,
+          "endSecond": 3.3991209340000004,
+          "cpuPercent": 81.83732932171264
+        },
+        {
+          "startSecond": 3.3991209340000004,
+          "endSecond": 3.9001115720000006,
+          "cpuPercent": 23.95254340062138
+        },
+        {
+          "startSecond": 3.9001115720000006,
+          "endSecond": 4.4016439290000005,
+          "cpuPercent": 23.92667159459065
+        },
+        {
+          "startSecond": 4.4016439290000005,
+          "endSecond": 4.902765953,
+          "cpuPercent": 31.92835124724038
+        },
+        {
+          "startSecond": 4.902765953,
+          "endSecond": 5.403280562,
+          "cpuPercent": 25.97326784521489
+        },
+        {
+          "startSecond": 5.403280562,
+          "endSecond": 5.904180553,
+          "cpuPercent": 27.949691059187888
+        },
+        {
+          "startSecond": 5.904180553,
+          "endSecond": 6.405086600000001,
+          "cpuPercent": 11.978294204940982
+        },
+        {
+          "startSecond": 6.405086600000001,
+          "endSecond": 6.906008829,
+          "cpuPercent": 69.87112564333816
+        },
+        {
+          "startSecond": 6.906008829,
+          "endSecond": 7.406754221000001,
+          "cpuPercent": 101.84816638312657
+        },
+        {
+          "startSecond": 7.406754221000001,
+          "endSecond": 7.907638780999999,
+          "cpuPercent": 71.87284830660403
+        },
+        {
+          "startSecond": 7.907638780999999,
+          "endSecond": 8.408965218,
+          "cpuPercent": 41.8888740950239
+        },
+        {
+          "startSecond": 8.408965218,
+          "endSecond": 8.910230443,
+          "cpuPercent": 15.959614992242907
+        },
+        {
+          "startSecond": 8.910230443,
+          "endSecond": 9.411257401,
+          "cpuPercent": 41.91391234481235
+        },
+        {
+          "startSecond": 9.411257401,
+          "endSecond": 9.912136677000001,
+          "cpuPercent": 37.933292332901416
+        },
+        {
+          "startSecond": 9.912136677000001,
+          "endSecond": 10.413158462,
+          "cpuPercent": 23.951054343874535
+        },
+        {
+          "startSecond": 10.413158462,
+          "endSecond": 10.913900246999999,
+          "cpuPercent": 15.97629804351158
+        },
+        {
+          "startSecond": 10.913900246999999,
+          "endSecond": 11.414766837,
+          "cpuPercent": 15.97231709944953
+        },
+        {
+          "startSecond": 11.414766837,
+          "endSecond": 11.916372793,
+          "cpuPercent": 13.955177198892766
+        },
+        {
+          "startSecond": 11.916372793,
+          "endSecond": 12.41735639,
+          "cpuPercent": 13.972513355562008
+        },
+        {
+          "startSecond": 12.41735639,
+          "endSecond": 12.918486915999999,
+          "cpuPercent": 9.97744048822923
+        },
+        {
+          "startSecond": 12.918486915999999,
+          "endSecond": 13.419086667,
+          "cpuPercent": 9.988019350812667
+        },
+        {
+          "startSecond": 13.419086667,
+          "endSecond": 13.919855042000002,
+          "cpuPercent": 21.96624337549265
+        },
+        {
+          "startSecond": 13.919855042000002,
+          "endSecond": 14.420809921,
+          "cpuPercent": 29.942816466710227
+        },
+        {
+          "startSecond": 14.420809921,
+          "endSecond": 14.921493482,
+          "cpuPercent": 7.98907795576696
+        },
+        {
+          "startSecond": 14.921493482,
+          "endSecond": 15.422272363999998,
+          "cpuPercent": 3.9937786354177875
+        },
+        {
+          "startSecond": 15.422272363999998,
+          "endSecond": 15.923148846000002,
+          "cpuPercent": 7.986000828044415
+        },
+        {
+          "startSecond": 15.923148846000002,
+          "endSecond": 16.42403693,
+          "cpuPercent": 11.978723774151554
+        },
+        {
+          "startSecond": 16.42403693,
+          "endSecond": 16.925498596999997,
+          "cpuPercent": 17.947533365496522
+        }
+      ]
+    },
+    "idle-after": {
+      "label": "idle-after",
+      "seconds": 16,
+      "warmup": 8,
+      "created": "2026-11-06T08:44:23.764Z",
+      "cpuMethod": "Linux /proc process family; 100% equals one core; warmup excluded",
+      "steadyCPUPercent": 13.027005586875136,
+      "transition": true,
+      "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+      "samples": [
+        {
+          "second": 1,
+          "reads": 407,
+          "frames": 2,
+          "transitionEnds": 800
+        },
+        {
+          "second": 2,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 3,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 4,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 5,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 6,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 7,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 8,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 9,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 10,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 11,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 12,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 13,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 14,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 15,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        },
+        {
+          "second": 16,
+          "reads": 0,
+          "frames": 0,
+          "transitionEnds": 0
+        }
+      ],
+      "cpuSamples": [
+        {
+          "startSecond": 0.0011110400000000026,
+          "endSecond": 0.294980401,
+          "cpuPercent": 176.9493758146498
+        },
+        {
+          "startSecond": 0.294980401,
+          "endSecond": 0.7958148970000002,
+          "cpuPercent": 193.67675504524345
+        },
+        {
+          "startSecond": 0.7958148970000002,
+          "endSecond": 1.296986193,
+          "cpuPercent": 29.92988648735383
+        },
+        {
+          "startSecond": 1.296986193,
+          "endSecond": 1.7983256859999999,
+          "cpuPercent": 43.8824395587762
+        },
+        {
+          "startSecond": 1.7983256859999999,
+          "endSecond": 2.2995948950000002,
+          "cpuPercent": 119.6961611101072
+        },
+        {
+          "startSecond": 2.2995948950000002,
+          "endSecond": 2.8012929810000005,
+          "cpuPercent": 37.87138227192676
+        },
+        {
+          "startSecond": 2.8012929810000005,
+          "endSecond": 3.302361793,
+          "cpuPercent": 49.89334678447324
+        },
+        {
+          "startSecond": 3.302361793,
+          "endSecond": 3.8041623820000003,
+          "cpuPercent": 33.877999294257485
+        },
+        {
+          "startSecond": 3.8041623820000003,
+          "endSecond": 4.305803857,
+          "cpuPercent": 21.92801143485995
+        },
+        {
+          "startSecond": 4.305803857,
+          "endSecond": 4.80759191,
+          "cpuPercent": 23.914479287134395
+        },
+        {
+          "startSecond": 4.80759191,
+          "endSecond": 5.309300949000001,
+          "cpuPercent": 19.931871309179254
+        },
+        {
+          "startSecond": 5.309300949000001,
+          "endSecond": 5.8107658220000005,
+          "cpuPercent": 73.78383211300228
+        },
+        {
+          "startSecond": 5.8107658220000005,
+          "endSecond": 6.311346947,
+          "cpuPercent": 73.9140933450098
+        },
+        {
+          "startSecond": 6.311346947,
+          "endSecond": 6.812705798,
+          "cpuPercent": 69.81027647201145
+        },
+        {
+          "startSecond": 6.812705798,
+          "endSecond": 7.313803465000001,
+          "cpuPercent": 7.982475799473225
+        },
+        {
+          "startSecond": 7.313803465000001,
+          "endSecond": 7.815079809000001,
+          "cpuPercent": 7.979630492996097
+        },
+        {
+          "startSecond": 7.815079809000001,
+          "endSecond": 8.316536578000001,
+          "cpuPercent": 13.959328964607106
+        },
+        {
+          "startSecond": 8.316536578000001,
+          "endSecond": 8.818878533000001,
+          "cpuPercent": 63.70162731082259
+        },
+        {
+          "startSecond": 8.818878533000001,
+          "endSecond": 9.31981211,
+          "cpuPercent": 17.966453863802396
+        },
+        {
+          "startSecond": 9.31981211,
+          "endSecond": 9.821402532,
+          "cpuPercent": 17.94292635037599
+        },
+        {
+          "startSecond": 9.821402532,
+          "endSecond": 10.322731745,
+          "cpuPercent": 3.989394489963617
+        },
+        {
+          "startSecond": 10.322731745,
+          "endSecond": 10.824653792000001,
+          "cpuPercent": 5.977023758830821
+        },
+        {
+          "startSecond": 10.824653792000001,
+          "endSecond": 11.325991973,
+          "cpuPercent": 3.98932312717671
+        },
+        {
+          "startSecond": 11.325991973,
+          "endSecond": 11.827014239,
+          "cpuPercent": 3.9918385583286633
+        },
+        {
+          "startSecond": 11.827014239,
+          "endSecond": 12.328211148000001,
+          "cpuPercent": 5.985671392079552
+        },
+        {
+          "startSecond": 12.328211148000001,
+          "endSecond": 12.83026219,
+          "cpuPercent": 7.967317394791916
+        },
+        {
+          "startSecond": 12.83026219,
+          "endSecond": 13.331675239,
+          "cpuPercent": 15.954909861151197
+        },
+        {
+          "startSecond": 13.331675239,
+          "endSecond": 13.833536913,
+          "cpuPercent": 21.91839020566453
+        },
+        {
+          "startSecond": 13.833536913,
+          "endSecond": 14.334878672,
+          "cpuPercent": 5.983941983975038
+        },
+        {
+          "startSecond": 14.334878672,
+          "endSecond": 14.835838931,
+          "cpuPercent": 3.9923326532773964
+        },
+        {
+          "startSecond": 14.835838931,
+          "endSecond": 15.337293712000001,
+          "cpuPercent": 5.982593273948658
+        },
+        {
+          "startSecond": 15.337293712000001,
+          "endSecond": 15.839370536,
+          "cpuPercent": 9.958635334261121
+        },
+        {
+          "startSecond": 15.839370536,
+          "endSecond": 16.34053798,
+          "cpuPercent": 15.962728816040212
+        }
+      ]
+    }
+  }
+}
