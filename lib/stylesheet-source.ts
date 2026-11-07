@@ -5,7 +5,9 @@ const MAX_BYTES = 2 * 1024 * 1024;
 
 // This background-only service reads stylesheet text for content scripts. The
 // page-world CSSOM helper cannot call it or receive its responses.
-export function createStylesheetReader(fetcher: typeof fetch = fetch) {
+export function createStylesheetReader(
+  fetcher: (input: string, init?: RequestInit) => Promise<Response> = fetch,
+) {
   const pending = new Map<string, Promise<StylesheetResult>>();
   const queue: Array<() => void> = [];
   let active = 0;

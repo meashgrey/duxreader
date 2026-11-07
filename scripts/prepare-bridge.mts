@@ -13,7 +13,7 @@ if (values["chrome-id"] && !/^[a-p]{32}$/.test(values["chrome-id"]))
 const binary = resolve("target/release/duxreader-bridge");
 await access(binary);
 // Quote every argument for /bin/sh, including paths containing apostrophes.
-const quote = (value) => "'" + value.replaceAll("'", "'\\''") + "'";
+const quote = (value: string) => "'" + value.replaceAll("'", "'\\''") + "'";
 // The popup can select a source later; an optional CLI path sets the default.
 const command = [binary];
 if (values.theme) command.push("--theme", resolve(values.theme));
@@ -38,7 +38,10 @@ await writeFile(
     ' "$@"\n',
   { mode: 0o755 },
 );
-const browsers = {
+const browsers: Record<
+  string,
+  { allowed_extensions?: string[]; allowed_origins?: string[] }
+> = {
   // Firefox identifies the extension by its manifest ID; Chrome uses its origin.
   firefox: { allowed_extensions: ["duxreader@duxreader.local"] },
 };

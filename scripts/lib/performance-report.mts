@@ -1,25 +1,65 @@
-export const median = (values) => {
+export interface InteractionSample {
+  scenario: string;
+  enabled: boolean;
+  browser: string;
+  phases: {
+    phase: string;
+    paints: number[];
+    events: { duration: number; inputDelay: number }[];
+    longTasks: number[];
+    mainThreadBusyMs: number;
+    styleMs: number;
+    styleRecalcs: number;
+    browserCpuPercent: number;
+    heapUsedBytes: number;
+    generatedCssBytes?: number;
+    browserRssBytes: number | null;
+  }[];
+}
+export type MetricName =
+  | "paintP95Ms"
+  | "slowEventMaxMs"
+  | "slowEventCount"
+  | "inputDelayMaxMs"
+  | "longTaskCount"
+  | "longTaskTotalMs"
+  | "mainThreadBusyMs"
+  | "styleMs"
+  | "styleRecalcs"
+  | "browserCpuPercent"
+  | "heapUsedMiB"
+  | "generatedCssKiB"
+  | "browserRssMiB";
+type RunMetrics = Record<MetricName, number | null>;
+export type SummaryEntry = { runs: number } & Partial<RunMetrics>;
+interface SummaryReport {
+  summary: Record<string, SummaryEntry>;
+}
+
+export const median = (values: number[]) => {
   const sorted = [...values].sort((a, b) => a - b);
   const n = sorted.length;
   return n
-    ? (sorted[Math.floor((n - 1) / 2)] + sorted[Math.floor(n / 2)]) / 2
+    ? (sorted[Math.floor((n - 1) / 2)]! + sorted[Math.floor(n / 2)]!) / 2
     : null;
 };
-export const percentile = (values, p) => {
+export const percentile = (values: number[], p: number) => {
   const sorted = [...values].sort((a, b) => a - b);
   return sorted.length
-    ? sorted[Math.max(0, Math.ceil(sorted.length * p) - 1)]
+    ? sorted[Math.max(0, Math.ceil(sorted.length * p) - 1)]!
     : null;
 };
 
-export function summarize(samples) {
-  const groups = new Map();
+export function summarize(
+  samples: InteractionSample[],
+): Record<string, SummaryEntry> {
+  const groups = new Map<string, RunMetrics[]>();
   for (const sample of samples)
     for (const phase of sample.phases) {
       const key = `${sample.scenario}/${sample.enabled ? "enabled" : "disabled"}/${phase.phase}`;
       if (!groups.has(key)) groups.set(key, []);
       // Aggregate within each run first so a slow run is not diluted by pooling.
-      groups.get(key).push({
+      groups.get(key)!.push({
         paintP95Ms: percentile(phase.paints, 0.95),
         slowEventMaxMs: phase.events.length
           ? Math.max(...phase.events.map((e) => e.duration))
@@ -51,7 +91,7 @@ export function summarize(samples) {
       {
         runs: runs.length,
         ...Object.fromEntries(
-          Object.keys(runs[0]).map((metric) => [
+          (Object.keys(runs[0]!) as MetricName[]).map((metric) => [
             metric,
             median(runs.map((r) => r[metric]).filter((v) => v !== null)),
           ]),
@@ -64,7 +104,9 @@ export function summarize(samples) {
 // Both a relative and an absolute increase are required. Shared CI runners
 // cannot support millisecond-perfect gates. CPU, RSS, and RAF callback timing
 // remain advisory; RAF phasing can diverge from actual Event Timing latency.
-export const budgets = {
+export const budgets: Partial<
+  Record<MetricName, { ratio: number; increase: number; ceiling?: number }>
+> = {
   slowEventMaxMs: { ratio: 1.35, increase: 32, ceiling: 200 },
   inputDelayMaxMs: { ratio: 1.35, increase: 16, ceiling: 100 },
   mainThreadBusyMs: { ratio: 1.35, increase: 150 },
@@ -73,7 +115,7 @@ export const budgets = {
   generatedCssKiB: { ratio: 1.25, increase: 64 },
 };
 
-export function regressions(current, baseline) {
+export function regressions(current: SummaryReport, baseline?: SummaryReport) {
   const failures = [];
   for (const [key, values] of Object.entries(current.summary)) {
     if (!key.includes("/enabled/")) continue;
@@ -86,9 +128,9 @@ export function regressions(current, baseline) {
         metric === "mainThreadBusyMs" && key.endsWith("/open-focus")
           ? 40
           : budget.increase;
-      const now = values[metric],
-        before = baseline?.summary[key]?.[metric];
-      if (now === null) continue;
+      const now = values[metric as MetricName],
+        before = baseline?.summary[key]?.[metric as MetricName];
+      if (now == null) continue;
       if (budget.ceiling && now > budget.ceiling)
         failures.push(
           `${key} ${metric}: ${now.toFixed(2)} exceeds ${budget.ceiling}`,
@@ -106,8 +148,17 @@ export function regressions(current, baseline) {
   return failures;
 }
 
-export function markdown(report, failures, baseline) {
-  const fmt = (v) => (v == null ? "n/a" : v.toFixed(1));
+export function markdown(
+  report: SummaryReport & {
+    browser: string;
+    runs: number;
+    check?: { requested: boolean };
+  },
+  failures: string[],
+  baseline?: SummaryReport,
+) {
+  const fmt = (v: number | null | undefined) =>
+    v == null ? "n/a" : v.toFixed(1);
   return [
     "# Interaction benchmark",
     "",

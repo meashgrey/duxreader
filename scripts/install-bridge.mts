@@ -4,12 +4,19 @@ import { homedir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { parseArgs } from "node:util";
 
-export function registrationDirectory(browser, platform, home, configHome) {
+export function registrationDirectory(
+  browser: string,
+  platform: string,
+  home: string,
+  configHome?: string,
+) {
   if (platform !== "linux")
     throw new Error("Automatic registration currently supports Linux only.");
   if (browser === "firefox")
     return join(home, ".mozilla/native-messaging-hosts");
-  const directory = { chrome: "google-chrome", chromium: "chromium" }[browser];
+  const directory = (
+    { chrome: "google-chrome", chromium: "chromium" } as Record<string, string>
+  )[browser];
   if (!directory) throw new Error("Choose firefox, chrome, or chromium.");
   return join(
     configHome || join(home, ".config"),
@@ -18,7 +25,7 @@ export function registrationDirectory(browser, platform, home, configHome) {
   );
 }
 
-export async function installManifest(source, destination) {
+export async function installManifest(source: string, destination: string) {
   const text = await readFile(source, "utf8");
   const manifest = JSON.parse(text);
   if (manifest.name !== "local.duxreader.bridge" || manifest.type !== "stdio") {
@@ -32,7 +39,7 @@ export async function installManifest(source, destination) {
   try {
     existing = await readFile(destination, "utf8");
   } catch (error) {
-    if (error.code !== "ENOENT") throw error;
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
   }
   if (existing === text) return;
   // Preserve an existing registration before replacing its content.
@@ -46,7 +53,7 @@ if (import.meta.main) {
   });
   const browser = values.browser;
   const target = registrationDirectory(
-    browser,
+    browser!,
     process.platform,
     homedir(),
     process.env.XDG_CONFIG_HOME,

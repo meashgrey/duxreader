@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 const args = process.argv.slice(2);
-const value = (flag, fallback) => {
+const value = (flag: string, fallback: string) => {
   const i = args.indexOf(flag);
-  return i < 0 ? fallback : args[i + 1];
+  return i < 0 ? fallback : (args[i + 1] ?? fallback);
 };
 const label = value("--label", "current"),
   runs = Number(value("--runs", "3"));
@@ -23,9 +23,13 @@ const build = await Bun.build({
 });
 if (!build.success)
   throw new AggregateError(build.logs, "Benchmark build failed");
-const code = await build.outputs[0].text();
+const code = await build.outputs[0]!.text();
 const bundleSHA256 = new Bun.CryptoHasher("sha256").update(code).digest("hex");
-let finish, result;
+type RendererResult = Awaited<
+  ReturnType<typeof import("../tests/browser/benchmark").benchmark>
+> & { error?: string };
+let finish: () => void = () => {};
+const response: { value?: RendererResult } = {};
 const cssServer = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
@@ -44,7 +48,7 @@ const server = Bun.serve({
         headers: { "content-type": "application/javascript" },
       });
     if (path === "/result") {
-      result = await request.json();
+      response.value = await request.json();
       finish();
       return new Response("ok");
     }
@@ -54,7 +58,7 @@ const server = Bun.serve({
     );
   },
 });
-const samples = [];
+const samples: RendererResult[] = [];
 try {
   for (let run = 0; run < runs; run++) {
     const profile = await mkdtemp(resolve(".temp/benchmarks/profile-"));
@@ -63,9 +67,9 @@ try {
       'user_pref("focusmanager.testmode",true);user_pref("browser.shell.checkDefaultBrowser",false);user_pref("browser.aboutwelcome.enabled",false);user_pref("browser.startup.homepage_override.mstone","ignore");',
     );
     let child, timer;
-    result = undefined;
+    response.value = undefined;
     try {
-      const done = new Promise((resolve) => {
+      const done = new Promise<void>((resolve) => {
         finish = resolve;
       });
       child = Bun.spawn(
@@ -93,6 +97,7 @@ try {
       child.kill();
       await child.exited;
       clearTimeout(timer);
+      const result = ((): RendererResult | undefined => response.value)();
       if (!result || result.error)
         throw new Error(
           JSON.stringify(result ?? { error: "Benchmark timed out" }),
@@ -107,16 +112,16 @@ try {
       await rm(profile, { recursive: true, force: true });
     }
   }
-  const median = (values) => {
+  const median = (values: number[]) => {
     const n = [...values].sort((a, b) => a - b);
     return n[Math.floor(n.length / 2)];
   };
-  const summary = samples[0].results.map((phase, i) =>
+  const summary = samples[0]!.results.map((phase, i) =>
     Object.fromEntries(
-      Object.keys(phase).map((key) => [
+      (Object.keys(phase) as (keyof typeof phase)[]).map((key) => [
         key,
         typeof phase[key] === "number"
-          ? median(samples.map((s) => s.results[i][key]))
+          ? median(samples.map((s) => s.results[i]![key] as number))
           : phase[key],
       ]),
     ),
@@ -128,8 +133,8 @@ try {
     cards,
     bundleSHA256,
     created: new Date().toISOString(),
-    nodes: samples[0].nodes,
-    userAgent: samples[0].userAgent,
+    nodes: samples[0]!.nodes,
+    userAgent: samples[0]!.userAgent,
     summary,
     samples,
   };

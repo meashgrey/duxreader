@@ -8,7 +8,8 @@ import {
   regressions,
   markdown,
   budgets,
-} from "./lib/performance-report.mjs";
+  type InteractionSample,
+} from "./lib/performance-report.mts";
 
 const args = process.argv.slice(2);
 const allowed = new Set([
@@ -20,20 +21,20 @@ const allowed = new Set([
   "--check",
 ]);
 for (let i = 0; i < args.length; i++) {
-  if (!allowed.has(args[i])) throw new Error(`Unknown argument: ${args[i]}`);
-  if (!["--check", "--trace"].includes(args[i])) {
-    if (!args[i + 1] || args[i + 1].startsWith("--"))
-      throw new Error(`Missing value for ${args[i]}`);
+  if (!allowed.has(args[i]!)) throw new Error(`Unknown argument: ${args[i]!}`);
+  if (!["--check", "--trace"].includes(args[i]!)) {
+    if (!args[i + 1] || args[i + 1]!.startsWith("--"))
+      throw new Error(`Missing value for ${args[i]!}`);
     i++;
   }
 }
-const option = (name, fallback) =>
+const option = (name: string, fallback?: string) =>
   args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const runs = Number(option("--runs", "3"));
 if (!Number.isInteger(runs) || runs < 1 || runs > 20)
   throw new Error("Use 1-20 runs");
-const output = resolve(option("--output", ".temp/interaction"));
-const extension = resolve(option("--extension", ".output/chrome-mv3"));
+const output = resolve(option("--output", ".temp/interaction")!);
+const extension = resolve(option("--extension", ".output/chrome-mv3")!);
 if (!(await Bun.file(resolve(extension, "manifest.json")).exists()))
   throw new Error("Build the production extension first: bun run build");
 if (args.includes("--trace") && args.includes("--check"))
@@ -65,8 +66,18 @@ const runner = Bun.spawn(
 const exit = await runner.exited;
 if (exit) process.exit(exit); // Never treat incomplete/error runs as a baseline.
 const results = await Bun.file(resolve(output, "playwright.json")).json();
-const samples = [];
-async function collect(suites) {
+const samples: InteractionSample[] = [];
+interface ReportSuite {
+  suites?: ReportSuite[];
+  specs?: {
+    tests: {
+      results: {
+        attachments?: { name: string; path?: string; body?: string }[];
+      }[];
+    }[];
+  }[];
+}
+async function collect(suites: ReportSuite[]) {
   for (const suite of suites) {
     for (const spec of suite.specs ?? [])
       for (const test of spec.tests)
@@ -77,7 +88,7 @@ async function collect(suites) {
                 attachment.path
                   ? await Bun.file(attachment.path).json()
                   : JSON.parse(
-                      Buffer.from(attachment.body, "base64").toString(),
+                      Buffer.from(attachment.body!, "base64").toString(),
                     ),
               );
             }
@@ -101,7 +112,7 @@ const report = {
   gatePolicy: "native-event-v2",
   created: new Date().toISOString(),
   runs,
-  browser: samples[0].browser,
+  browser: samples[0]!.browser,
   workloadHash: hash.digest("hex"),
   environment: {
     platform: process.platform,
@@ -113,6 +124,9 @@ const report = {
   budgets,
   summary: summarize(samples),
   samples,
+  check: undefined as
+    | { requested: boolean; baseline: string | null; failures: string[] }
+    | undefined,
 };
 const baselinePath = option("--baseline");
 const baseline = baselinePath

@@ -17,8 +17,8 @@ const child = spawn(resolve("target/release/duxreader-bridge"), [
   "--css",
   cssPath,
 ]);
-const messages = [];
-const errors = [];
+const messages: import("../lib/theme").Theme[] = [];
+const errors: { source: string }[] = [];
 let buffer = Buffer.alloc(0);
 child.stdout.on("data", (chunk) => {
   buffer = Buffer.concat([buffer, chunk]);
@@ -36,7 +36,7 @@ let logs = "";
 child.stderr.on("data", (chunk) => {
   logs += chunk;
 });
-async function waitFor(predicate) {
+async function waitFor(predicate: () => boolean) {
   for (let i = 0; i < 100; i++) {
     if (predicate()) return;
     await delay(50);
@@ -45,7 +45,7 @@ async function waitFor(predicate) {
 }
 try {
   await waitFor(() => messages.length === 1);
-  assert.equal(messages[0].colors.accent, theme.colors.accent);
+  assert.equal(messages[0]!.colors.accent, theme.colors.accent);
   theme.colors.accent = "#ff0000";
   await writeFile(join(directory, "next.json"), JSON.stringify(theme));
   await rename(join(directory, "next.json"), themePath);
@@ -70,7 +70,7 @@ try {
   const selected = join(directory, "selected.json");
   theme.colors.accent = "#123456";
   await writeFile(selected, JSON.stringify(theme));
-  function select(path) {
+  function select(path: string | null) {
     const payload = Buffer.from(JSON.stringify({ type: "watch", path }));
     const header = Buffer.alloc(4);
     if (endianness() === "LE") header.writeUInt32LE(payload.length);
@@ -89,7 +89,7 @@ try {
     "Old source must no longer publish updates",
   );
   select(join(directory, "missing.json"));
-  await waitFor(() => errors.at(-1)?.source.endsWith("missing.json"));
+  await waitFor(() => errors.at(-1)?.source.endsWith("missing.json") === true);
   await writeFile(join(directory, "missing.json"), JSON.stringify(theme));
   await waitFor(() => messages.at(-1)?.colors.accent === "#654321");
   select(null);

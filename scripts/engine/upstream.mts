@@ -13,7 +13,7 @@ const initialize =
 // Verify the actual nested checkout, not the parent repository that Git would
 // otherwise discover when a submodule directory is empty or uninitialized.
 export async function verifyUpstream(root = defaultRoot) {
-  function git(...args) {
+  function git(...args: string[]) {
     const result = Bun.spawnSync(["git", "-C", root, ...args]);
     if (result.exitCode)
       throw new Error(`Dark Reader submodule unavailable. ${initialize}`);

@@ -10,16 +10,16 @@ test("only demanded variable roles are emitted, including aliases discovered lat
   graph.define("--late", "var(--tone)");
   graph.use("--late", "edge");
   expect(new Set(graph.roles("--tone"))).toEqual(new Set(["bg", "edge"]));
-  const values = {
+  const values: Record<string, string> = {
     "--tone": "#eee",
     "--spacing": "8px",
     "--font": "system-ui",
   };
   const style = {
     cssText: "--tone:#eee;--spacing:8px;--font:system-ui",
-    getPropertyValue: (p) => values[p] ?? "",
+    getPropertyValue: (p: string) => values[p] ?? "",
     getPropertyPriority: () => "",
-  };
+  } as unknown as CSSStyleDeclaration;
   const css = compileDeclarations(
     style,
     ":root",
@@ -34,7 +34,17 @@ test("only demanded variable roles are emitted, including aliases discovered lat
   expect(css).not.toContain("--dux-value-fg-tone");
   expect(css).not.toContain("spacing");
   expect(css).not.toContain("font");
-  expect(compileDeclarations(style, "html", "#fff", true, undefined, "variables", new VariableProjections(()=>{}))).toBe("");
+  expect(
+    compileDeclarations(
+      style,
+      "html",
+      "#fff",
+      true,
+      undefined,
+      "variables",
+      new VariableProjections(() => {}),
+    ),
+  ).toBe("");
 });
 test("role demand propagates through cycles and late semantic aliases without repeated invalidation", () => {
   let notifications = 0;

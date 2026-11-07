@@ -24,7 +24,7 @@ p::before { content:'@import "fake.css";'; }
   expect(result.css).not.toContain("layer(theme)");
 });
 test("the stylesheet reader validates requests and omits credentials", async () => {
-  const calls = [];
+  const calls: { url: string; options?: RequestInit }[] = [];
   const read = createStylesheetReader(async (url, options) => {
     calls.push({ url, options });
     return new Response(".card{color:red}", {
@@ -40,8 +40,8 @@ test("the stylesheet reader validates requests and omits credentials", async () 
     ok: true,
     css: ".card{color:red}",
   });
-  expect(calls[0].url).toBe("https://example.org/style.css");
-  expect(calls[0].options.credentials).toBe("omit");
+  expect(calls[0]!.url).toBe("https://example.org/style.css");
+  expect(calls[0]!.options!.credentials).toBe("omit");
 });
 test("duplicate stylesheet reads share a request and enforce response limits", async () => {
   let calls = 0;

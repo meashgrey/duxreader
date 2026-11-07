@@ -1,12 +1,12 @@
 import { resolve } from "node:path";
 import { copyFile, readFile } from "node:fs/promises";
 
-import { verifyUpstream } from "./engine/upstream.mjs";
+import { verifyUpstream } from "./engine/upstream.mts";
 
 // The gitlink pins upstream; adapters stay outside the submodule.
 const { source, version, revision } = await verifyUpstream();
-const imported = new Set();
-const plugin = {
+const imported = new Set<string>();
+const plugin: Bun.BunPlugin = {
   name: "duxreader-engine-boundaries",
   setup(build) {
     build.onResolve({ filter: /^upstream:/ }, ({ path }) => ({

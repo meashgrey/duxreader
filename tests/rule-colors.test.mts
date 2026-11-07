@@ -47,7 +47,7 @@ test("deferred shorthands and serialized declaration order survive compilation",
   expect(
     declarationNames('background:var(--tone);--image:url("x;a:b");color:red;'),
   ).toEqual(["background", "--image", "color"]);
-  const values = {
+  const values: Record<string, string> = {
     background: "var(--tone)",
     color: "#111",
     border: "1px solid #999",
@@ -56,9 +56,9 @@ test("deferred shorthands and serialized declaration order survive compilation",
   const style = {
     cssText:
       "background:var(--tone);color:#111;border:1px solid #999;width:10px;",
-    getPropertyValue: (p) => values[p],
-    getPropertyPriority: (p) => (p === "color" ? "important" : ""),
-  };
+    getPropertyValue: (p: string) => values[p] ?? "",
+    getPropertyPriority: (p: string) => (p === "color" ? "important" : ""),
+  } as unknown as CSSStyleDeclaration;
   const css = compileDeclarations(style, ".row:hover", "#fff");
   expect(css).toContain("background:var(--dux-value-bg-tone);");
   expect(css).toContain("color:var(--dux-fg)!important;");
@@ -66,9 +66,9 @@ test("deferred shorthands and serialized declaration order survive compilation",
   expect(css).not.toContain("width");
   const semantic = {
     cssText: "color:red",
-    getPropertyValue: (p) => (p === "color" ? "red" : ""),
+    getPropertyValue: (p: string) => (p === "color" ? "red" : ""),
     getPropertyPriority: () => "",
-  };
+  } as unknown as CSSStyleDeclaration;
   expect(compileDeclarations(semantic, "span", "#fff", true)).toBe("");
   expect(compileDeclarations(semantic, "span", "#fff")).toBe("color:red;");
 });

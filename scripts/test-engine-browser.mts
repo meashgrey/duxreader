@@ -8,7 +8,7 @@ const browserName =
     : args[0] === "--browser" && args.length === 2
       ? args[1]
       : undefined;
-if (!["firefox", "chromium"].includes(browserName))
+if (!["firefox", "chromium"].includes(browserName ?? ""))
   throw new Error("Use --browser firefox or --browser chromium");
 await mkdir(".temp", { recursive: true });
 const profile = await mkdtemp(resolve(".temp/engine-browser-"));
@@ -30,12 +30,13 @@ const build = await Bun.build({
 });
 if (!build.success)
   throw new AggregateError(build.logs, "Browser fixture build failed");
-const code = await build.outputs[0].text();
-let finish;
-const finished = new Promise((resolve) => {
+const code = await build.outputs[0]!.text();
+let finish!: () => void;
+const finished = new Promise<void>((resolve) => {
   finish = resolve;
 });
-let result;
+const response: { value?: { ok: boolean; checks: string[]; error?: string } } =
+  {};
 const cssServer = Bun.serve({
   hostname: "127.0.0.1",
   port: 0,
@@ -71,7 +72,7 @@ const server = Bun.serve({
         headers: { "content-type": "text/css" },
       });
     if (path === "/result" && request.method === "POST") {
-      result = await request.json();
+      response.value = await request.json();
       finish();
       return new Response("ok");
     }
@@ -117,6 +118,7 @@ try {
   child?.kill();
   if (child) await child.exited;
   await automatedBrowser?.close();
+  const result = response.value;
   await Bun.write(
     ".temp/engine-browser-result.json",
     JSON.stringify(

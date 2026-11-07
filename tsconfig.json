@@ -3,7 +3,8 @@
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "types": ["bun", "node"]
   },
   "exclude": ["node_modules", ".temp", "vendor"]
 }

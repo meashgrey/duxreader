@@ -1,9 +1,9 @@
 import { mkdir, mkdtemp, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 const args = process.argv.slice(2);
-const option = (name, fallback) => {
+const option = (name: string, fallback: string) => {
   const i = args.indexOf(name);
-  return i < 0 ? fallback : args[i + 1];
+  return i < 0 ? fallback : (args[i + 1] ?? fallback);
 };
 const source = resolve(option("--source", ".")),
   label = option("--label", "idle-current");
@@ -34,7 +34,7 @@ const build = await Bun.build({
 });
 if (!build.success)
   throw new AggregateError(build.logs, "Idle fixture build failed");
-const code = await build.outputs[0].text();
+const code = await build.outputs[0]!.text();
 const linux = process.platform === "linux";
 const hz = linux
   ? Number(
@@ -43,16 +43,23 @@ const hz = linux
       ).text(),
     )
   : 0;
-let child,
-  result,
-  started = 0,
+type IdleResult = Awaited<
+  ReturnType<typeof import("../tests/browser/idle-benchmark").idleBenchmark>
+> & { error?: string };
+const response: { value?: IdleResult } = {};
+let child: Bun.Subprocess<"ignore", "ignore", "pipe"> | undefined;
+let started = 0,
   lastAt = 0,
-  lastTicks = new Map();
-const cpu = [];
-async function ticks(pid, seen = new Set()) {
+  lastTicks = new Map<number, number>();
+const cpu: { startSecond: number; endSecond: number; cpuPercent: number }[] =
+  [];
+async function ticks(
+  pid: number,
+  seen = new Set<number>(),
+): Promise<Map<number, number>> {
   if (seen.has(pid)) return new Map();
   seen.add(pid);
-  const output = new Map();
+  const output = new Map<number, number>();
   try {
     const stat = await Bun.file(`/proc/${pid}/stat`).text();
     const fields = stat.slice(stat.lastIndexOf(")") + 2).split(" ");
@@ -102,7 +109,7 @@ const server = Bun.serve({
       return new Response("ok");
     }
     if (path === "/result") {
-      result = await request.json();
+      response.value = await request.json();
       return new Response("ok");
     }
     return new Response(
@@ -129,10 +136,15 @@ try {
     { stdout: "ignore", stderr: "pipe" },
   );
   const deadline = performance.now() + seconds * 1000 + 15000;
-  while (!result && child.exitCode === null && performance.now() < deadline) {
+  while (
+    !response.value &&
+    child.exitCode === null &&
+    performance.now() < deadline
+  ) {
     await Bun.sleep(500);
     await collect();
   }
+  const result = response.value;
   if (!result || result.error)
     throw new Error(
       JSON.stringify(result ?? { error: "Idle benchmark timed out" }),

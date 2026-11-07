@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import {
   installManifest,
   registrationDirectory,
-} from "../scripts/install-bridge.mjs";
+} from "../scripts/install-bridge.mts";
 
 test("registration paths follow each browser convention", () => {
   expect(

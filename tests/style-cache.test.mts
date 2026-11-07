@@ -2,9 +2,10 @@ import { expect, test } from "bun:test";
 import { createStyleManager } from "../lib/rendering/style-manager.ts";
 
 test("unchanged sheets avoid CSS text serialization and audits rotate one source at a time", () => {
+  const globals = globalThis as unknown as Record<string, unknown>;
   const names = ["CSSImportRule", "CSSStyleRule", "CSSKeyframesRule"];
-  const originals = names.map((name) => globalThis[name]);
-  for (const name of names) globalThis[name] = class {};
+  const originals = names.map((name) => globals[name]);
+  for (const name of names) globals[name] = class {};
   try {
     let reads = 0;
     const sheets = Array.from({ length: 30 }, () => ({
@@ -19,13 +20,13 @@ test("unchanged sheets avoid CSS text serialization and audits rotate one source
           },
         },
       ],
-    }));
+    })) as unknown as CSSStyleSheet[];
     const manager = createStyleManager(
-      { baseURI: "https://example.org/" },
+      { baseURI: "https://example.org/" } as Document,
       { background: "#fff", ready() {} },
     );
     const theme = {
-      mode: "dark",
+      mode: "dark" as const,
       css: "",
       colors: {
         background: "#000000",
@@ -54,8 +55,8 @@ test("unchanged sheets avoid CSS text serialization and audits rotate one source
     manager.dispose();
   } finally {
     names.forEach((name, i) => {
-      if (originals[i] === undefined) delete globalThis[name];
-      else globalThis[name] = originals[i];
+      if (originals[i] === undefined) delete globals[name];
+      else globals[name] = originals[i];
     });
   }
 });

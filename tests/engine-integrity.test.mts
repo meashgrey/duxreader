@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { verifyUpstream } from "../scripts/engine/upstream.mjs";
+import { verifyUpstream } from "../scripts/engine/upstream.mts";
 
 test("the engine uses the clean, pinned upstream submodule", async () => {
   const upstream = await verifyUpstream();

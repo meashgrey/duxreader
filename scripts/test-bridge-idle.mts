@@ -10,7 +10,7 @@ const child = spawn(resolve("target/release/duxreader-bridge"), [], {
   env: { ...process.env, XDG_CONFIG_HOME: directory },
 });
 let buffer = Buffer.alloc(0);
-const messages = [];
+const messages: { type: string }[] = [];
 let logs = "";
 child.stderr.on("data", (chunk) => {
   logs += chunk;
@@ -25,7 +25,7 @@ child.stdout.on("data", (chunk) => {
     buffer = buffer.subarray(length + 4);
   }
 });
-async function waitFor(predicate) {
+async function waitFor(predicate: () => boolean) {
   for (let i = 0; i < 120; i++) {
     if (predicate()) return;
     await delay(50);
@@ -34,7 +34,7 @@ async function waitFor(predicate) {
 }
 try {
   await waitFor(() => messages.length > 0);
-  assert.equal(messages[0].type, "idle");
+  assert.equal(messages[0]!.type, "idle");
   assert.equal(logs, "", "An absent first-run default must not log an error");
   const config = join(directory, "duxreader");
   await mkdir(config);

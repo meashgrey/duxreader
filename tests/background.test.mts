@@ -1,7 +1,16 @@
 import { expect, mock, test } from "bun:test";
 
-const state = { sourceMode: "file" };
-let themeUpdated;
+// The browser mock stores heterogeneous extension storage and message payloads.
+const state: {
+  sourceMode: string;
+  bridgeError?: string;
+  bridgeStatus?: string;
+  pickerStatus?: string;
+  sourcePath?: string;
+  theme?: import("../lib/theme").Theme;
+} = { sourceMode: "file" };
+const stored = state as Record<string, unknown>;
+let themeUpdated: (event: { theme: object }) => void;
 const browserPalette = {
   colors: {
     ntp_background: "#111318",
@@ -11,21 +20,25 @@ const browserPalette = {
   },
   properties: { color_scheme: "dark" },
 };
-let receive;
-let control;
-let disconnected;
-const commands = [];
-const changeListeners = [];
+let receive: (message: object) => void;
+let control: (message: object, sender: object) => unknown;
+let disconnected: () => void;
+const commands: object[] = [];
+type ChangeListener = (
+  changes: Record<string, { newValue: unknown }>,
+  area: string,
+) => void;
+const changeListeners: ChangeListener[] = [];
 const port = {
   disconnect: () => disconnected(),
-  postMessage: (command) => commands.push(command),
+  postMessage: (command: object) => commands.push(command),
   onMessage: {
-    addListener: (listener) => {
+    addListener: (listener: typeof receive) => {
       receive = listener;
     },
   },
   onDisconnect: {
-    addListener: (listener) => {
+    addListener: (listener: typeof disconnected) => {
       disconnected = listener;
     },
   },
@@ -35,7 +48,7 @@ mock.module("wxt/browser", () => ({
     theme: {
       getCurrent: async () => browserPalette,
       onUpdated: {
-        addListener: (listener) => {
+        addListener: (listener: typeof themeUpdated) => {
           themeUpdated = listener;
         },
       },
@@ -44,7 +57,7 @@ mock.module("wxt/browser", () => ({
       id: "duxreader-test",
       connectNative: () => port,
       onMessage: {
-        addListener: (listener) => {
+        addListener: (listener: typeof control) => {
           control = listener;
         },
       },
@@ -52,29 +65,36 @@ mock.module("wxt/browser", () => ({
     storage: {
       local: {
         get: async () => ({ ...state }),
-        remove: async (keys) => {
-          const changes = {};
+        remove: async (keys: string[]) => {
+          const changes: Record<string, { newValue: unknown }> = {};
           for (const key of keys) {
-            delete state[key];
+            delete stored[key];
             changes[key] = { newValue: undefined };
           }
           for (const listener of changeListeners) listener(changes, "local");
         },
-        set: async (values) => {
-          const changes = {};
+        set: async (values: Record<string, unknown>) => {
+          const changes: Record<string, { newValue: unknown }> = {};
           for (const [key, value] of Object.entries(values)) {
-            if (state[key] !== value) changes[key] = { newValue: value };
+            if (stored[key] !== value) changes[key] = { newValue: value };
           }
           Object.assign(state, values);
           for (const listener of changeListeners) listener(changes, "local");
         },
       },
-      onChanged: { addListener: (listener) => changeListeners.push(listener) },
+      onChanged: {
+        addListener: (listener: ChangeListener) =>
+          changeListeners.push(listener),
+      },
     },
     alarms: { create: async () => {}, onAlarm: { addListener: () => {} } },
   },
 }));
-globalThis.defineBackground = (callback) => callback();
+(
+  globalThis as typeof globalThis & {
+    defineBackground: (callback: () => void) => void;
+  }
+).defineBackground = (callback) => callback();
 const settle = async () => {
   for (let i = 0; i < 8; i++) await Promise.resolve();
 };
@@ -117,7 +137,7 @@ test("Pywalfox browser themes update pages without a native host and file mode s
   await browser.storage.local.set({ sourceMode: "browser" });
   await settle();
   expect(state.bridgeStatus).toBe("following-browser");
-  expect(state.theme.colors).toEqual({
+  expect(state.theme!.colors).toEqual({
     background: "#111318",
     surface: "#1d2024",
     foreground: "#e1e2e9",
@@ -131,7 +151,7 @@ test("Pywalfox browser themes update pages without a native host and file mode s
     },
   });
   await settle();
-  expect(state.theme.colors.accent).toBe("#ff0000");
+  expect(state.theme!.colors.accent).toBe("#ff0000");
   expect(commands.length).toBe(count);
   themeUpdated({ theme: {} });
   await settle();

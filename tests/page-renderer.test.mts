@@ -71,17 +71,17 @@ test("desktop color mapping uses exact palette endpoints", () => {
     accent: "#a0cf93",
   };
   const palette = { colors };
-  expect(mapDesktopColor(parseColor("#fff"), "background", palette)).toEqual(
-    parseColor(colors.background),
+  expect(mapDesktopColor(parseColor("#fff")!, "background", palette)).toEqual(
+    parseColor(colors.background)!,
   );
-  expect(mapDesktopColor(parseColor("#eee"), "background", palette)).toEqual(
-    parseColor(colors.surface),
+  expect(mapDesktopColor(parseColor("#eee")!, "background", palette)).toEqual(
+    parseColor(colors.surface)!,
   );
-  expect(mapDesktopColor(parseColor("#111"), "text", palette)).toEqual(
-    parseColor(colors.foreground),
+  expect(mapDesktopColor(parseColor("#111")!, "text", palette)).toEqual(
+    parseColor(colors.foreground)!,
   );
-  expect(mapDesktopColor(parseColor("#2563eb"), "text", palette)).toEqual(
-    parseColor(colors.accent),
+  expect(mapDesktopColor(parseColor("#2563eb")!, "text", palette)).toEqual(
+    parseColor(colors.accent)!,
   );
   expect(onAccent(colors.background, colors.foreground, colors.accent)).toBe(
     colors.background,

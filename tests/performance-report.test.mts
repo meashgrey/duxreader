@@ -1,9 +1,10 @@
 import { expect, test } from "bun:test";
 import {
   median,
+  type SummaryEntry,
   percentile,
   regressions,
-} from "../scripts/lib/performance-report.mjs";
+} from "../scripts/lib/performance-report.mts";
 
 test("performance medians and percentiles preserve slow samples", () => {
   expect(median([80, 10, 20])).toBe(20);
@@ -12,7 +13,7 @@ test("performance medians and percentiles preserve slow samples", () => {
   expect(percentile([], 0.95)).toBeNull();
 });
 test("performance gates require both relative and absolute regressions", () => {
-  const report = (values) => ({
+  const report = (values: Partial<SummaryEntry>) => ({
     summary: { "input/enabled/typing": { runs: 3, ...values } },
   });
   const baseline = report({
@@ -41,7 +42,7 @@ test("performance gates require both relative and absolute regressions", () => {
   ).toHaveLength(1);
 });
 test("RAF phase changes are diagnostic while native delay and focus costs gate regressions", () => {
-  const report = (values) => ({
+  const report = (values: Partial<SummaryEntry>) => ({
     summary: { "editor/enabled/typing": { runs: 3, ...values } },
   });
   expect(

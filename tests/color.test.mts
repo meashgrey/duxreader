@@ -33,8 +33,8 @@ test("Oklab and wide-gamut colors can be classified without canvas pixel access"
   });
   expect(parseColor("oklch(0% 0 90)")).toEqual({ r: 0, g: 0, b: 0, a: 1 });
   expect(parseColor("oklab(0.5 0 0)")).toEqual({ r: 99, g: 99, b: 99, a: 1 });
-  expect(neutral(parseColor("oklch(90% .01 120)"))).toBe(true);
-  expect(neutral(parseColor("oklch(60% .2 30)"))).toBe(false);
+  expect(neutral(parseColor("oklch(90% .01 120)")!)).toBe(true);
+  expect(neutral(parseColor("oklch(60% .2 30)")!)).toBe(false);
   expect(parseColor("color(display-p3 1 1 1)")).toEqual({
     r: 255,
     g: 255,
