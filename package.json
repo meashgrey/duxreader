@@ -33,7 +33,8 @@
     "vimium:build": "bun scripts/build-vimium.mts",
     "assets:build": "bun run engine:build && bun run vimium:build",
     "test:sites": "bun scripts/test-sites.mts",
-    "test:vimium": "bun scripts/test-vimium.mts"
+    "test:vimium": "bun scripts/test-vimium.mts",
+    "test:preferences": "bun scripts/test-preferences.mts"
   },
   "dependencies": {
     "@lit/react": "1.0.8",

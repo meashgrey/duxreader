@@ -145,7 +145,8 @@ try {
     const hidden = await page.evaluate(() => {
       for (const host of document.querySelectorAll("div.vimium-reset")) {
         const frame = host.shadowRoot?.querySelector("iframe.vomnibar-frame");
-        if (frame) return frame.classList.contains("vimium-ui-component-hidden");
+        if (frame)
+          return frame.classList.contains("vimium-ui-component-hidden");
       }
       return false;
     });
@@ -159,7 +160,9 @@ try {
   await page.keyboard.press("?");
   const help = await (async () => {
     for (let i = 0; i < 60; i++) {
-      const frame = page.frames().find((item) => item.url().includes("/help.html"));
+      const frame = page
+        .frames()
+        .find((item) => item.url().includes("/help.html"));
       if (frame) return frame;
       await page.waitForTimeout(100);
     }
@@ -185,7 +188,9 @@ try {
   await page.keyboard.press("/");
   const hud = await (async () => {
     for (let i = 0; i < 60; i++) {
-      const frame = page.frames().find((item) => item.url().includes("/hud.html"));
+      const frame = page
+        .frames()
+        .find((item) => item.url().includes("/hud.html"));
       if (frame) return frame;
       await page.waitForTimeout(100);
     }
@@ -199,7 +204,8 @@ try {
     .filter({ hasText: "Match" })
     .waitFor({ timeout: 10000 });
   const hudColors = await hud.evaluate(() => ({
-    background: getComputedStyle(document.querySelector(".hud")!).backgroundColor,
+    background: getComputedStyle(document.querySelector(".hud")!)
+      .backgroundColor,
     count: document.querySelector(".hud-match-count")?.textContent,
   }));
   assert.equal(hudColors.background, rgb(colors.surface));
@@ -213,8 +219,7 @@ try {
     waitUntil: "domcontentloaded",
   });
   await options.waitForFunction(
-    () =>
-      getComputedStyle(document.body).backgroundColor === "rgb(17, 19, 24)",
+    () => getComputedStyle(document.body).backgroundColor === "rgb(17, 19, 24)",
     undefined,
     { timeout: 10000 },
   );

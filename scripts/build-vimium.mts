@@ -91,7 +91,10 @@ const background = await Bun.build({
             );
             // Upstream's background lives in background_scripts/, so its
             // action icons use "../icons". Duxreader bundles it at the root.
-            contents = contents.replaceAll('"../icons/action_', '"icons/action_');
+            contents = contents.replaceAll(
+              '"../icons/action_',
+              '"icons/action_',
+            );
             // Firefox MV2 exposes browser_action, not action. Keep the same
             // Vimium status icon on both manifest versions.
             contents = contents.replace(
@@ -124,11 +127,45 @@ const background = await Bun.build({
 });
 if (!background.success)
   throw new AggregateError(background.logs, "Vimium background build failed");
-await Bun.write("lib/vimium/background.js", await background.outputs[0]!.text());
+await Bun.write(
+  "lib/vimium/background.js",
+  await background.outputs[0]!.text(),
+);
 
 // Copy the upstream extension pages, assets, and styles that remain part of
 // Vimium (options, command listing, search completion, favicon and icons).
 await cp(resolve(root, "pages"), "public/pages", { recursive: true });
+// Keep the upstream options controller and field contract; Duxreader owns
+// the preference page's layout, labels, and Material 3 presentation.
+await cp("lib/preferences/options.html", "public/pages/options.html");
+await cp("lib/preferences/style.css", "public/vimium/preferences.css");
+// Public pages are copied outside Vite's module graph. Bundle their imports:
+// raw upstream scripts reference lib/ and background_scripts/ directories
+// which do not exist in the packaged extension.
+for (const page of ["options", "command_listing", "doc_search_completion"]) {
+  const result = await Bun.build({
+    entrypoints: [resolve(root, `pages/${page}.js`)],
+    target: "browser",
+    format: "esm",
+  });
+  if (!result.success)
+    throw new AggregateError(result.logs, `Vimium ${page} build failed`);
+  let code = await result.outputs[0]!.text();
+  for (const [upstream, replacement] of pageReplacements)
+    code = code.replaceAll(upstream, replacement);
+  await Bun.write(`public/pages/${page}.js`, code);
+}
+const preferences = await Bun.build({
+  entrypoints: ["lib/preferences/main.ts"],
+  target: "browser",
+  format: "esm",
+});
+if (!preferences.success)
+  throw new AggregateError(preferences.logs, "Preferences build failed");
+await Bun.write(
+  "public/vimium/preferences.js",
+  await preferences.outputs[0]!.text(),
+);
 await cp(resolve(root, "icons"), "public/icons", { recursive: true });
 await mkdir("public/content_scripts", { recursive: true });
 await cp(
@@ -142,10 +179,7 @@ await cp(
 await mkdir("public/resources", { recursive: true });
 await cp(resolve(root, "resources/tlds.txt"), "public/resources/tlds.txt");
 await mkdir("public/third-party", { recursive: true });
-await cp(
-  resolve(root, "MIT-LICENSE.txt"),
-  "public/third-party/vimium-MIT.txt",
-);
+await cp(resolve(root, "MIT-LICENSE.txt"), "public/third-party/vimium-MIT.txt");
 
 // Upstream pages that remain (options, command listing, search completion)
 // receive the same palette through a shared page theme. The Firefox alias has
@@ -186,7 +220,14 @@ for await (const file of new Bun.Glob("*.html").scan("public/pages")) {
     "<head>",
     '<head>\n    <script type="module" src="../vimium/firefox-api.js"></script>',
   );
-  html = html.replace("</head>", `    ${headInjection}\n  </head>`);
+  const preferencesStyle =
+    file === "options.html"
+      ? '<link rel="stylesheet" href="../vimium/preferences.css">'
+      : "";
+  html = html.replace(
+    "</head>",
+    `    ${headInjection}\n    ${preferencesStyle}\n  </head>`,
+  );
   await Bun.write(path, html);
 }
 

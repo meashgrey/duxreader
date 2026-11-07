@@ -1,0 +1,438 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Duxreader · Preferences</title>
+    <script type="module" src="options.js"></script>
+    <script type="module" src="../vimium/preferences.js"></script>
+  </head>
+  <body class="vimium-body preferences">
+    <a class="skip-link" href="#appearance">Skip to settings</a>
+    <div id="wrapper" class="preferences-layout">
+      <aside class="preferences-sidebar">
+        <a class="brand" href="#appearance"
+          ><span class="brand-mark" aria-hidden="true">D</span>Duxreader</a
+        >
+        <div class="nav-label">Preferences</div>
+        <nav aria-label="Settings sections">
+          <a href="#appearance" aria-current="location"
+            ><span aria-hidden="true">◐</span>Appearance</a
+          >
+          <a href="#keyboard"><span aria-hidden="true">⌘</span>Keyboard</a>
+          <a href="#navigation"><span aria-hidden="true">↗</span>Navigation</a>
+          <a href="#sites"><span aria-hidden="true">◎</span>Site rules</a>
+          <a href="#backup"
+            ><span aria-hidden="true">↧</span>Backup &amp; restore</a
+          >
+        </nav>
+        <a class="commands-link" href="command_listing.html" target="_blank"
+          >Command reference ↗</a
+        >
+      </aside>
+      <main class="preferences-main">
+        <header class="page-header">
+          <p class="eyebrow">Duxreader</p>
+          <h1>Preferences</h1>
+          <p>Appearance and keyboard controls.</p>
+        </header>
+        <input type="hidden" name="settingsVersion" />
+        <section
+          class="settings-section"
+          id="appearance"
+          aria-labelledby="appearance-heading"
+        >
+          <h2 id="appearance-heading">Appearance</h2>
+          <div class="settings-card">
+            <div class="setting-row">
+              <div>
+                <label for="ui-font">Interface font</label>
+                <p>Applies to Duxreader and its Vimium overlays.</p>
+              </div>
+              <select id="ui-font">
+                <option value="system">System UI</option>
+              </select>
+            </div>
+            <div class="appearance-preview" aria-label="Font and theme preview">
+              <span class="preview-badge">Preview</span
+              ><span class="preview-title">Duxreader</span
+              ><span class="preview-caption"
+                >The quick brown fox jumps over the lazy dog.</span
+              >
+              <div class="palette-swatches" aria-label="Current palette">
+                <span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+            <div class="setting-row">
+              <span class="supporting-text">Follows your desktop theme</span
+              ><span id="font-status" role="status"
+                >Font changes save automatically</span
+              >
+            </div>
+          </div>
+          <div class="settings-card field-card">
+            <div class="field-heading">
+              <label for="hint-css">Custom Vimium CSS</label
+              ><a
+                class="reference-link"
+                href="https://github.com/philc/vimium/wiki/Customizing-Link-Hints"
+                target="_blank"
+                rel="noreferrer"
+                >Reference ↗</a
+              >
+            </div>
+            <div>
+              <textarea
+                id="hint-css"
+                name="userDefinedLinkHintCss"
+                class="code"
+                spellcheck="false"
+                rows="7"
+              ></textarea>
+              <div class="example reset-link"><a href="#">Reset</a></div>
+            </div>
+            <p class="supporting-text">
+              Styles for link hints, the Vomnibar, help, exclusions and HUD.
+            </p>
+          </div>
+          <div class="settings-card">
+            <label class="setting-row toggle-row"
+              ><span>Hide HUD in insert mode</span
+              ><input name="hideHud" type="checkbox" role="switch" /></label
+            ><label class="setting-row toggle-row"
+              ><span>Hide update notifications</span
+              ><input
+                name="hideUpdateNotifications"
+                type="checkbox"
+                role="switch"
+            /></label>
+          </div>
+        </section>
+        <section
+          class="settings-section"
+          id="keyboard"
+          aria-labelledby="keyboard-heading"
+        >
+          <h2 id="keyboard-heading">Keyboard</h2>
+          <div class="settings-card field-card">
+            <div class="field-heading">
+              <label for="key-mappings">Custom key mappings</label
+              ><a
+                class="reference-link"
+                href="command_listing.html"
+                target="_blank"
+                >All commands ↗</a
+              >
+            </div>
+            <textarea
+              id="key-mappings"
+              name="keyMappings"
+              spellcheck="false"
+              rows="7"
+            ></textarea>
+            <details class="field-help">
+              <summary>Mapping syntax</summary>
+              <pre id="exampleKeyMapping">
+map j scrollDown
+map z2 setZoom level=2
+unmap j
+unmapAll
+" this is a comment
+# this is also a comment</pre>
+            </details>
+          </div>
+          <div class="settings-card">
+            <label class="setting-row toggle-row"
+              ><span
+                >Ignore keyboard layout<small
+                  >Use the en-US QWERTY layout.</small
+                ></span
+              ><input name="ignoreKeyboardLayout" type="checkbox" role="switch"
+            /></label>
+          </div>
+          <h3>Link hints</h3>
+          <div class="settings-card">
+            <div class="setting-row" id="link-hint-characters-container">
+              <label for="hint-characters">Hint characters</label>
+              <div class="link-hint-characters-field">
+                <input
+                  id="hint-characters"
+                  name="linkHintCharacters"
+                  type="text"
+                />
+                <div class="example reset-link"><a href="#">Reset</a></div>
+              </div>
+            </div>
+            <div class="setting-row" id="link-hint-numbers-container">
+              <label for="hint-numbers">Hint numbers</label>
+              <div class="link-hint-characters-field">
+                <input id="hint-numbers" name="linkHintNumbers" type="text" />
+                <div class="example reset-link"><a href="#">Reset</a></div>
+              </div>
+            </div>
+            <label class="setting-row toggle-row"
+              ><span
+                >Filter hints by link text<small
+                  >Type a link's name to select it.</small
+                ></span
+              ><input name="filterLinkHints" type="checkbox" role="switch"
+            /></label>
+            <div id="wait-for-enter">
+              <label class="setting-row toggle-row"
+                ><span>Require Enter for filtered hints</span
+                ><input
+                  name="waitForEnterForFilteredHints"
+                  type="checkbox"
+                  role="switch"
+              /></label>
+            </div>
+          </div>
+        </section>
+        <section
+          class="settings-section"
+          id="navigation"
+          aria-labelledby="navigation-heading"
+        >
+          <h2 id="navigation-heading">Navigation</h2>
+          <div class="settings-card field-card">
+            <label for="search-engines">Custom search engines</label
+            ><textarea
+              id="search-engines"
+              name="searchEngines"
+              spellcheck="false"
+              rows="5"
+            ></textarea>
+            <details class="field-help">
+              <summary>Search syntax</summary>
+              <pre>
+a: https://example.com/?q=%s Description
+" this is a comment
+# this is also a comment</pre>
+              <p>
+                <code>%s</code> is replaced by your search terms.
+                <a href="doc_search_completion.html" target="_blank"
+                  >Search completion ↗</a
+                >
+              </p>
+            </details>
+          </div>
+          <h3>New tabs</h3>
+          <div class="settings-card" id="new-tab-url-container">
+            <label class="setting-row radio-row"
+              ><input
+                id="vimiumNewTabPage"
+                type="radio"
+                name="newTabDestination"
+                value="vimiumNewTabPage"
+              /><span>Vimium blank page</span></label
+            >
+            <div id="openVomnibarContainer">
+              <label class="setting-row toggle-row nested-row"
+                ><span>Open Vomnibar on load</span
+                ><input
+                  id="openVomnibarOnNewTabPage"
+                  type="checkbox"
+                  name="openVomnibarOnNewTabPage"
+                  role="switch"
+              /></label>
+            </div>
+            <label class="setting-row radio-row"
+              ><input
+                id="browserNewTabPage"
+                type="radio"
+                name="newTabDestination"
+                value="browserNewTabPage"
+              /><span>Browser default</span></label
+            >
+            <label class="setting-row radio-row"
+              ><input
+                id="customUrl"
+                type="radio"
+                name="newTabDestination"
+                value="customUrl"
+              /><span>Custom URL</span></label
+            >
+            <div class="custom-url-field">
+              <input
+                type="text"
+                name="newTabCustomUrl"
+                aria-label="Custom new tab URL"
+                placeholder="https://"
+                style="display: none"
+              />
+            </div>
+          </div>
+          <p class="section-note">
+            Used by Vimium's create-new-tab command.
+            <a
+              href="https://github.com/philc/vimium/blob/master/README.md#how-to-allow-vimium-to-work-on-new-tab-pages"
+              target="_blank"
+              rel="noreferrer"
+              >New tab setup ↗</a
+            >
+          </p>
+          <h3>Page behavior</h3>
+          <div class="settings-card">
+            <div class="setting-row">
+              <label for="scroll-step"
+                >Scroll step<small>Distance for j / k / h / l.</small></label
+              >
+              <div class="input-unit">
+                <input
+                  id="scroll-step"
+                  name="scrollStepSize"
+                  type="number"
+                /><span>px</span>
+              </div>
+            </div>
+            <label class="setting-row toggle-row"
+              ><span>Smooth scrolling</span
+              ><input
+                name="smoothScroll"
+                type="checkbox"
+                role="switch" /></label
+            ><label class="setting-row toggle-row"
+              ><span>Prevent pages from stealing focus</span
+              ><input
+                name="grabBackFocus"
+                type="checkbox"
+                role="switch" /></label
+            ><label class="setting-row toggle-row"
+              ><span
+                >Use regular expressions in Find<small
+                  >Use <code>\R</code> to switch to plain text.</small
+                ></span
+              ><input name="regexFindMode" type="checkbox" role="switch"
+            /></label>
+          </div>
+          <div class="settings-card field-card">
+            <label for="previous-patterns">Previous-page patterns</label>
+            <div>
+              <input
+                id="previous-patterns"
+                name="previousPatterns"
+                type="text"
+              />
+              <div class="example reset-link"><a href="#">Reset</a></div>
+            </div>
+            <label for="next-patterns">Next-page patterns</label>
+            <div>
+              <input id="next-patterns" name="nextPatterns" type="text" />
+              <div class="example reset-link"><a href="#">Reset</a></div>
+            </div>
+          </div>
+        </section>
+        <section
+          class="settings-section"
+          id="sites"
+          aria-labelledby="sites-heading"
+        >
+          <h2 id="sites-heading">Site rules</h2>
+          <p class="section-note">
+            Choose where Vimium shortcuts are disabled. These rules affect
+            keyboard navigation.
+          </p>
+          <div class="settings-card field-card">
+            <div id="exclusion-scroll-box">
+              <table id="exclusion-rules">
+                <tr>
+                  <th scope="col">URL pattern</th>
+                  <th scope="col">Excluded keys</th>
+                  <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+              </table>
+            </div>
+            <button
+              id="exclusion-add-button"
+              class="tonal-button"
+              type="button"
+            >
+              Add rule
+            </button>
+            <details class="field-help">
+              <summary>Pattern syntax</summary>
+              <p>
+                Use <code>*</code> to match any characters. Leave keys empty to
+                disable all Vimium keys on a matching URL.
+              </p>
+            </details>
+          </div>
+        </section>
+        <section
+          class="settings-section"
+          id="backup"
+          aria-labelledby="backup-heading"
+        >
+          <h2 id="backup-heading">Backup &amp; restore</h2>
+          <div class="settings-card">
+            <div class="setting-row">
+              <div>
+                <span class="setting-label">Export settings</span>
+                <p>Save a copy of your Vimium configuration.</p>
+              </div>
+              <a
+                id="download-backup"
+                class="tonal-button"
+                download="vimium-options.json"
+                href="#"
+                >Download</a
+              >
+            </div>
+            <div class="setting-row restore-row">
+              <label for="upload-backup"
+                >Restore settings<small
+                  >Import a Vimium JSON backup.</small
+                ></label
+              ><input id="upload-backup" type="file" accept=".json" />
+            </div>
+          </div>
+        </section>
+        <footer class="save-bar">
+          <div id="footer-content">
+            <div id="footer-help-text">
+              <span id="save-state" role="status">All changes saved</span
+              ><small
+                ><strong id="shortcut-to-save-all"></strong> to save ·
+                <strong>?</strong> for help</small
+              >
+            </div>
+            <div id="footer-save-options">
+              <button id="save" type="button" disabled>No changes</button>
+            </div>
+          </div>
+        </footer>
+      </main>
+    </div>
+    <template id="exclusion-rule-template"
+      ><tr class="rule">
+        <td>
+          <input
+            type="text"
+            name="pattern"
+            spellcheck="false"
+            placeholder="URL pattern"
+            aria-label="URL pattern"
+          />
+        </td>
+        <td>
+          <input
+            type="text"
+            name="passKeys"
+            spellcheck="false"
+            placeholder="All"
+            aria-label="Keys to exclude"
+          />
+        </td>
+        <td>
+          <button type="button" class="remove" aria-label="Remove rule">
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12Z"
+              />
+            </svg>
+          </button>
+        </td></tr
+    ></template>
+  </body>
+</html>

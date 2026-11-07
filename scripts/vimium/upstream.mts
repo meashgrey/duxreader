@@ -32,6 +32,8 @@ export async function verifyUpstream(root = defaultRoot) {
   const manifest = await Bun.file(resolve(root, "manifest.json")).text();
   const version = /"version"\s*:\s*"([^"]+)"/.exec(manifest)?.[1];
   if (version !== metadata.version)
-    throw new Error("Vimium version does not match scripts/vimium/upstream.json");
+    throw new Error(
+      "Vimium version does not match scripts/vimium/upstream.json",
+    );
   return { ...metadata, root };
 }

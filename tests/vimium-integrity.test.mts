@@ -4,12 +4,7 @@ import { VIMIUM_VERSION } from "../lib/vimium/version.ts";
 
 test("Vimium uses the clean, pinned upstream submodule", async () => {
   const upstream = await verifyUpstream();
-  const entry = Bun.spawnSync([
-    "git",
-    "ls-files",
-    "--stage",
-    "vendor/vimium",
-  ]);
+  const entry = Bun.spawnSync(["git", "ls-files", "--stage", "vendor/vimium"]);
   expect(entry.exitCode).toBe(0);
   expect(entry.stdout.toString().trim()).toBe(
     `160000 ${upstream.revision} 0\tvendor/vimium`,
@@ -23,7 +18,7 @@ test("Vimium uses the clean, pinned upstream submodule", async () => {
 test("generated Vimium content scripts use the React overlay pages", async () => {
   const content = await Bun.file("public/vimium/content.js").text();
   expect(content).toContain('this.vomnibarUI.load("vomnibar.html"');
-  expect(content).toContain('hud.html${queryString}');
+  expect(content).toContain("hud.html${queryString}");
   expect(content).toContain('this.helpUI.load("help.html"');
   expect(content).not.toContain("pages/vomnibar_page.html");
   expect(content).not.toContain("pages/hud_page.html");

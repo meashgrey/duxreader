@@ -51,7 +51,9 @@ export default {
             bodyBackground: getComputedStyle(document.body).backgroundColor,
             svg: paint(svg),
             nodes: [
-              ...svg.querySelectorAll(".node rect, .node polygon, .node circle"),
+              ...svg.querySelectorAll(
+                ".node rect, .node polygon, .node circle",
+              ),
             ]
               .slice(0, 6)
               .map(paint),
@@ -89,8 +91,16 @@ export default {
     await expect.poll(snapshot, { timeout: 30000 }).not.toBeNull();
     const changed = (await snapshot())!;
     await section.screenshot({ path: resolve(output, "changed-palette.png") });
-    assert.equal(changed.themed, false, "Palette updates must not enter the frame");
-    assert.deepEqual(changed, before, "Palette updates must not recolor Mermaid");
+    assert.equal(
+      changed.themed,
+      false,
+      "Palette updates must not enter the frame",
+    );
+    assert.deepEqual(
+      changed,
+      before,
+      "Palette updates must not recolor Mermaid",
+    );
     return { before, after, changed };
   },
 } satisfies SiteCase;

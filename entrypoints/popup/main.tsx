@@ -274,7 +274,7 @@ function App() {
             <legend className="visually-hidden">Color source</legend>
             {(
               [
-                ["browser", "Pywalfox"],
+                ["browser", "Browser theme"],
                 ["file", "Theme file"],
               ] as const
             ).map(([mode, label]) => (
@@ -309,7 +309,7 @@ function App() {
               <h3>Browser theme</h3>
               <p>
                 {status === "waiting-browser"
-                  ? "Apply colors in Pywalfox"
+                  ? "Waiting for a browser theme"
                   : "Follows your browser"}
               </p>
             </div>

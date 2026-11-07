@@ -43,7 +43,11 @@ export default defineConfig({
       "webNavigation",
       "search",
       ...(browser === "firefox"
-        ? ["theme" as const, "clipboardRead" as const, "clipboardWrite" as const]
+        ? [
+            "theme" as const,
+            "clipboardRead" as const,
+            "clipboardWrite" as const,
+          ]
         : ["favicon" as const]),
     ],
     options_ui: {
