@@ -1,6 +1,15 @@
 # duxreader
 
+<p align="center" name="markdown">
+  <img src="public/duxlogo.svg" alt="duxlogo" width="100" />
+</p>
+
 Bring your desktop palette to web pages. Built with WXT, React, Material Design 3, and a Rust file-watching bridge.
+
+|                             Purple                              |                            Pink                             |
+| :-------------------------------------------------------------: | :---------------------------------------------------------: |
+|  ![GitHub profile in purple](assets/github-profile-purple.png)  |  ![GitHub profile in pink](assets/github-profile-pink.png)  |
+| ![Vimium Vomnibar in purple](assets/vimium-vomnibar-purple.png) | ![Vimium Vomnibar in pink](assets/vimium-vomnibar-pink.png) |
 
 ## Development
 
