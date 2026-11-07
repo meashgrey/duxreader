@@ -144,7 +144,11 @@ await cp("lib/preferences/style.css", "public/vimium/preferences.css");
 // which do not exist in the packaged extension.
 for (const page of ["options", "command_listing", "doc_search_completion"]) {
   const result = await Bun.build({
-    entrypoints: [resolve(root, `pages/${page}.js`)],
+    entrypoints: [
+      page === "options"
+        ? resolve("lib/preferences/controller.ts")
+        : resolve(root, `pages/${page}.js`),
+    ],
     target: "browser",
     format: "esm",
   });
@@ -156,7 +160,9 @@ for (const page of ["options", "command_listing", "doc_search_completion"]) {
   await Bun.write(`public/pages/${page}.js`, code);
 }
 const preferences = await Bun.build({
-  entrypoints: ["lib/preferences/main.ts"],
+  entrypoints: ["lib/preferences/main.tsx"],
+  define: { "process.env.NODE_ENV": JSON.stringify("production") },
+  minify: true,
   target: "browser",
   format: "esm",
 });
