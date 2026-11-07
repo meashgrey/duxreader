@@ -2,6 +2,7 @@ import { cp, mkdir, readFile, rm } from "node:fs/promises";
 import { resolve } from "node:path";
 
 import { verifyUpstream } from "./vimium/upstream.mts";
+import { buildIcons } from "./vimium/icons.mts";
 
 // These classic content scripts share one global lexical scope and must keep
 // upstream's load order. Keep the list in sync with vendor/vimium/manifest.json.
@@ -172,7 +173,7 @@ await Bun.write(
   "public/vimium/preferences.js",
   await preferences.outputs[0]!.text(),
 );
-await cp(resolve(root, "icons"), "public/icons", { recursive: true });
+await buildIcons();
 await mkdir("public/content_scripts", { recursive: true });
 await cp(
   resolve(root, "content_scripts/vimium.css"),

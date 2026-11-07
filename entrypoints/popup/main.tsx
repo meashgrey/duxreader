@@ -207,9 +207,7 @@ function App() {
       <header className="app-bar">
         <div className="brand">
           <span className="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M6 4h6a8 8 0 0 1 0 16H6V4Zm4 4v8h2a4 4 0 0 0 0-8h-2Z" />
-            </svg>
+            <img src="/duxlogo.svg" alt="" />
           </span>
           <h1>Duxreader</h1>
         </div>

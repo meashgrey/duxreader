@@ -35,7 +35,7 @@ function Sidebar() {
     <aside className="preferences-sidebar">
       <a className="brand" href="#appearance">
         <span className="brand-mark" aria-hidden="true">
-          D
+          <img src="../duxlogo.svg" alt="" />
         </span>
         Duxreader
       </a>

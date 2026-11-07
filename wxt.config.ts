@@ -27,6 +27,16 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: "Duxreader",
     description: "Bring your desktop palette to the web.",
+    icons: {
+      16: "icons/icon16.png",
+      32: "icons/icon32.png",
+      48: "icons/icon48.png",
+      96: "icons/icon96.png",
+      128: "icons/icon128.png",
+    },
+    [browser === "firefox" ? "browser_action" : "action"]: {
+      default_icon: { 16: "icons/icon16.png", 32: "icons/icon32.png" },
+    },
     host_permissions: ["<all_urls>"],
     // Vimium's background and content scripts use these browser APIs. The
     // favicon permission is Chrome-only; Firefox adds clipboard permissions.
