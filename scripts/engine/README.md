@@ -38,6 +38,11 @@ page-specific modules such as `github/repository.mts` and `github/search.mts`.
 Rules can also declare optional pathname patterns. The registry matches them once per palette application.
 Keep shared component rules in `semantic-colors.mts`.
 
+GitHub renders Mermaid diagrams in a cross-origin `viewscreen.githubusercontent.com`
+frame that already follows GitHub's own color mode. `lib/native-frames.ts` excludes
+that frame from theming, so diagrams keep their native colors while the rest of the
+page follows the desktop palette.
+
 Run all registered live-site cases with the production Chromium extension:
 
 ```sh
@@ -51,9 +56,10 @@ bun run test:sites --site github --url https://github.com/OWNER/REPO
 ```
 
 Cases in `tests/sites/cases/**/*.site.mts` are discovered automatically,
-including nested site folders such as `cases/github/`. GitHub repository and search cases check
-language colors in legends, result footers, and filter facets, NixOS Wiki checks the document surface, and MDN checks document
-text and theming. Each case gets an isolated browser profile. Failures do not skip
+including nested site folders such as `cases/github/`. GitHub cases cover header
+mappings, repository and profile surfaces, language colors in legends and filter
+facets, search results, and embedded Mermaid diagrams. NixOS Wiki checks the document
+surface, and MDN checks document text and theming. Each case gets an isolated browser profile. Failures do not skip
 later cases; the command exits unsuccessfully if any case fails. Screenshots and
 per-site JSON reports are written under `.temp/sites`, with an aggregate report.
 These tests require network access and Chromium (`nix develop path:.` on NixOS).

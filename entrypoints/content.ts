@@ -4,6 +4,7 @@ import {
 } from "../lib/stylesheet-source";
 import { browser } from "wxt/browser";
 import { ENABLED_KEY, isTheme, THEME_KEY } from "../lib/theme";
+import { isNativeFrame } from "../lib/native-frames";
 import { createPageRenderer } from "../lib/page-renderer";
 
 export default defineContentScript({
@@ -11,6 +12,7 @@ export default defineContentScript({
   allFrames: true,
   runAt: "document_idle",
   async main(ctx) {
+    if (isNativeFrame(new URL(location.href))) return;
     const renderer = createPageRenderer(document, {
       async readCSS(url) {
         const result: StylesheetResult = await browser.runtime.sendMessage({
