@@ -46,6 +46,7 @@ bun run test:sites
 bun run test:sites --list
 bun run test:sites --site github
 bun run test:sites --site github-search
+bun run test:sites --site github-header
 bun run test:sites --site github --url https://github.com/OWNER/REPO
 ```
 
@@ -57,3 +58,26 @@ later cases; the command exits unsuccessfully if any case fails. Screenshots and
 per-site JSON reports are written under `.temp/sites`, with an aggregate report.
 These tests require network access and Chromium (`nix develop path:.` on NixOS).
 Live tests remain separate from deterministic CI fixtures.
+
+Site modules can also declare `colorMap` entries. Each entry has a CSS selector,
+a color property, and a `target` from `background`, `surface`, `foreground`, or
+`accent`. Raw colors and unsupported targets are rejected. For example:
+
+```ts
+{ selector: ".AppHeader", property: "background-color", target: "background" }
+```
+
+Mappings compile to CSS using the current palette, before user custom CSS, through
+the upstream override lifecycle. They follow palette updates and are removed when
+Duxreader is disabled. Selectors continue to match new elements and states natively.
+`github/header.mts` maps only header containers, preserving control backgrounds and
+semantic data colors. The `github-header` live case checks two distinct palettes;
+the browser fixtures also cover the authenticated AppHeader structure.
+
+`mix: { with: "surface", weight: 25 }` blends 25% of the target role with the
+other theme role. Both endpoints must be palette roles and weights must be 0–100.
+This preserves contribution-calendar intensity without hard-coded green shades.
+`contrastAgainst: "accent"` chooses the highest-contrast color among the target,
+theme background, and theme foreground. It never introduces literal black/white.
+GitHub profile rules live in `github/profile.mts`; `test:sites --site github-profile`
+checks calendar levels, SVG paint, bar widths, and selected-year contrast.

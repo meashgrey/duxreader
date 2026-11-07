@@ -1,8 +1,10 @@
+import type { Theme } from "../../lib/theme";
 import type { Page } from "@playwright/test";
 export interface SiteContext {
   page: Page;
   output: string;
   setEnabled(enabled: boolean): Promise<void>;
+  setTheme(theme: Theme): Promise<void>;
 }
 export interface SiteCase {
   id: string;

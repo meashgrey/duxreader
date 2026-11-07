@@ -119,6 +119,14 @@ for (const site of selected) {
       await site.run({
         page,
         output: directory,
+        async setTheme(theme) {
+          await worker.evaluate(async (theme) => {
+            await (globalThis as unknown as WorkerAPI).chrome.storage.local.set(
+              { theme },
+            );
+          }, theme);
+          await page!.waitForTimeout(6000);
+        },
         async setEnabled(enabled) {
           await worker.evaluate(async (enabled) => {
             await (globalThis as unknown as WorkerAPI).chrome.storage.local.set(

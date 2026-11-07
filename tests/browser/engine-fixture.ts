@@ -1,3 +1,5 @@
+import { compileColorMaps } from "../../scripts/engine/color-map.mts";
+import { siteColorMaps } from "../../scripts/engine/sites/index.mts";
 import { createPageRenderer } from "../../lib/page-renderer";
 import { installEngineProxy } from "../../lib/engine/proxy-host";
 import { getPreservedInlineSelectors } from "../../scripts/engine/semantic-colors.mts";
@@ -34,6 +36,18 @@ const theme: Theme = {
     accent: "#a0cf93",
   },
 };
+function mappedTheme(value: Theme): Theme {
+  return {
+    ...value,
+    css: [
+      compileColorMaps(
+        siteColorMaps(new URL("https://github.com/meashgrey")),
+        value.colors,
+      ),
+      value.css,
+    ].join("\n"),
+  };
+}
 function generatedCSS() {
   return [...document.querySelectorAll<HTMLStyleElement>("style.darkreader")]
     .map((style) =>
@@ -51,7 +65,7 @@ async function run() {
   const inline = document.querySelector<HTMLElement>("#inline")!;
   const source = document.createElement("style");
   source.textContent = `
-    :root{--tone:#fff;--alias:var(--tone);--unused-size:20px;--future-color:#ddd}
+    :root{--bgColor-inset:#151b23;--tone:#fff;--alias:var(--tone);--unused-size:20px;--future-color:#ddd}
     .variable{background:var(--alias);color:#111}
     .surface{background:#eee;color:#111}
     .focus-card{background:#fff;color:#111}
@@ -59,8 +73,40 @@ async function run() {
     .focus-card:focus::before{content:"State";color:#111;background:#eee}
     .accent{color:#2563eb}
     .alpha{background:rgba(255,255,255,.4)}
+    .AppHeader,.AppHeader-globalBar,.AppHeader-localBar{background:#eee;color:#111}
+    .AppHeader button,.GlobalNav button{background:#eee;color:#111}
+    .GlobalNav,.unmapped-inset{background:var(--bgColor-inset);color:#111}
+    .ContributionCalendar-day{background:#40c463}
+    .js-year-link{background:#eee;color:#111}
+    .js-year-link.selected{background:#0969da;color:white}
   `;
   document.head.append(source);
+  const header = document.createElement("header");
+  header.className = "AppHeader";
+  header.innerHTML =
+    '<div class="AppHeader-globalBar"><button>Search</button></div><div class="AppHeader-localBar">Profile navigation</div>';
+  document.body.append(header);
+  const globalNav = document.createElement("header");
+  globalNav.className = "GlobalNav styles-module_gNfHta_appHeader";
+  globalNav.setAttribute("aria-label", "Global navigation menu");
+  globalNav.dataset.component = "Stack";
+  globalNav.innerHTML =
+    '<div data-component="Stack"><button>Search</button></div><nav aria-label="Repository">Repository navigation</nav>';
+  const inset = document.createElement("aside");
+  inset.className = "unmapped-inset";
+  document.body.append(globalNav, inset);
+  const profile = document.createElement("section");
+  profile.className = "js-yearly-contributions contribution-activity-listing";
+  profile.innerHTML =
+    [0, 1, 2, 3, 4]
+      .map(
+        (level) =>
+          `<div class="ContributionCalendar-day" data-level="${level}"></div>`,
+      )
+      .join("") +
+    '<svg class="js-activity-overview-graph" width="40" height="40" viewBox="0 0 40 40"><path class="js-highlight-blob" fill="#40c463" stroke="#40c463" opacity="0.5" d="M5 5 L35 5 L20 35 Z"></path><line class="activity-overview-axis" stroke="#40c463" x1="0" y1="20" x2="40" y2="20"></line><ellipse class="activity-overview-point" fill="white" stroke="#40c463" cx="20" cy="20" rx="3" ry="3"></ellipse></svg><div class="Progress" role="img"><span class="Progress-item" style="width:55%;background-color:#30a14e"></span></div><a class="js-year-link selected" aria-current="true">2026</a><a class="js-year-link">2025</a>';
+  document.body.append(profile);
+
   const area = document.createElement("section");
   area.innerHTML =
     '<div class="surface">Surface</div><div class="variable">Variables</div><button class="focus-card">Focus</button><a class="accent">Link</a><div class="alpha">Alpha</div><div data-duxreader-preserve style="background:white;color:black">Preserved inline</div>';
@@ -155,7 +201,7 @@ async function run() {
       return response.text();
     },
   });
-  renderer.apply(theme, true);
+  renderer.apply(mappedTheme(theme), true);
   await waitFor(
     () =>
       color(panel) === rgb(theme.colors.background) &&
@@ -231,6 +277,86 @@ async function run() {
   assert(
     color(dynamicSwatch) === "rgb(255, 0, 0)",
     "Data color updates retain source colors",
+  );
+  assert(
+    [
+      header,
+      ...header.querySelectorAll(".AppHeader-globalBar,.AppHeader-localBar"),
+    ].every((node) => color(node) === rgb(theme.colors.background)),
+    "GitHub header containers use the exact theme background",
+  );
+  assert(
+    color(header.querySelector("button")!) === rgb(theme.colors.surface),
+    "Header controls retain their surface colors",
+  );
+  assert(
+    color(globalNav) === rgb(theme.colors.background),
+    "Current GlobalNav background shorthand is overridden by the theme background",
+  );
+  assert(
+    color(inset) === rgb(theme.colors.surface),
+    "Shared bgColor-inset consumers keep their surface color",
+  );
+  assert(
+    color(globalNav.querySelector("button")!) === rgb(theme.colors.surface),
+    "GlobalNav controls are not flattened into the header background",
+  );
+  const levels = [...profile.querySelectorAll(".ContributionCalendar-day")].map(
+    (node) => color(node),
+  );
+  assert(
+    new Set(levels).size === 5,
+    "Contribution intensity retains five distinct theme shades",
+  );
+  assert(
+    levels[0] === rgb(theme.colors.surface) &&
+      levels[4] === rgb(theme.colors.accent),
+    "Calendar intensity uses only theme endpoints",
+  );
+  assert(
+    color(profile.querySelector(".js-highlight-blob")!, "fill") ===
+      rgb(theme.colors.accent),
+    "Radar fill uses theme accent",
+  );
+  assert(
+    color(profile.querySelector(".activity-overview-axis")!, "stroke") ===
+      rgb(theme.colors.accent),
+    "Radar axes use theme accent",
+  );
+  assert(
+    profile.querySelector(".js-highlight-blob")!.getAttribute("d") ===
+      "M5 5 L35 5 L20 35 Z",
+    "Radar geometry remains unchanged",
+  );
+  assert(
+    color(profile.querySelector(".Progress-item")!) ===
+      rgb(theme.colors.accent),
+    "Repository contribution bars use theme accent",
+  );
+  assert(
+    (profile.querySelector(".Progress-item") as HTMLElement).style.width ===
+      "55%",
+    "Contribution bar widths remain unchanged",
+  );
+  let selectedYear = profile.querySelector(".js-year-link.selected")!;
+  assert(
+    color(selectedYear, "color") === rgb(theme.colors.background),
+    "Selected-year text uses a contrasting dark palette color",
+  );
+  const beforeYearSelection = generatedCSS();
+  const nextYear = profile.querySelectorAll(".js-year-link")[1]!;
+  selectedYear.classList.remove("selected");
+  selectedYear.removeAttribute("aria-current");
+  nextYear.classList.add("selected");
+  nextYear.setAttribute("aria-current", "true");
+  selectedYear = nextYear;
+  assert(
+    color(selectedYear, "color") === rgb(theme.colors.background),
+    "Newly selected years immediately use contrasting theme text",
+  );
+  assert(
+    generatedCSS() === beforeYearSelection,
+    "Year selection does not regenerate mapped CSS",
   );
   const beforeFocus = generatedCSS();
   focus.focus();
@@ -317,7 +443,7 @@ async function run() {
     ...theme,
     colors: { ...theme.colors, surface: "#384532", accent: "#bbcdaa" },
   };
-  renderer.apply(replacement, true);
+  renderer.apply(mappedTheme(replacement), true);
   await waitFor(() => color(surface) === rgb(replacement.colors.surface));
   await waitFor(() => color(inline) === rgb(replacement.colors.surface));
   assert(
@@ -339,7 +465,7 @@ async function run() {
       accent: "#335588",
     },
   };
-  renderer.apply(light, true);
+  renderer.apply(mappedTheme(light), true);
   await waitFor(() => color(panel) === rgb(light.colors.background));
   assert(
     color(panel, "color") === rgb(light.colors.foreground),
@@ -349,11 +475,28 @@ async function run() {
     color(dynamicSwatch) === "rgb(255, 0, 0)",
     "Palette changes preserve semantic data colors",
   );
+  assert(
+    color(header) === rgb(light.colors.background),
+    "Header mappings follow a new light palette",
+  );
+  assert(
+    color(globalNav) === rgb(light.colors.background),
+    "GlobalNav mappings update with a light palette",
+  );
+  assert(
+    color(selectedYear, "color") === rgb(light.colors.background),
+    "Selected-year text remains readable on a dark light-mode accent",
+  );
   renderer.apply(light, false);
   assert(
     CSSStyleSheet.prototype.insertRule === nativeInsert,
     "Disable restores upstream CSSOM hooks",
   );
+  assert(
+    color(globalNav) === "rgb(21, 27, 35)",
+    "Disabling restores the original GlobalNav background variable",
+  );
+
   assert(
     color(panel) === "rgb(255, 255, 255)",
     "Disable restores original stylesheet colors",
@@ -372,7 +515,7 @@ async function run() {
     ) && color(shadow.querySelector("p")!) === "rgb(255, 255, 255)",
     "Disable removes active shadow overrides (upstream may retain empty style nodes)",
   );
-  renderer.apply(theme, true);
+  renderer.apply(mappedTheme(theme), true);
   await waitFor(() => color(panel) === rgb(theme.colors.background));
   renderer.dispose();
   assert(

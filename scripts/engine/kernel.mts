@@ -1,3 +1,5 @@
+import { compileColorMaps } from "./color-map.mts";
+import { siteColorMaps } from "./sites/index.mts";
 import type { Theme } from "../../lib/theme";
 import type { StylesheetReader } from "./network.mts";
 import { getPreservedInlineSelectors } from "./semantic-colors.mts";
@@ -11,6 +13,8 @@ import { setStylesheetReader } from "./network.mts";
 export function configure(theme: Theme, readCSS?: StylesheetReader) {
   setStylesheetReader(readCSS);
   const colors = theme.colors;
+  const url = new URL(location.href);
+  const mappedCSS = compileColorMaps(siteColorMaps(url), colors);
   // Establish the page's native background once, before injection. This is
   // palette input only; interaction processing stays entirely in upstream CSS.
   let sourceBackground = parseColor(
@@ -38,12 +42,12 @@ export function configure(theme: Theme, readCSS?: StylesheetReader) {
       duxPalette: JSON.stringify(palette),
     },
     {
-      ignoreInlineStyle: getPreservedInlineSelectors(new URL(location.href)),
+      ignoreInlineStyle: getPreservedInlineSelectors(url),
       ignoreImageAnalysis: [
         "[data-duxreader-preserve]",
         "[data-duxreader-preserve] *",
       ],
-      css: theme.css,
+      css: [mappedCSS, theme.css].filter(Boolean).join("\n"),
     },
     window !== window.top,
   );
