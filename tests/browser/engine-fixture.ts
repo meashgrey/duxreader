@@ -1,33 +1,28 @@
 import { createPageRenderer } from "../../lib/page-renderer";
-import { installCSSOMProxy } from "../../lib/rendering/cssom-proxy";
-import { mechanismChecks } from "./mechanism-checks";
+import { installEngineProxy } from "../../lib/engine/proxy-host";
 import type { Theme } from "../../lib/theme";
 
 const checks: string[] = [];
-(window as unknown as { regressionErrors: string[] }).regressionErrors = [];
+const errors: string[] = [];
 window.addEventListener("error", (event) =>
-  (window as unknown as { regressionErrors: string[] }).regressionErrors.push(
-    String(event.error ?? event.message),
-  ),
+  errors.push(String(event.error ?? event.message)),
 );
-function assert(condition: boolean, label: string) {
-  if (!condition) throw new Error(label);
+function assert(value: unknown, label: string) {
+  if (!value) throw new Error(label);
   checks.push(label);
 }
 async function waitFor(predicate: () => boolean) {
   const deadline = performance.now() + 6000;
   while (!predicate()) {
     if (performance.now() > deadline)
-      throw new Error("Timed out waiting for page styles");
+      throw new Error("Timed out waiting for upstream engine");
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
-const color = (
-  element: Element,
-  property: "color" | "backgroundColor" = "backgroundColor",
-) => getComputedStyle(element)[property];
 const rgb = (hex: string) =>
   `rgb(${[1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16)).join(", ")})`;
+const color = (node: Element, property = "background-color") =>
+  getComputedStyle(node).getPropertyValue(property);
 const theme: Theme = {
   mode: "dark",
   css: "",
@@ -38,130 +33,212 @@ const theme: Theme = {
     accent: "#a0cf93",
   },
 };
+function generatedCSS() {
+  return [...document.querySelectorAll<HTMLStyleElement>("style.darkreader")]
+    .map((style) =>
+      [...(style.sheet?.cssRules ?? [])].map((rule) => rule.cssText).join("\n"),
+    )
+    .join("\n");
+}
 async function run() {
-  const originalInsertRule = CSSStyleSheet.prototype.insertRule;
-  const releaseProxy = installCSSOMProxy();
+  // Plain-tab fixtures have no extension runtime; upstream's optional PDF
+  // integration only probes chrome.dom. Production uses the real browser API.
+  (window as any).chrome ??= {};
+  const nativeInsert = CSSStyleSheet.prototype.insertRule;
+  const release = installEngineProxy();
   const panel = document.querySelector<HTMLElement>(".panel")!;
   const inline = document.querySelector<HTMLElement>("#inline")!;
-  const card = document.createElement("section");
-  card.style.cssText =
-    "background:#eee;color:#111;border:1px solid #999;padding:12px";
-  card.textContent = "Secondary surface";
-  const button = document.createElement("button");
-  button.style.cssText = "background:#2563eb;color:white";
-  button.innerHTML = "<span>Accent control</span>";
-  card.append(button);
-  document.body.append(card);
+  const source = document.createElement("style");
+  source.textContent = `
+    :root{--tone:#fff;--alias:var(--tone);--unused-size:20px;--future-color:#ddd}
+    .variable{background:var(--alias);color:#111}
+    .surface{background:#eee;color:#111}
+    .focus-card{background:#fff;color:#111}
+    .focus-card:focus{background:#eee}
+    .focus-card:focus::before{content:"State";color:#111;background:#eee}
+    .accent{color:#2563eb}
+    .alpha{background:rgba(255,255,255,.4)}
+  `;
+  document.head.append(source);
+  const area = document.createElement("section");
+  area.innerHTML =
+    '<div class="surface">Surface</div><div class="variable">Variables</div><button class="focus-card">Focus</button><a class="accent">Link</a><div class="alpha">Alpha</div><div data-duxreader-preserve style="background:white;color:black">Preserved inline</div>';
+  document.body.append(area);
+  const surface = area.querySelector(".surface")!;
+  const variable = area.querySelector(".variable")!;
+  const focus = area.querySelector<HTMLElement>(".focus-card")!;
   const host = document.createElement("div");
+  document.body.append(host);
   const shadow = host.attachShadow({ mode: "open" });
   shadow.innerHTML =
-    "<style>p{background:white;color:black}</style><p>Shadow content</p>";
-  document.body.append(host);
-  const readURLs = new Set<string>();
+    "<style>p{background:white;color:black}</style><p>Shadow</p>";
+  const readerURLs = new Set<string>();
   const renderer = createPageRenderer(document, {
     async readCSS(url) {
-      readURLs.add(url);
-      if (url.includes("unavailable-index"))
-        throw new Error("Simulated stylesheet reader failure");
-      const response = await fetch(url, { credentials: "omit" });
-      if (!response.ok) throw new Error("Stylesheet unavailable");
+      readerURLs.add(url);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Fixture stylesheet unavailable");
       return response.text();
     },
   });
   renderer.apply(theme, true);
-  assert(
-    CSSStyleSheet.prototype.insertRule !== originalInsertRule,
-    "The page-world CSSOM helper activates with the renderer",
-  );
   await waitFor(
     () =>
       color(panel) === rgb(theme.colors.background) &&
-      color(card) === rgb(theme.colors.surface),
+      color(surface) === rgb(theme.colors.surface),
+  );
+  assert(
+    CSSStyleSheet.prototype.insertRule !== nativeInsert,
+    "The upstream page-world proxy is active",
   );
   assert(
     color(document.body) === rgb(theme.colors.background),
-    "Page background equals the desktop background exactly",
+    "The page background matches the desktop exactly",
   );
   assert(
     color(panel, "color") === rgb(theme.colors.foreground),
-    "Neutral text equals the desktop foreground exactly",
+    "Neutral text matches the desktop exactly",
   );
   assert(
-    color(card) === rgb(theme.colors.surface),
-    "Cards use the provided secondary surface",
+    color(area.querySelector(".accent")!, "color") === rgb(theme.colors.accent),
+    "Blue links use the desktop accent",
   );
   assert(
-    color(panel.querySelector("a")!, "color") === rgb(theme.colors.accent),
-    "Links use the provided accent",
+    color(area.querySelector(".alpha")!).includes("0.4"),
+    "Source alpha is preserved",
   );
   assert(
-    color(button) === rgb(theme.colors.accent),
-    "Primary buttons use the provided accent",
-  );
-  assert(
-    color(button.firstElementChild!, "color") === rgb(theme.colors.background),
-    "Nested button text uses a contrasting palette color",
+    color(area.querySelector("[data-duxreader-preserve]")!) ===
+      "rgb(255, 255, 255)",
+    "Preserved inline elements retain source colors",
   );
   await waitFor(
     () =>
       color(inline) === rgb(theme.colors.background) &&
-      color(shadow.querySelector("p")!) === rgb(theme.colors.background),
+      color(variable) === rgb(theme.colors.background),
   );
   assert(
     inline.style.backgroundColor === "white",
-    "Source inline styles remain unchanged",
+    "Source inline color declarations remain unchanged",
+  );
+  assert(
+    inline.hasAttribute("data-darkreader-inline-bgcolor"),
+    "Inline colors use upstream local overrides",
+  );
+  assert(
+    !document.querySelector("[data-duxreader-node]"),
+    "No global inline selector index is created",
+  );
+  await waitFor(
+    () => color(shadow.querySelector("p")!) === rgb(theme.colors.background),
   );
   assert(
     color(shadow.querySelector("p")!, "color") === rgb(theme.colors.foreground),
-    "Open shadow roots follow the same palette",
+    "Shadow styles use the desktop palette",
   );
-
-  const late = document.createElement("div");
-  late.className = "panel";
-  late.textContent = "Inserted content";
-  document.body.append(late);
-  await waitFor(() => color(late) === rgb(theme.colors.background));
-  assert(true, "New DOM content is classified automatically");
-  card.style.backgroundColor = "white";
-  await waitFor(() => color(card) === rgb(theme.colors.background));
+  const beforeFocus = generatedCSS();
+  focus.focus();
+  await waitFor(() => color(focus) === rgb(theme.colors.surface));
   assert(
-    true,
-    "Inline style mutations trigger reclassification from original colors",
+    getComputedStyle(focus, "::before").backgroundColor ===
+      rgb(theme.colors.surface),
+    "Pseudo-element state colors are precompiled",
   );
-  card.style.backgroundColor = "#eee";
-  await waitFor(() => color(card) === rgb(theme.colors.surface));
   assert(
-    true,
-    "Repeated scans retain the original surface role without color drift",
+    generatedCSS() === beforeFocus,
+    "Focus does not regenerate stylesheets",
   );
-
-  const utility = document.createElement("style");
-  utility.textContent =
-    "body div.panel{background:#fff!important;color:#111!important}";
-  document.head.append(utility);
+  focus.blur();
+  await waitFor(() => color(focus) === rgb(theme.colors.background));
+  assert(
+    generatedCSS() === beforeFocus,
+    "Blur uses the browser cascade without compilation",
+  );
+  inline.style.backgroundColor = "#eee";
+  await waitFor(() => color(inline) === rgb(theme.colors.surface));
+  assert(
+    generatedCSS() === beforeFocus,
+    "Changing an inline color does not rebuild a global inline sheet",
+  );
+  inline.style.setProperty("--layout-width", "30px");
   await new Promise((resolve) => setTimeout(resolve, 100));
   assert(
-    color(late) === rgb(theme.colors.background),
-    "Site important utility rules retain the desktop background",
+    !inline.style.cssText.includes("--darkreader-bg--layout-width"),
+    "Layout variables receive no color projection",
   );
-  utility.remove();
-
-  const sheet = document.createElement("style");
-  document.head.append(sheet);
-  await new Promise((resolve) => setTimeout(resolve, 1100));
-  late.id = "cssom-test";
-  sheet.sheet!.insertRule("#cssom-test{background:#eee;border-radius:8px}");
+  source.textContent = source.textContent!.replace(
+    "--tone:#fff",
+    "--tone:#eee",
+  );
+  await waitFor(() => color(variable) === rgb(theme.colors.surface));
+  assert(true, "Stylesheet variable updates propagate through aliases");
+  assert(
+    !generatedCSS().includes("--darkreader-placeholder-"),
+    "Internal variable sentinels are not emitted into inherited CSS",
+  );
+  const future = document.createElement("div");
+  future.className = "future-color";
+  document.body.append(future);
+  const futureStyle = document.createElement("style");
+  futureStyle.textContent = ".future-color{background:var(--future-color)}";
+  document.head.append(futureStyle);
+  await waitFor(() => color(future) === rgb(theme.colors.surface));
+  assert(
+    true,
+    "Previously unused variables activate through upstream type subscriptions",
+  );
+  const late = document.createElement("div");
+  late.style.cssText = "background:white;color:black";
+  area.append(late);
+  await waitFor(() => color(late) === rgb(theme.colors.background));
+  assert(true, "New inline elements are processed");
+  const lateStyle = document.createElement("style");
+  lateStyle.textContent = ".late-rule{background:#eee}";
+  document.head.append(lateStyle);
+  late.className = "late-rule";
+  late.style.removeProperty("background");
   await waitFor(() => color(late) === rgb(theme.colors.surface));
-  assert(true, "CSSOM rule insertion triggers reclassification");
-
-  await mechanismChecks(theme, assert, waitFor, readURLs);
-
+  assert(true, "Dynamically inserted stylesheets are managed");
+  lateStyle.sheet!.insertRule(".late-rule{background:white}", 1);
+  await waitFor(() => color(late) === rgb(theme.colors.background));
+  assert(true, "CSSOM rule insertion updates the owning stylesheet");
+  const origin = document.querySelector<HTMLMetaElement>(
+    '[name="duxreader-test-css-origin"]',
+  )!.content;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = origin + "/remote.css";
+  const remote = document.createElement("div");
+  remote.className = "remote-card";
+  document.body.append(remote);
+  document.head.append(link);
+  await waitFor(() => color(remote) === rgb(theme.colors.background));
+  assert(
+    readerURLs.has(link.href),
+    "External stylesheets use the extension transport",
+  );
+  const replacement: Theme = {
+    ...theme,
+    colors: { ...theme.colors, surface: "#384532", accent: "#bbcdaa" },
+  };
+  renderer.apply(replacement, true);
+  await waitFor(() => color(surface) === rgb(replacement.colors.surface));
+  await waitFor(() => color(inline) === rgb(replacement.colors.surface));
+  assert(
+    color(area.querySelector(".accent")!, "color") ===
+      rgb(replacement.colors.accent),
+    "Accent-only changes invalidate cached colors",
+  );
+  assert(
+    color(inline) === rgb(replacement.colors.surface),
+    "Surface-only changes update cached inline colors",
+  );
   const light: Theme = {
     mode: "light",
     css: "",
     colors: {
       background: "#fafafa",
-      surface: "#eeeeee",
+      surface: "#eeeedd",
       foreground: "#202124",
       accent: "#335588",
     },
@@ -170,70 +247,50 @@ async function run() {
   await waitFor(() => color(panel) === rgb(light.colors.background));
   assert(
     color(panel, "color") === rgb(light.colors.foreground),
-    "Palette changes use exact replacement colors",
-  );
-  assert(
-    color(card) === rgb(light.colors.surface),
-    "Existing roles survive a palette change",
+    "Light mode uses the supplied palette",
   );
   renderer.apply(light, false);
   assert(
-    CSSStyleSheet.prototype.insertRule === originalInsertRule,
-    "Disable restores native CSSOM methods",
+    CSSStyleSheet.prototype.insertRule === nativeInsert,
+    "Disable restores upstream CSSOM hooks",
   );
   assert(
-    color(panel) === "rgb(255, 255, 255)" &&
-      color(panel, "color") === "rgb(17, 17, 17)",
-    "Disable restores original site colors",
+    color(panel) === "rgb(255, 255, 255)",
+    "Disable restores original stylesheet colors",
   );
   assert(
-    !document.querySelector("[data-duxreader-bg],[data-duxreader-sheet]"),
-    "Disable removes annotations and styles",
+    color(inline) === "rgb(238, 238, 238)",
+    "Disable restores original inline rendering",
   );
   assert(
-    !shadow.querySelector("[data-duxreader-bg],[data-duxreader-sheet]"),
-    "Disable cleans shadow roots",
+    !document.querySelector("style.darkreader"),
+    "Disable removes generated document styles",
+  );
+  assert(
+    [...shadow.querySelectorAll<HTMLStyleElement>("style.darkreader")].every(
+      (style) => !style.sheet?.cssRules.length,
+    ) && color(shadow.querySelector("p")!) === "rgb(255, 255, 255)",
+    "Disable removes active shadow overrides (upstream may retain empty style nodes)",
   );
   renderer.apply(theme, true);
   await waitFor(() => color(panel) === rgb(theme.colors.background));
   renderer.dispose();
   assert(
-    color(inline) === "rgb(255, 255, 255)",
-    "Dispose restores source inline styling",
+    color(panel) === "rgb(255, 255, 255)",
+    "Repeated enable and dispose restore the page",
   );
-  renderer.apply(theme, true);
-  await waitFor(() => color(panel) === rgb(theme.colors.background));
-  document.querySelector("#result")!.textContent =
-    `PASS · ${checks.length} browser checks`;
-  assert(
-    (window as unknown as { regressionErrors: string[] }).regressionErrors
-      .length === 0,
-    "No uncaught renderer errors occurred",
-  );
-  releaseProxy();
+  release();
+  assert(errors.length === 0, "No uncaught renderer errors occurred");
   return { ok: true, checks };
 }
 void run()
-  .catch((error) => {
-    document.querySelector("#result")!.textContent = String(error);
-    const focus = document.querySelector(".focus-card");
-    const errors = (window as unknown as { regressionErrors?: string[] })
-      .regressionErrors;
-    return {
-      ok: false,
-      checks,
-      error: String(error),
-      errors,
-      focus: focus && {
-        active: document.activeElement === focus,
-        matches: focus.matches(":focus"),
-        attributes: focus.outerHTML,
-        bg: color(focus),
-        pseudo: getComputedStyle(focus, "::before").backgroundColor,
-        content: getComputedStyle(focus, "::before").content,
-      },
-    };
-  })
+  .catch((error) => ({
+    ok: false,
+    error: String(error),
+    checks,
+    errors,
+    css: generatedCSS().slice(-10000),
+  }))
   .then((result) =>
     fetch("/result", { method: "POST", body: JSON.stringify(result) }),
   );

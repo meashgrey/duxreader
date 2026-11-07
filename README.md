@@ -5,12 +5,13 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 ## Development
 
 ```sh
+git submodule update --init --recursive
 nix develop path:.
 bun install --frozen-lockfile
-bun run dev:firefox
+bun run dev
 ```
 
-In Firefox, open `about:debugging`, load `.output/firefox-mv2-dev/manifest.json` as a temporary add-on, and pin Duxreader to the toolbar. Use `bun run dev` for Chrome.
+For Chrome/Chromium, use `bun run dev`. For Firefox, use `bun run dev:firefox`, open `about:debugging`, and load `.output/firefox-mv2-dev/manifest.json` as a temporary add-on. Pin Duxreader to the toolbar.
 
 ## Theme sources
 
@@ -32,10 +33,11 @@ Reload the extension, then select **Choose file**. The native chooser requires a
 ```sh
 bun run check
 bun run test:browser # Requires Firefox
+bun run benchmark:interaction # Requires a production build and Chromium
 bun run build
 bun run build:firefox
 ```
 
-Page colors map directly to the Pywalfox/Matugen palette, with continuous DOM and style monitoring. Custom CSS remains supported. See [rendering notes](docs/rendering.md).
+The pinned Dark Reader dynamic engine maps page colors to the Pywalfox/Matugen palette. Custom CSS remains supported. See [engine notes](scripts/engine/README.md).
 
 Performance measurements and reproduction commands: [benchmarks](docs/performance.md).

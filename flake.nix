@@ -13,6 +13,9 @@
             # rfd loads libdbus dynamically for the desktop portal on Linux.
             DUXREADER_LIBRARY_PATH = pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux
               (pkgs.lib.makeLibraryPath [ pkgs.dbus ]);
+            # Playwright's downloaded Linux binaries do not run directly on NixOS.
+            PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH = pkgs.lib.optionalString pkgs.stdenv.hostPlatform.isLinux
+              "${pkgs.chromium}/bin/chromium";
             packages = with pkgs; [ bun cargo rustc rustfmt clippy rust-analyzer git pkg-config ]
               ++ pkgs.lib.optionals pkgs.stdenv.hostPlatform.isLinux [ pkgs.wayland ];
             shellHook = ''

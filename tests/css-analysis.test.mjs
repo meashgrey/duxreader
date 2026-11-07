@@ -5,8 +5,26 @@ import {
   VariableGraph,
   pseudoHost,
   isPaletteTransition,
+  interactionSelector,
+  isStateSelector,
 } from "../lib/rendering/css-analysis.ts";
 import { mapEffect } from "../lib/rendering/effects.ts";
+
+test("typing checks only dependent states, including nested and escaped selectors", () => {
+  expect(interactionSelector(".card:hover", "input")).toBe(false);
+  expect(interactionSelector(".editor:empty", "keydown")).toBe(false);
+  expect(interactionSelector("form:has(input:valid) .message", "input")).toBe(
+    true,
+  );
+  expect(interactionSelector("input:placeholder-shown", "input")).toBe(true);
+  expect(interactionSelector("input:out-of-range", "change")).toBe(true);
+  expect(interactionSelector("button:active span", "keyup")).toBe(true);
+  expect(interactionSelector("button:focus-visible", "keydown")).toBe(true);
+  expect(interactionSelector("input:\\76 alid", "input")).toBe(true);
+  expect(interactionSelector(".sm\\:card:hover", "input")).toBe(false);
+  expect(isStateSelector(".sm\\:card")).toBe(false);
+  expect(isStateSelector("input:out-of-range")).toBe(true);
+});
 
 test("selector lists preserve functional selectors, escapes, and quoted commas", () => {
   expect(

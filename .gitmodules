@@ -1,0 +1,3 @@
+[submodule "vendor/darkreader"]
+	path = vendor/darkreader
+	url = https://github.com/darkreader/darkreader.git

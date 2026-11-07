@@ -1,4 +1,4 @@
-import { installCSSOMProxy } from "../lib/rendering/cssom-proxy";
+import { installEngineProxy } from "../lib/engine/proxy-host";
 
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
@@ -6,6 +6,6 @@ export default defineContentScript({
   runAt: "document_start",
   world: "MAIN",
   main() {
-    installCSSOMProxy();
+    installEngineProxy();
   },
 });

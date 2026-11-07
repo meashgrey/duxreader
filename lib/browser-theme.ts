@@ -1,11 +1,11 @@
 import type { Theme } from "./theme";
 
-export interface FirefoxTheme {
+export interface BrowserTheme {
   colors?: Record<string, unknown>;
   properties?: { color_scheme?: string; content_color_scheme?: string };
 }
 
-// Firefox returns theme colors as normalized rgb()/rgba() strings or arrays,
+// Browser theme providers can supply normalized rgb()/rgba() strings or arrays,
 // while Pywalfox generates hexadecimal strings. Normalize before creating CSS.
 export function hexColor(value: unknown): string | undefined {
   if (typeof value === "string" && /^#[\da-f]{6}$/i.test(value))
@@ -47,7 +47,7 @@ export function hexColor(value: unknown): string | undefined {
   );
 }
 
-export function fromFirefoxTheme(input: FirefoxTheme): Theme | undefined {
+export function fromBrowserTheme(input: BrowserTheme): Theme | undefined {
   const colors = input.colors;
   if (!colors) return undefined;
   const pick = (...names: string[]) =>
@@ -86,13 +86,14 @@ export function fromFirefoxTheme(input: FirefoxTheme): Theme | undefined {
   };
 }
 
-// Firefox-only API: Chrome has no equivalent theme observer. Duxreader never
-// calls theme.update(), so Pywalfox retains ownership of the browser chrome.
-export interface FirefoxThemeAPI {
-  getCurrent(): Promise<FirefoxTheme>;
+// Optional browser-theme observation capability, currently provided by Firefox.
+// Chromium uses the file source when this capability is absent. Duxreader never
+// calls theme.update(), so the theme provider retains ownership of browser chrome.
+export interface BrowserThemeAPI {
+  getCurrent(): Promise<BrowserTheme>;
   onUpdated: {
     addListener(
-      listener: (info: { theme: FirefoxTheme; windowId?: number }) => void,
+      listener: (info: { theme: BrowserTheme; windowId?: number }) => void,
     ): void;
   };
 }

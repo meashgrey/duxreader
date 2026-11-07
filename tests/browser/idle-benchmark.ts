@@ -1,4 +1,4 @@
-import { installCSSOMProxy } from "../../lib/rendering/cssom-proxy";
+import { installEngineProxy } from "../../lib/engine/proxy-host";
 import type { Theme } from "../../lib/theme";
 interface Renderer {
   apply(theme: Theme, enabled: boolean): void;
@@ -19,7 +19,8 @@ export async function idleBenchmark(create: () => Renderer) {
     node.textContent = "Static page";
     document.body.append(node);
   }
-  const release = installCSSOMProxy();
+  (window as any).chrome ??= {};
+  const release = installEngineProxy();
   let reads = 0,
     frames = 0,
     ends = 0;

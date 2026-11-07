@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { classify, onAccent, parseColor } from "../lib/color-roles.ts";
-import { paletteCSS } from "../lib/page-renderer.ts";
+import { mapDesktopColor } from "../lib/engine/desktop-colors.ts";
 
 const facts = {
   background: "rgb(255, 255, 255)",
@@ -63,21 +63,26 @@ test("transparent edges and unsupported color syntax stay untouched", () => {
     a: 0.5,
   });
 });
-test("all generated color literals belong to the provided desktop palette", () => {
+test("desktop color mapping uses exact palette endpoints", () => {
   const colors = {
     background: "#061003",
     surface: "#293426",
     foreground: "#d3ddcf",
     accent: "#a0cf93",
   };
-  const theme = { mode: "dark", colors, css: "/* user CSS */" };
-  const css = paletteCSS(theme);
-  expect(new Set(css.match(/#[\da-f]{6}\b/gi))).toEqual(
-    new Set(Object.values(colors)),
+  const palette = { colors };
+  expect(mapDesktopColor(parseColor("#fff"), "background", palette)).toEqual(
+    parseColor(colors.background),
   );
-  expect(css).toContain(`--dux-bg:${colors.background}`);
-  expect(css).toContain(`--dux-surface:${colors.surface}`);
-  expect(css.trim().endsWith(theme.css)).toBe(true);
+  expect(mapDesktopColor(parseColor("#eee"), "background", palette)).toEqual(
+    parseColor(colors.surface),
+  );
+  expect(mapDesktopColor(parseColor("#111"), "text", palette)).toEqual(
+    parseColor(colors.foreground),
+  );
+  expect(mapDesktopColor(parseColor("#2563eb"), "text", palette)).toEqual(
+    parseColor(colors.accent),
+  );
   expect(onAccent(colors.background, colors.foreground, colors.accent)).toBe(
     colors.background,
   );

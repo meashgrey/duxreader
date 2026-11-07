@@ -12,23 +12,23 @@ import {
   type SourceMode,
 } from "../lib/theme";
 import {
-  fromFirefoxTheme,
-  type FirefoxTheme,
-  type FirefoxThemeAPI,
-} from "../lib/firefox-theme";
+  fromBrowserTheme,
+  type BrowserTheme,
+  type BrowserThemeAPI,
+} from "../lib/browser-theme";
 
 export default defineBackground(() => {
   const readStylesheet = createStylesheetReader();
   let port: ReturnType<typeof browser.runtime.connectNative> | undefined;
   let source = "";
-  const themeAPI = (browser as unknown as { theme?: FirefoxThemeAPI }).theme;
+  const themeAPI = (browser as unknown as { theme?: BrowserThemeAPI }).theme;
   let mode: SourceMode = "file";
   let themeRevision = 0;
 
-  async function applyBrowserTheme(value: FirefoxTheme) {
+  async function applyBrowserTheme(value: BrowserTheme) {
     if (mode !== "browser") return;
     const revision = themeRevision;
-    const theme = fromFirefoxTheme(value);
+    const theme = fromBrowserTheme(value);
     if (theme) {
       await browser.storage.local.set({
         [THEME_KEY]: theme,
@@ -272,7 +272,8 @@ export default defineBackground(() => {
       SOURCE_MODE_KEY,
       SOURCE_KEY,
     ]);
-    // Preserve an existing file setup; new Firefox installs follow Pywalfox.
+    // Preserve an existing file setup; otherwise prefer browser theme observation
+    // when the browser exposes that capability.
     const next: SourceMode =
       themeAPI &&
       state[SOURCE_MODE_KEY] !== "file" &&

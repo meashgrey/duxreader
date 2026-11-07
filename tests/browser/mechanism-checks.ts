@@ -44,6 +44,12 @@ export async function mechanismChecks(
     .order-list > .order-item { background:#fff; }
     .order-list > .order-item:nth-child(even) { background:#eee; }
     .media-card { background:#fff; }
+    .typing-valid { background:#fff; }
+    .typing-valid:valid { background:#eee; }
+    .typing-form .typing-status { background:#fff; border-radius:4px; }
+    .typing-form:has(.typing-valid:placeholder-shown) .typing-status { background:#eee; }
+    .typing-range { background:#fff; }
+    .typing-range:out-of-range { background:#eee; }
     @media (min-width:1px) { .media-card { background:#eee; } }
   `;
   const container = document.createElement("div");
@@ -56,6 +62,9 @@ export async function mechanismChecks(
     <div class="mechanism pseudo-card">Pseudo surface</div>
     <div class="mechanism effects-card">Effects</div>
     <div class="mechanism media-card">Conditional surface</div>
+    <div class="typing-form"><input class="typing-valid" required pattern="[a-z]{3,}" placeholder="Type"><span class="typing-status">Validation</span></div>
+    <input class="typing-range" type="number" min="1" max="5" value="2">
+    <div class="typing-editor" contenteditable="true"><span>Existing text</span></div>
     <div class="mechanism modern-card">Oklch surface</div>
     <div class="mechanism p3-card">Display P3 surface</div>
     <div class="mechanism modern-gradient">Oklch gradient</div>
@@ -74,6 +83,62 @@ export async function mechanismChecks(
   const notified = () => notifications++;
   document.addEventListener(CSSOM_CHANGED, notified);
   await waitFor(() => bg(variable) === surface);
+  const geometryRule = [...source.sheet!.cssRules].find(
+    (rule) =>
+      rule instanceof CSSStyleRule && rule.selectorText === ".mechanism",
+  ) as CSSStyleRule;
+  geometryRule.style.borderTopWidth = "5px";
+  await waitFor(() => getComputedStyle(variable).borderTopWidth === "5px");
+  assert(
+    true,
+    "Named shorthand geometry edits invalidate color overrides promptly",
+  );
+  geometryRule.style.borderTopWidth = "1px";
+  const typing = find(".typing-valid") as HTMLInputElement;
+  await waitFor(() => bg(find(".typing-status")) === surface);
+  typing.value = "abcd";
+  typing.dispatchEvent(new InputEvent("input", { bubbles: true }));
+  await waitFor(
+    () => bg(typing) === surface && bg(find(".typing-status")) === base,
+  );
+  assert(
+    true,
+    "Value-only input updates validation and relational placeholder selectors",
+  );
+  typing.value = "";
+  typing.dispatchEvent(new InputEvent("input", { bubbles: true }));
+  await waitFor(
+    () => bg(typing) === base && bg(find(".typing-status")) === surface,
+  );
+  assert(true, "Clearing input restores dependent CSS state roles");
+  const range = find(".typing-range") as HTMLInputElement;
+  range.value = "10";
+  range.dispatchEvent(new Event("change", { bubbles: true }));
+  await waitFor(() => bg(range) === surface);
+  assert(true, "Range validity changes retain computed style updates");
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  const nativeComputed = window.getComputedStyle;
+  let typingReads = 0;
+  window.getComputedStyle = (...args) => {
+    typingReads++;
+    return nativeComputed.apply(window, args);
+  };
+  try {
+    const editor = find(".typing-editor");
+    editor.dispatchEvent(
+      new KeyboardEvent("keydown", { key: "a", bubbles: true }),
+    );
+    editor.dispatchEvent(
+      new KeyboardEvent("keyup", { key: "a", bubbles: true }),
+    );
+    await new Promise((resolve) => setTimeout(resolve, 150));
+  } finally {
+    window.getComputedStyle = nativeComputed;
+  }
+  assert(
+    typingReads === 0,
+    "Unchanged keyboard state does not sample the editor subtree or toggle palette sheets",
+  );
   const rootRule = source.sheet!.cssRules[0] as CSSStyleRule;
   rootRule.style.setProperty("--mechanism-tone", "#fff");
   await waitFor(() => bg(variable) === base);
@@ -102,7 +167,9 @@ export async function mechanismChecks(
   );
   focus.blur();
   await waitFor(
-    () => bg(focus) === base && !focus.hasAttribute("data-duxreader-before-bg"),
+    () =>
+      bg(focus) === base &&
+      getComputedStyle(focus, "::before").content === "none",
   );
   assert(true, "Leaving a state removes obsolete pseudo-element overrides");
   button.focus();
@@ -253,21 +320,26 @@ export async function mechanismChecks(
   moving.textContent = "Moved gradient";
   container.append(moving);
   await waitFor(() => getComputedStyle(moving).backgroundImage.includes(base));
+  assert(
+    true,
+    "Inline gradient declarations compile without source style mutation",
+  );
   const movingID = moving.getAttribute("data-duxreader-node")!;
   shadow.append(moving);
   await waitFor(
     () =>
       getComputedStyle(moving).backgroundImage.includes(base) &&
       !!shadow
-        .querySelector('[data-duxreader-sheet="effects"]')
+        .querySelector('[data-duxreader-sheet="inline"]')
         ?.textContent?.includes(movingID),
   );
+  assert(true, "Inline rules follow consumers into shadow roots");
   container.append(moving);
   await waitFor(
     () =>
       getComputedStyle(moving).backgroundImage.includes(base) &&
       !shadow
-        .querySelector('[data-duxreader-sheet="effects"]')
+        .querySelector('[data-duxreader-sheet="inline"]')
         ?.textContent?.includes(movingID),
   );
   assert(
@@ -348,12 +420,12 @@ export async function mechanismChecks(
   document.body.append(fallbackContent);
   await unavailableLoaded;
   const fallbackCard = fallbackContent.querySelector("div")!;
-  await waitFor(() => bg(fallbackCard) === base);
+  await waitFor(() => bg(fallbackCard) === "rgb(255, 255, 255)");
   fallbackContent.querySelector("input")!.focus();
-  await waitFor(() => bg(fallbackCard) === surface);
+  await waitFor(() => bg(fallbackCard) === "rgb(238, 238, 238)");
   assert(
     true,
-    "Unreadable stylesheet failures retain computed-style state fallback",
+    "Unavailable stylesheets retain native states without interaction sampling",
   );
   remote.remove();
   unavailable.remove();

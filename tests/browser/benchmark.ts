@@ -1,4 +1,4 @@
-import { installCSSOMProxy } from "../../lib/rendering/cssom-proxy";
+import { installEngineProxy } from "../../lib/engine/proxy-host";
 interface Renderer {
   apply(theme: any, enabled: boolean): void;
   dispose(): void;
@@ -50,8 +50,9 @@ export async function benchmark(createRenderer: () => Renderer) {
   const mode = document.querySelector<HTMLMetaElement>(
     '[name="bench-mode"]',
   )!.content;
+  (window as any).chrome ??= {};
   let releaseProxy = () => {};
-  if (mode === "normal") releaseProxy = installCSSOMProxy();
+  if (mode === "normal") releaseProxy = installEngineProxy();
   else {
     // A real, opaque stylesheet exercises the fallback used for failed CDN reads.
     const link = document.createElement("link");
@@ -101,6 +102,10 @@ export async function benchmark(createRenderer: () => Renderer) {
     nativeCancel(id);
   };
   const nativeInterval = window.setInterval.bind(window);
+  const nativeIdle = window.requestIdleCallback?.bind(window);
+  if (nativeIdle)
+    window.requestIdleCallback = (fn, options) =>
+      nativeIdle((deadline) => measure(() => fn(deadline)), options);
   window.setInterval = ((fn: () => void, delay: number) =>
     nativeInterval(() => measure(fn), delay)) as typeof window.setInterval;
   const NativeObserver = MutationObserver;
@@ -156,9 +161,11 @@ export async function benchmark(createRenderer: () => Renderer) {
     reset();
     const start = performance.now();
     await fn();
+    const actionWallMs = performance.now() - start;
     const settled = await quiet();
     results.push({
       name,
+      actionWallMs,
       wallMs: performance.now() - start,
       settled,
       computed,
@@ -185,6 +192,11 @@ export async function benchmark(createRenderer: () => Renderer) {
       leaf.dispatchEvent(
         new PointerEvent("pointerover", { bubbles: true, composed: true }),
       );
+  });
+  await phase("focus-burst", () => {
+    for (const control of [...main.querySelectorAll("button")].slice(0, 12))
+      control.focus();
+    (document.activeElement as HTMLElement)?.blur();
   });
   await phase("mutation-burst", () => {
     for (let i = 0; i < 24; i++) {

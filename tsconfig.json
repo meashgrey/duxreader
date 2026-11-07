@@ -4,5 +4,6 @@
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "jsx": "react-jsx"
-  }
+  },
+  "exclude": ["node_modules", ".temp", "vendor"]
 }

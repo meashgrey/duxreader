@@ -1,0 +1,4 @@
+# Pinned upstream source and generated engine artifacts must remain reproducible.
+vendor/
+lib/engine/kernel.js
+lib/engine/proxy.js

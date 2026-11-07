@@ -15,6 +15,8 @@ p::before { content:'@import "fake.css";'; }
     {
       url: "https://example.org/css/base.css",
       media: "screen and (min-width: 400px)",
+      layer: "theme",
+      supports: "display:grid",
     },
     { url: "https://example.org/css/page/palette.css", media: "print" },
   ]);

@@ -299,7 +299,7 @@ function App() {
               </svg>
             </span>
             <div className="source-copy">
-              <h3>Firefox theme</h3>
+              <h3>Browser theme</h3>
               <p>
                 {status === "waiting-browser"
                   ? "Apply colors in Pywalfox"

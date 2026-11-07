@@ -1,6 +1,8 @@
 export interface ImportReference {
   url: string;
   media: string;
+  layer?: string;
+  supports?: string;
 }
 
 // Read only top-level @import statements; quoted content and nested rules must
@@ -81,6 +83,7 @@ export function stylesheetImports(
         const url = new URL(value.trim(), base);
         if (/^https?:$/.test(url.protocol)) {
           let media = statement.slice(match[0].length).trim();
+          let layer: string | undefined, supports: string | undefined;
           // Layer/supports clauses affect native application, not rule indexing.
           // Their media tail still needs matchMedia invalidation subscriptions.
           while (/^(?:layer|supports)\b/i.test(media)) {
@@ -95,9 +98,18 @@ export function stylesheetImports(
                 n++;
               }
             }
+            const clause = media.slice(head[0].length, n);
+            if (head[0].trim().toLowerCase() === "layer")
+              layer = clause ? clause.slice(1, -1) : "";
+            else supports = clause.slice(1, -1);
             media = media.slice(n).trim();
           }
-          imports.push({ url: url.href, media });
+          imports.push({
+            url: url.href,
+            media,
+            ...(layer !== undefined ? { layer } : {}),
+            ...(supports !== undefined ? { supports } : {}),
+          });
         }
       } catch {
         /* An invalid import stays unavailable to the native stylesheet. */

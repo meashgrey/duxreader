@@ -1,0 +1,2034 @@
+{
+  "method": "Normal headless Firefox engine fixture, 400 cards / 9200 elements. Three fresh profiles per variant. callbackMs excludes synchronous apply; wallMs includes actions and settling waits. Counters measure explicit JS calls, not browser-internal style resolution. Unavailable CSS keeps native styles in the new renderer.",
+  "before": {
+    "label": "rules-before-renderer",
+    "runs": 3,
+    "mode": "normal",
+    "cards": 400,
+    "bundleSHA256": "32a36f432002091c9f6e2e0135bbe8574ad4a2acd97d6c9938425d50a591f177",
+    "created": "2026-11-07T05:22:31.664Z",
+    "nodes": 9200,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "summary": [
+      {
+        "name": "initial",
+        "wallMs": 971,
+        "settled": true,
+        "computed": 9263,
+        "queries": 256,
+        "visited": 6801,
+        "matches": 54832,
+        "bounds": 801,
+        "callbackMs": 372,
+        "maxCallbackMs": 54,
+        "longCallbacks": 1
+      },
+      {
+        "name": "local-style",
+        "wallMs": 483,
+        "settled": true,
+        "computed": 40,
+        "queries": 0,
+        "visited": 0,
+        "matches": 144,
+        "bounds": 0,
+        "callbackMs": 53,
+        "maxCallbackMs": 9,
+        "longCallbacks": 0
+      },
+      {
+        "name": "pointer-burst",
+        "wallMs": 202,
+        "settled": true,
+        "computed": 3,
+        "queries": 1,
+        "visited": 0,
+        "matches": 5,
+        "bounds": 0,
+        "callbackMs": 7,
+        "maxCallbackMs": 7,
+        "longCallbacks": 0
+      },
+      {
+        "name": "focus-burst",
+        "wallMs": 211,
+        "settled": true,
+        "computed": 14,
+        "queries": 2,
+        "visited": 400,
+        "matches": 48,
+        "bounds": 12,
+        "callbackMs": 6,
+        "maxCallbackMs": 6,
+        "longCallbacks": 0
+      },
+      {
+        "name": "mutation-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 27,
+        "queries": 1,
+        "visited": 0,
+        "matches": 173,
+        "bounds": 0,
+        "callbackMs": 12,
+        "maxCallbackMs": 10,
+        "longCallbacks": 0
+      },
+      {
+        "name": "palette",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "idle",
+        "wallMs": 1600,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 1,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "clock-text",
+        "wallMs": 483,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 2,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "removal-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 3,
+        "queries": 26,
+        "visited": 928,
+        "matches": 53,
+        "bounds": 0,
+        "callbackMs": 8,
+        "maxCallbackMs": 7,
+        "longCallbacks": 0
+      }
+    ],
+    "samples": [
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 971,
+            "settled": true,
+            "computed": 9263,
+            "queries": 256,
+            "visited": 6801,
+            "matches": 54832,
+            "bounds": 801,
+            "callbackMs": 372,
+            "maxCallbackMs": 60,
+            "longCallbacks": 1
+          },
+          {
+            "name": "local-style",
+            "wallMs": 484,
+            "settled": true,
+            "computed": 40,
+            "queries": 0,
+            "visited": 0,
+            "matches": 144,
+            "bounds": 0,
+            "callbackMs": 63,
+            "maxCallbackMs": 9,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 3,
+            "queries": 1,
+            "visited": 0,
+            "matches": 5,
+            "bounds": 0,
+            "callbackMs": 7,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 211,
+            "settled": true,
+            "computed": 14,
+            "queries": 2,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 12,
+            "callbackMs": 5,
+            "maxCallbackMs": 5,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 27,
+            "queries": 1,
+            "visited": 0,
+            "matches": 173,
+            "bounds": 0,
+            "callbackMs": 8,
+            "maxCallbackMs": 6,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1599,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 484,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 3,
+            "queries": 26,
+            "visited": 928,
+            "matches": 53,
+            "bounds": 0,
+            "callbackMs": 12,
+            "maxCallbackMs": 11,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 930,
+            "settled": true,
+            "computed": 9263,
+            "queries": 256,
+            "visited": 6801,
+            "matches": 54832,
+            "bounds": 801,
+            "callbackMs": 367,
+            "maxCallbackMs": 50,
+            "longCallbacks": 1
+          },
+          {
+            "name": "local-style",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 40,
+            "queries": 0,
+            "visited": 0,
+            "matches": 144,
+            "bounds": 0,
+            "callbackMs": 53,
+            "maxCallbackMs": 9,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 203,
+            "settled": true,
+            "computed": 3,
+            "queries": 1,
+            "visited": 0,
+            "matches": 5,
+            "bounds": 0,
+            "callbackMs": 7,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 211,
+            "settled": true,
+            "computed": 14,
+            "queries": 2,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 12,
+            "callbackMs": 6,
+            "maxCallbackMs": 6,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 27,
+            "queries": 1,
+            "visited": 0,
+            "matches": 173,
+            "bounds": 0,
+            "callbackMs": 12,
+            "maxCallbackMs": 10,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 3,
+            "queries": 26,
+            "visited": 928,
+            "matches": 53,
+            "bounds": 0,
+            "callbackMs": 6,
+            "maxCallbackMs": 6,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 1448,
+            "settled": true,
+            "computed": 9303,
+            "queries": 256,
+            "visited": 6801,
+            "matches": 54832,
+            "bounds": 801,
+            "callbackMs": 624,
+            "maxCallbackMs": 54,
+            "longCallbacks": 1
+          },
+          {
+            "name": "local-style",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 40,
+            "queries": 0,
+            "visited": 0,
+            "matches": 144,
+            "bounds": 0,
+            "callbackMs": 39,
+            "maxCallbackMs": 5,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 3,
+            "queries": 1,
+            "visited": 0,
+            "matches": 5,
+            "bounds": 0,
+            "callbackMs": 5,
+            "maxCallbackMs": 3,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 212,
+            "settled": true,
+            "computed": 14,
+            "queries": 2,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 12,
+            "callbackMs": 6,
+            "maxCallbackMs": 6,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 27,
+            "queries": 1,
+            "visited": 0,
+            "matches": 173,
+            "bounds": 0,
+            "callbackMs": 14,
+            "maxCallbackMs": 14,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 200,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1601,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 3,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 3,
+            "queries": 26,
+            "visited": 928,
+            "matches": 53,
+            "bounds": 0,
+            "callbackMs": 8,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          }
+        ]
+      }
+    ]
+  },
+  "after": {
+    "label": "rules-after-renderer",
+    "runs": 3,
+    "mode": "normal",
+    "cards": 400,
+    "bundleSHA256": "f998f1fae58c9ba25a34b4dae568279b2630149887fd8242f16d8159351acc93",
+    "created": "2026-11-07T05:22:46.673Z",
+    "nodes": 9200,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "summary": [
+      {
+        "name": "initial",
+        "wallMs": 234,
+        "settled": true,
+        "computed": 1,
+        "queries": 0,
+        "visited": 0,
+        "matches": 9212,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "local-style",
+        "wallMs": 482,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 2,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "pointer-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "focus-burst",
+        "wallMs": 213,
+        "settled": true,
+        "computed": 0,
+        "queries": 1,
+        "visited": 400,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 1,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "mutation-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 24,
+        "bounds": 0,
+        "callbackMs": 1,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "palette",
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 7,
+        "maxCallbackMs": 7,
+        "longCallbacks": 0
+      },
+      {
+        "name": "idle",
+        "wallMs": 1600,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 2,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "clock-text",
+        "wallMs": 484,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "removal-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 1,
+        "visited": 400,
+        "matches": 48,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      }
+    ],
+    "samples": [
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 225,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9212,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 213,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 5,
+            "maxCallbackMs": 5,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 484,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 235,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9212,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 217,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 200,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 10,
+            "maxCallbackMs": 10,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1601,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 234,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9212,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 212,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 7,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 484,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      }
+    ]
+  },
+  "fallback": {
+    "label": "rules-fallback-renderer",
+    "runs": 3,
+    "mode": "fallback",
+    "cards": 400,
+    "bundleSHA256": "f998f1fae58c9ba25a34b4dae568279b2630149887fd8242f16d8159351acc93",
+    "created": "2026-11-07T05:23:01.893Z",
+    "nodes": 9200,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "summary": [
+      {
+        "name": "initial",
+        "wallMs": 221,
+        "settled": true,
+        "computed": 1,
+        "queries": 0,
+        "visited": 0,
+        "matches": 9214,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "local-style",
+        "wallMs": 482,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "pointer-burst",
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "focus-burst",
+        "wallMs": 247,
+        "settled": true,
+        "computed": 0,
+        "queries": 2,
+        "visited": 9617,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 5,
+        "maxCallbackMs": 5,
+        "longCallbacks": 0
+      },
+      {
+        "name": "mutation-burst",
+        "wallMs": 200,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 24,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "palette",
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 7,
+        "maxCallbackMs": 7,
+        "longCallbacks": 0
+      },
+      {
+        "name": "idle",
+        "wallMs": 1600,
+        "computed": 0,
+        "queries": 2,
+        "visited": 18482,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 4,
+        "maxCallbackMs": 2,
+        "longCallbacks": 0
+      },
+      {
+        "name": "clock-text",
+        "wallMs": 483,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 1,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "removal-burst",
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 1,
+        "visited": 400,
+        "matches": 48,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      }
+    ],
+    "samples": [
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 221,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9214,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 247,
+            "settled": true,
+            "computed": 0,
+            "queries": 2,
+            "visited": 9617,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 4,
+            "maxCallbackMs": 4,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 200,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 10,
+            "maxCallbackMs": 10,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 2,
+            "visited": 18482,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 4,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 231,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9214,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 222,
+            "settled": true,
+            "computed": 0,
+            "queries": 2,
+            "visited": 9617,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 7,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 200,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 7,
+            "maxCallbackMs": 7,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 2,
+            "visited": 18482,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 4,
+            "maxCallbackMs": 3,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 483,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      },
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "wallMs": 221,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9214,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "wallMs": 248,
+            "settled": true,
+            "computed": 0,
+            "queries": 2,
+            "visited": 9617,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 5,
+            "maxCallbackMs": 5,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "wallMs": 200,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1600,
+            "computed": 0,
+            "queries": 2,
+            "visited": 18482,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 4,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "wallMs": 484,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      }
+    ]
+  },
+  "idle": {
+    "label": "rules-idle",
+    "seconds": 16,
+    "warmup": 8,
+    "created": "2026-11-07T05:23:19.459Z",
+    "cpuMethod": "Linux /proc process family; 100% equals one core; warmup excluded",
+    "steadyCPUPercent": 2.9249524580853277,
+    "transition": true,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "samples": [
+      {
+        "second": 1,
+        "reads": 1,
+        "frames": 0,
+        "transitionEnds": 800
+      },
+      {
+        "second": 2,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 3,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 4,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 5,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 6,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 7,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 8,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 9,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 10,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 11,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 12,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 13,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 14,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 15,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      },
+      {
+        "second": 16,
+        "reads": 0,
+        "frames": 0,
+        "transitionEnds": 0
+      }
+    ],
+    "cpuSamples": [
+      {
+        "startSecond": 0.0014245769999999994,
+        "endSecond": 0.3125711079999999,
+        "cpuPercent": 241.0439857997325
+      },
+      {
+        "startSecond": 0.3125711079999999,
+        "endSecond": 0.8141608859999999,
+        "cpuPercent": 125.60064571331833
+      },
+      {
+        "startSecond": 0.8141608859999999,
+        "endSecond": 1.3150832919999997,
+        "cpuPercent": 29.94475755193111
+      },
+      {
+        "startSecond": 1.3150832919999997,
+        "endSecond": 1.8158241309999998,
+        "cpuPercent": 109.83725655338448
+      },
+      {
+        "startSecond": 1.8158241309999998,
+        "endSecond": 2.316807418,
+        "cpuPercent": 47.905789719488176
+      },
+      {
+        "startSecond": 2.316807418,
+        "endSecond": 2.81751443,
+        "cpuPercent": 11.98305567168689
+      },
+      {
+        "startSecond": 2.81751443,
+        "endSecond": 3.3185964319999997,
+        "cpuPercent": 25.943857388835152
+      },
+      {
+        "startSecond": 3.3185964319999997,
+        "endSecond": 3.819237397,
+        "cpuPercent": 27.964151914735915
+      },
+      {
+        "startSecond": 3.819237397,
+        "endSecond": 4.3199915110000005,
+        "cpuPercent": 61.90663068621347
+      },
+      {
+        "startSecond": 4.3199915110000005,
+        "endSecond": 4.821399645,
+        "cpuPercent": 101.7135473913153
+      },
+      {
+        "startSecond": 4.821399645,
+        "endSecond": 5.322832943,
+        "cpuPercent": 13.959982370377011
+      },
+      {
+        "startSecond": 5.322832943,
+        "endSecond": 5.823878473000001,
+        "cpuPercent": 5.987479820446653
+      },
+      {
+        "startSecond": 5.823878473000001,
+        "endSecond": 6.325134127999999,
+        "cpuPercent": 61.844688814533185
+      },
+      {
+        "startSecond": 6.325134127999999,
+        "endSecond": 6.826865171,
+        "cpuPercent": 25.910296325834487
+      },
+      {
+        "startSecond": 6.826865171,
+        "endSecond": 7.32807577,
+        "cpuPercent": 5.985507900242948
+      },
+      {
+        "startSecond": 7.32807577,
+        "endSecond": 7.8294329399999985,
+        "cpuPercent": 3.989172030789951
+      },
+      {
+        "startSecond": 7.8294329399999985,
+        "endSecond": 8.330756755,
+        "cpuPercent": 7.9788748914710705
+      },
+      {
+        "startSecond": 8.330756755,
+        "endSecond": 8.832944938999999,
+        "cpuPercent": 1.991285402286571
+      },
+      {
+        "startSecond": 8.832944938999999,
+        "endSecond": 9.333685550999999,
+        "cpuPercent": 15.976335468472062
+      },
+      {
+        "startSecond": 9.333685550999999,
+        "endSecond": 9.835436361,
+        "cpuPercent": 5.979063591347251
+      },
+      {
+        "startSecond": 9.835436361,
+        "endSecond": 10.33664229,
+        "cpuPercent": 1.9951878901256985
+      },
+      {
+        "startSecond": 10.33664229,
+        "endSecond": 10.838483833,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 10.838483833,
+        "endSecond": 11.339888088,
+        "cpuPercent": 11.966392267652386
+      },
+      {
+        "startSecond": 11.339888088,
+        "endSecond": 11.840675985,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 11.840675985,
+        "endSecond": 12.341806733,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 12.341806733,
+        "endSecond": 12.842698642,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 12.842698642,
+        "endSecond": 13.343706558,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 13.343706558,
+        "endSecond": 13.846152692,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 13.846152692,
+        "endSecond": 14.347590394,
+        "cpuPercent": 1.994265680485273
+      },
+      {
+        "startSecond": 14.347590394,
+        "endSecond": 14.849342200999999,
+        "cpuPercent": 1.9930172369065309
+      },
+      {
+        "startSecond": 14.849342200999999,
+        "endSecond": 15.350717419,
+        "cpuPercent": 1.9945142162969807
+      },
+      {
+        "startSecond": 15.350717419,
+        "endSecond": 15.852246528,
+        "cpuPercent": 0
+      },
+      {
+        "startSecond": 15.852246528,
+        "endSecond": 16.35318499,
+        "cpuPercent": 11.97751910692779
+      }
+    ]
+  },
+  "finalValidation": {
+    "label": "rules-final-renderer",
+    "runs": 1,
+    "mode": "normal",
+    "cards": 400,
+    "bundleSHA256": "6de10029428125c35735317da1b60187c1dae045250b25939092770fd08a2e27",
+    "created": "2026-11-07T05:26:01.923Z",
+    "nodes": 9200,
+    "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+    "summary": [
+      {
+        "name": "initial",
+        "actionWallMs": 32,
+        "wallMs": 232,
+        "settled": true,
+        "computed": 1,
+        "queries": 0,
+        "visited": 0,
+        "matches": 9212,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "local-style",
+        "actionWallMs": 283,
+        "wallMs": 482,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 2,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "pointer-burst",
+        "actionWallMs": 2,
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "focus-burst",
+        "actionWallMs": 14,
+        "wallMs": 214,
+        "settled": true,
+        "computed": 0,
+        "queries": 1,
+        "visited": 400,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 2,
+        "maxCallbackMs": 2,
+        "longCallbacks": 0
+      },
+      {
+        "name": "mutation-burst",
+        "actionWallMs": 1,
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 24,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "palette",
+        "actionWallMs": 1,
+        "wallMs": 201,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 6,
+        "maxCallbackMs": 5,
+        "longCallbacks": 0
+      },
+      {
+        "name": "idle",
+        "wallMs": 1601,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 0,
+        "bounds": 0,
+        "callbackMs": 1,
+        "maxCallbackMs": 1,
+        "longCallbacks": 0
+      },
+      {
+        "name": "clock-text",
+        "actionWallMs": 282,
+        "wallMs": 482,
+        "settled": true,
+        "computed": 0,
+        "queries": 0,
+        "visited": 0,
+        "matches": 8,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      },
+      {
+        "name": "removal-burst",
+        "actionWallMs": 1,
+        "wallMs": 202,
+        "settled": true,
+        "computed": 0,
+        "queries": 1,
+        "visited": 400,
+        "matches": 48,
+        "bounds": 0,
+        "callbackMs": 0,
+        "maxCallbackMs": 0,
+        "longCallbacks": 0
+      }
+    ],
+    "samples": [
+      {
+        "nodes": 9200,
+        "userAgent": "Mozilla/5.0 (X11; Linux x86_64; rv:159.0) Gecko/20100101 Firefox/159.0",
+        "results": [
+          {
+            "name": "initial",
+            "actionWallMs": 32,
+            "wallMs": 232,
+            "settled": true,
+            "computed": 1,
+            "queries": 0,
+            "visited": 0,
+            "matches": 9212,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "local-style",
+            "actionWallMs": 283,
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "pointer-burst",
+            "actionWallMs": 2,
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "focus-burst",
+            "actionWallMs": 14,
+            "wallMs": 214,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 2,
+            "maxCallbackMs": 2,
+            "longCallbacks": 0
+          },
+          {
+            "name": "mutation-burst",
+            "actionWallMs": 1,
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 24,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "palette",
+            "actionWallMs": 1,
+            "wallMs": 201,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 6,
+            "maxCallbackMs": 5,
+            "longCallbacks": 0
+          },
+          {
+            "name": "idle",
+            "wallMs": 1601,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 0,
+            "bounds": 0,
+            "callbackMs": 1,
+            "maxCallbackMs": 1,
+            "longCallbacks": 0
+          },
+          {
+            "name": "clock-text",
+            "actionWallMs": 282,
+            "wallMs": 482,
+            "settled": true,
+            "computed": 0,
+            "queries": 0,
+            "visited": 0,
+            "matches": 8,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          },
+          {
+            "name": "removal-burst",
+            "actionWallMs": 1,
+            "wallMs": 202,
+            "settled": true,
+            "computed": 0,
+            "queries": 1,
+            "visited": 400,
+            "matches": 48,
+            "bounds": 0,
+            "callbackMs": 0,
+            "maxCallbackMs": 0,
+            "longCallbacks": 0
+          }
+        ]
+      }
+    ]
+  }
+}

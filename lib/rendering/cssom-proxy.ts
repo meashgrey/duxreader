@@ -91,18 +91,22 @@ export function installCSSOMProxy(doc: Document = document) {
       if (style.parentRule) report(style.parentRule.parentStyleSheet);
     });
     // Engines expose named declaration setters on different prototype levels.
-    for (const key of [
-      "color",
-      "background",
-      "backgroundColor",
-      "backgroundImage",
-      "borderColor",
-      "outlineColor",
-      "fill",
-      "stroke",
-      "boxShadow",
-      "textShadow",
-    ]) {
+    const declarationKeys = new Set<string>();
+    for (
+      let proto: object | null = Object.getPrototypeOf(
+        doc.createElement("span").style,
+      );
+      proto && proto !== Object.prototype;
+      proto = Object.getPrototypeOf(proto)
+    )
+      for (const key of Object.getOwnPropertyNames(proto))
+        if (
+          /^(?:color$|background|border|outline|columnRule|fill|stroke|boxShadow|textShadow|textDecoration|textEmphasis|caretColor|accentColor|webkitTextFillColor)/.test(
+            key,
+          )
+        )
+          declarationKeys.add(key);
+    for (const key of declarationKeys) {
       let proto: object | null = Object.getPrototypeOf(
         doc.createElement("span").style,
       );
@@ -113,6 +117,15 @@ export function installCSSOMProxy(doc: Document = document) {
           if (style.parentRule) report(style.parentRule.parentStyleSheet);
         });
     }
+    if (realm.CSSKeyframeRule)
+      wrap(realm.CSSKeyframeRule.prototype, "keyText", "set", (rule) =>
+        report(rule.parentStyleSheet),
+      );
+    if (realm.CSSKeyframesRule)
+      for (const key of ["appendRule", "deleteRule"])
+        wrap(realm.CSSKeyframesRule.prototype, key, "value", (rule) =>
+          report(rule.parentStyleSheet),
+        );
     wrap(realm.CSSStyleRule.prototype, "selectorText", "set", (rule) =>
       report(rule.parentStyleSheet),
     );

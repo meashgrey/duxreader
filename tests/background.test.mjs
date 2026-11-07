@@ -2,7 +2,7 @@ import { expect, mock, test } from "bun:test";
 
 const state = { sourceMode: "file" };
 let themeUpdated;
-const firefoxPalette = {
+const browserPalette = {
   colors: {
     ntp_background: "#111318",
     ntp_text: "#e1e2e9",
@@ -33,7 +33,7 @@ const port = {
 mock.module("wxt/browser", () => ({
   browser: {
     theme: {
-      getCurrent: async () => firefoxPalette,
+      getCurrent: async () => browserPalette,
       onUpdated: {
         addListener: (listener) => {
           themeUpdated = listener;
@@ -126,8 +126,8 @@ test("Pywalfox browser themes update pages without a native host and file mode s
   const count = commands.length;
   themeUpdated({
     theme: {
-      ...firefoxPalette,
-      colors: { ...firefoxPalette.colors, icons: "#ff0000" },
+      ...browserPalette,
+      colors: { ...browserPalette.colors, icons: "#ff0000" },
     },
   });
   await settle();
@@ -139,7 +139,7 @@ test("Pywalfox browser themes update pages without a native host and file mode s
   expect(state.theme).toBeUndefined();
   await browser.storage.local.set({ sourceMode: "file" });
   await settle();
-  themeUpdated({ theme: firefoxPalette });
+  themeUpdated({ theme: browserPalette });
   await settle();
   expect(state.bridgeStatus).not.toBe("following-browser");
   expect(state.theme).toBeUndefined();

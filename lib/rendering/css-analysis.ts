@@ -120,9 +120,26 @@ export function pseudoHost(selector: string): {
   return { host: selector };
 }
 export function isStateSelector(selector: string): boolean {
-  return /[+~]|:(?:empty|dir|nth-(?:last-)?(?:child|of-type)|(?:first|last|only)-(?:child|of-type)|hover|active|focus(?:-within|-visible)?|checked|indeterminate|disabled|enabled|target|open|valid|invalid|user-valid|user-invalid|placeholder-shown|has)\b/.test(
-    selector,
+  return (
+    selector.includes(":\\") ||
+    /[+~]|:(?:empty|dir|nth-(?:last-)?(?:child|of-type)|(?:first|last|only)-(?:child|of-type)|hover|active|focus(?:-within|-visible)?|checked|indeterminate|disabled|enabled|target|open|valid|invalid|user-valid|user-invalid|in-range|out-of-range|autofill|placeholder-shown|has)\b/.test(
+      selector,
+    )
   );
+}
+
+// Keystrokes do not change every CSS state. Filter the selector index before
+// querying the document, while retaining nested :has/:is dependencies and
+// conservatively handling escaped pseudo names that this lexical check misses.
+export function interactionSelector(selector: string, event: string): boolean {
+  if (selector.includes(":\\")) return true;
+  if (event === "keydown" || event === "keyup")
+    return /:(?:active|focus(?:-visible|-within)?)\b/.test(selector);
+  if (event === "input" || event === "change")
+    return /:(?:(?:user-)?(?:valid|invalid)|in-range|out-of-range|placeholder-shown|checked|indeterminate|dir|autofill)\b/.test(
+      selector,
+    );
+  return true;
 }
 
 // A source can be replaced or removed without leaving stale dependencies. A

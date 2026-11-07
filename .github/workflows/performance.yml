@@ -1,0 +1,66 @@
+name: Interaction performance
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  interaction:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.2
+      - run: bun install --frozen-lockfile
+      - run: bunx --bun playwright install --with-deps chromium
+      - name: Check native rule behavior
+        run: bun run test:browser --browser chromium
+      - run: bun run build
+
+      # Use the PR base's production extension with the current benchmark harness.
+      # This also supports base revisions that predate this benchmark suite.
+      - uses: actions/checkout@v4
+        if: github.event_name == 'pull_request'
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: .temp/pr-base
+          persist-credentials: false
+          submodules: recursive
+      - name: Build base extension
+        if: github.event_name == 'pull_request'
+        working-directory: .temp/pr-base
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+      - name: Measure base
+        if: github.event_name == 'pull_request'
+        run: bun run benchmark:interaction --runs 3 --extension .temp/pr-base/.output/chrome-mv3 --output .temp/perf-base
+      - name: Compare PR
+        if: github.event_name == 'pull_request'
+        run: bun run benchmark:interaction --runs 3 --output .temp/perf-current --baseline .temp/perf-base/report.json --check
+      - name: Check current branch
+        if: github.event_name != 'pull_request'
+        run: bun run benchmark:interaction --runs 3 --output .temp/perf-current --check
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: interaction-performance
+          path: |
+            .temp/perf-base/
+            .temp/perf-current/
+          include-hidden-files: true
+          retention-days: 14

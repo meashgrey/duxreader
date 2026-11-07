@@ -1,0 +1,437 @@
+{
+  "method": "Anonymous headless Chromium 156, https://github.com/darkreader/darkreader, fresh profiles, seven-second warmup. Single observations, not statistical comparisons or Firefox measurements. The initial run did not open search; later successful runs did. CSS sizes count UTF-16 code units. Timing includes automation and page activity. Retain later slower results and failed probes; dialogs/network variability prevented complete final live-site validation. Inline-only demand filtering was validated by local browser regressions and the variable-heavy fixture, not these completed live runs.",
+  "environment": {
+    "platform": "linux",
+    "arch": "x64",
+    "cpu": "12th Gen Intel(R) Core(TM) i5-1240P",
+    "bun": "1.4.2"
+  },
+  "series": [
+    {
+      "name": "before",
+      "runs": [
+        {
+          "enabled": false,
+          "error": null,
+          "styles": 30,
+          "background": "rgb(255, 255, 255)",
+          "generatedCharacters": 0,
+          "projectedTokens": 0,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3203.762488999999,
+              "taskMs": 1.3560000000000005,
+              "styleMs": 0,
+              "scriptMs": 0,
+              "recalcs": 0,
+              "heapMiB": 14.541683197021484
+            },
+            {
+              "name": "hover",
+              "wallMs": 1708.155114000001,
+              "taskMs": 168.458,
+              "styleMs": 5.301,
+              "scriptMs": 26.904999999999998,
+              "recalcs": 18,
+              "heapMiB": 17.682647705078125
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "error": null,
+          "styles": 62,
+          "background": "rgb(6, 16, 3)",
+          "generatedCharacters": 8553438,
+          "projectedTokens": 122741,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3204.7764229999993,
+              "taskMs": 210.773,
+              "styleMs": 0,
+              "scriptMs": 185.585,
+              "recalcs": 0,
+              "heapMiB": 50.78770065307617
+            },
+            {
+              "name": "hover",
+              "wallMs": 2000.9745049999983,
+              "taskMs": 342.46600000000007,
+              "styleMs": 10.775,
+              "scriptMs": 149.24599999999998,
+              "recalcs": 18,
+              "heapMiB": 48.917850494384766
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "cache",
+      "runs": [
+        {
+          "enabled": false,
+          "error": null,
+          "styles": 30,
+          "background": "rgb(255, 255, 255)",
+          "generatedCharacters": 0,
+          "projectedTokens": 0,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3205.100633,
+              "taskMs": 1.9650000000000005,
+              "styleMs": 0,
+              "scriptMs": 0,
+              "recalcs": 0,
+              "heapMiB": 19.39923095703125
+            },
+            {
+              "name": "open",
+              "wallMs": 257.7788169999985,
+              "taskMs": 78.89299999999999,
+              "styleMs": 24.891999999999996,
+              "scriptMs": 12.038,
+              "recalcs": 7,
+              "heapMiB": 16.1845703125
+            },
+            {
+              "name": "typing",
+              "wallMs": 1414.089869999998,
+              "taskMs": 280.13500000000005,
+              "styleMs": 9.168000000000003,
+              "scriptMs": 133.337,
+              "recalcs": 38,
+              "heapMiB": 19.480392456054688
+            },
+            {
+              "name": "hover",
+              "wallMs": 1918.973034999999,
+              "taskMs": 269.814,
+              "styleMs": 8.06599999999999,
+              "scriptMs": 42.38900000000001,
+              "recalcs": 18,
+              "heapMiB": 22.066509246826172
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "error": null,
+          "styles": 62,
+          "background": "rgb(6, 16, 3)",
+          "generatedCharacters": 8553438,
+          "projectedTokens": 122741,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3207.1102489999976,
+              "taskMs": 42.629,
+              "styleMs": 0,
+              "scriptMs": 39.324,
+              "recalcs": 0,
+              "heapMiB": 48.157447814941406
+            },
+            {
+              "name": "open",
+              "wallMs": 265.6786809999976,
+              "taskMs": 116.237,
+              "styleMs": 72.229,
+              "scriptMs": 20.052,
+              "recalcs": 7,
+              "heapMiB": 52.03193283081055
+            },
+            {
+              "name": "typing",
+              "wallMs": 1411.8646069999959,
+              "taskMs": 312.334,
+              "styleMs": 14.041000000000025,
+              "scriptMs": 135.06099999999998,
+              "recalcs": 41,
+              "heapMiB": 34.55323028564453
+            },
+            {
+              "name": "hover",
+              "wallMs": 1945.837115000002,
+              "taskMs": 285.40200000000004,
+              "styleMs": 17.069999999999975,
+              "scriptMs": 53.02799999999999,
+              "recalcs": 18,
+              "heapMiB": 37.605445861816406
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "demand",
+      "runs": [
+        {
+          "enabled": false,
+          "error": null,
+          "styles": 30,
+          "background": "rgb(255, 255, 255)",
+          "generatedCharacters": 0,
+          "projectedTokens": 0,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3205.437458999999,
+              "taskMs": 3.3150000000000004,
+              "styleMs": 0,
+              "scriptMs": 0,
+              "recalcs": 0,
+              "heapMiB": 14.550613403320312
+            },
+            {
+              "name": "open",
+              "wallMs": 269.4240259999988,
+              "taskMs": 57.709,
+              "styleMs": 25.320000000000004,
+              "scriptMs": 10.118,
+              "recalcs": 7,
+              "heapMiB": 17.48004150390625
+            },
+            {
+              "name": "typing",
+              "wallMs": 1420.9230839999982,
+              "taskMs": 303.522,
+              "styleMs": 9.752000000000004,
+              "scriptMs": 142.243,
+              "recalcs": 41,
+              "heapMiB": 18.442405700683594
+            },
+            {
+              "name": "hover",
+              "wallMs": 1937.163661999999,
+              "taskMs": 264.557,
+              "styleMs": 8.94700000000001,
+              "scriptMs": 39.660000000000004,
+              "recalcs": 18,
+              "heapMiB": 21.048458099365234
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "error": null,
+          "styles": 62,
+          "background": "rgb(6, 16, 3)",
+          "generatedCharacters": 3037029,
+          "projectedTokens": 22998,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3206.0659290000003,
+              "taskMs": 26.083000000000002,
+              "styleMs": 0,
+              "scriptMs": 23.18,
+              "recalcs": 0,
+              "heapMiB": 51.21051025390625
+            },
+            {
+              "name": "open",
+              "wallMs": 254.26375299999927,
+              "taskMs": 83.87899999999998,
+              "styleMs": 46.105999999999995,
+              "scriptMs": 14.338999999999997,
+              "recalcs": 7,
+              "heapMiB": 55.54874801635742
+            },
+            {
+              "name": "typing",
+              "wallMs": 1422.9711050000042,
+              "taskMs": 344.45699999999994,
+              "styleMs": 13.229000000000019,
+              "scriptMs": 150.285,
+              "recalcs": 41,
+              "heapMiB": 35.47515106201172
+            },
+            {
+              "name": "hover",
+              "wallMs": 1969.0891609999962,
+              "taskMs": 254.32599999999994,
+              "styleMs": 16.79200000000003,
+              "scriptMs": 46.08399999999999,
+              "recalcs": 18,
+              "heapMiB": 38.469791412353516
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "idle-and-filter",
+      "runs": [
+        {
+          "enabled": false,
+          "error": null,
+          "styles": 30,
+          "background": "rgb(255, 255, 255)",
+          "generatedCharacters": 0,
+          "projectedTokens": 0,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3205.2975100000003,
+              "taskMs": 4.611,
+              "styleMs": 0,
+              "scriptMs": 1.461,
+              "recalcs": 0,
+              "heapMiB": 15.264915466308594
+            },
+            {
+              "name": "open",
+              "wallMs": 255.97558500000014,
+              "taskMs": 67.473,
+              "styleMs": 26.486,
+              "scriptMs": 15.459,
+              "recalcs": 7,
+              "heapMiB": 18.188472747802734
+            },
+            {
+              "name": "typing",
+              "wallMs": 1366.5497380000015,
+              "taskMs": 249.411,
+              "styleMs": 7.837000000000003,
+              "scriptMs": 109.68900000000001,
+              "recalcs": 40,
+              "heapMiB": 19.520938873291016
+            },
+            {
+              "name": "hover",
+              "wallMs": 1957.910136999999,
+              "taskMs": 215.99799999999996,
+              "styleMs": 8.103,
+              "scriptMs": 35.002,
+              "recalcs": 18,
+              "heapMiB": 22.132064819335938
+            }
+          ],
+          "rowTransitions": [
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            }
+          ]
+        },
+        {
+          "enabled": true,
+          "error": null,
+          "styles": 62,
+          "background": "rgb(6, 16, 3)",
+          "generatedCharacters": 3037029,
+          "projectedTokens": 22998,
+          "phases": [
+            {
+              "name": "idle",
+              "wallMs": 3203.759943000001,
+              "taskMs": 17.996,
+              "styleMs": 0,
+              "scriptMs": 14.293,
+              "recalcs": 0,
+              "heapMiB": 42.47145080566406
+            },
+            {
+              "name": "open",
+              "wallMs": 263.67435500000283,
+              "taskMs": 142.58900000000003,
+              "styleMs": 65.121,
+              "scriptMs": 38.076,
+              "recalcs": 7,
+              "heapMiB": 46.7396240234375
+            },
+            {
+              "name": "typing",
+              "wallMs": 1415.006972999996,
+              "taskMs": 451.6389999999999,
+              "styleMs": 17.75899999999997,
+              "scriptMs": 179.52199999999996,
+              "recalcs": 41,
+              "heapMiB": 26.836524963378906
+            },
+            {
+              "name": "hover",
+              "wallMs": 1700.5914670000057,
+              "taskMs": 197.5690000000001,
+              "styleMs": 11.633999999999977,
+              "scriptMs": 36.58699999999998,
+              "recalcs": 18,
+              "heapMiB": 29.86357879638672
+            }
+          ],
+          "rowTransitions": [
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            },
+            {
+              "property": "all",
+              "duration": "0s"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "inline-diagnostic-incomplete",
+      "runs": [
+        {
+          "enabled": false,
+          "error": "TimeoutError: focus: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('input:focus').first()\u001b[22m\n",
+          "phases": []
+        },
+        {
+          "enabled": true,
+          "error": "TimeoutError: goto: Timeout 30000ms exceeded.\nCall log:\n\u001b[2m  - navigating to \"https://github.com/darkreader/darkreader\", waiting until \"domcontentloaded\"\u001b[22m\n",
+          "phases": []
+        }
+      ]
+    },
+    {
+      "name": "delivery-diagnostic-incomplete",
+      "runs": [
+        {
+          "enabled": false,
+          "error": "TimeoutError: hover: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('tr.react-directory-row').first()\u001b[22m\n\u001b[2m    - locator resolved to <tr id=\"folder-row-0\" class=\"react-directory-row undefined\">…</tr>\u001b[22m\n\u001b[2m  - attempting hover action\u001b[22m\n\u001b[2m    - waiting for element to be visible and stable\u001b[22m\n\u001b[2m    - element is visible and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - performing hover action\u001b[22m\n\u001b[2m    - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying hover action\u001b[22m\n\u001b[2m    - waiting for element to be visible and stable\u001b[22m\n\u001b[2m    - element is visible and stable\u001b[22m\n\u001b[2m    - scrolling into view if needed\u001b[22m\n\u001b[2m    - done scrolling\u001b[22m\n\u001b[2m    - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m  - retrying hover action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    9 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n",
+          "phases": []
+        },
+        {
+          "enabled": true,
+          "error": "TimeoutError: hover: Timeout 5000ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('tr.react-directory-row').nth(1)\u001b[22m\n\u001b[2m    - locator resolved to <tr id=\"folder-row-1\" class=\"react-directory-row undefined\">…</tr>\u001b[22m\n\u001b[2m  - attempting hover action\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m    - waiting 20ms\u001b[22m\n\u001b[2m    2 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m      - waiting 100ms\u001b[22m\n\u001b[2m    9 × waiting for element to be visible and stable\u001b[22m\n\u001b[2m      - element is visible and stable\u001b[22m\n\u001b[2m      - scrolling into view if needed\u001b[22m\n\u001b[2m      - done scrolling\u001b[22m\n\u001b[2m      - <div data-position-narrow=\"center\" data-position-regular=\"center\" class=\"prc-Dialog-Backdrop-5Nt2U\">…</div> from <div class=\"PortalRoot__W2cBoj\">…</div> subtree intercepts pointer events\u001b[22m\n\u001b[2m    - retrying hover action\u001b[22m\n\u001b[2m      - waiting 500ms\u001b[22m\n",
+          "phases": []
+        }
+      ]
+    }
+  ]
+}

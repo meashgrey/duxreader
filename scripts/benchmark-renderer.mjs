@@ -143,6 +143,13 @@ try {
       for (const phase of sample.results) {
         if (phase.settled === false)
           throw new Error(`${phase.name}: renderer did not settle`);
+        if (
+          (phase.name === "pointer-burst" || phase.name === "focus-burst") &&
+          phase.computed !== 0
+        )
+          throw new Error(
+            `${phase.name}: interactions must not sample computed styles`,
+          );
         if (phase.matches > output.nodes * 32 + 1000)
           throw new Error(
             `${phase.name}: selector matching work budget exceeded`,

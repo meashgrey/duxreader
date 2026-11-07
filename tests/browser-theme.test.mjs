@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
-import { fromFirefoxTheme, hexColor } from "../lib/firefox-theme.ts";
+import { fromBrowserTheme, hexColor } from "../lib/browser-theme.ts";
 
-test("Firefox normalized colors and Pywalfox hex colors are accepted safely", () => {
+test("Browser theme colors and Pywalfox hex colors are accepted safely", () => {
   expect(hexColor("rgb(17, 19, 24)")).toBe("#111318");
   expect(hexColor("rgba(17, 19, 24, 1)")).toBe("#111318");
   expect(hexColor([17, 19, 24])).toBe("#111318");
@@ -18,7 +18,7 @@ test("Firefox normalized colors and Pywalfox hex colors are accepted safely", ()
 
 test("Pywalfox mappings preserve its effective colors and light-mode property", () => {
   expect(
-    fromFirefoxTheme({
+    fromBrowserTheme({
       colors: {
         ntp_background: "#eeeeee",
         ntp_text: "#222222",
@@ -37,8 +37,8 @@ test("Pywalfox mappings preserve its effective colors and light-mode property", 
     },
     css: "",
   });
-  expect(fromFirefoxTheme({})).toBeUndefined();
+  expect(fromBrowserTheme({})).toBeUndefined();
   expect(
-    fromFirefoxTheme({ colors: { ntp_background: "#ffffff" } }),
+    fromBrowserTheme({ colors: { ntp_background: "#ffffff" } }),
   ).toBeUndefined();
 });
