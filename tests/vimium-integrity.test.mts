@@ -27,12 +27,19 @@ test("generated Vimium content scripts use the React overlay pages", async () =>
   expect(content).toContain("globalThis.chrome = globalThis.browser");
 });
 
-test("upstream extension pages receive the Firefox API alias first", async () => {
-  const options = await Bun.file("public/pages/options.html").text();
-  const alias = options.indexOf("../vimium/firefox-api.js");
-  const script = options.indexOf("options.js");
-  expect(alias).toBeGreaterThanOrEqual(0);
-  expect(alias).toBeLessThan(script);
+test("extension pages load the Firefox API alias before their entrypoints", async () => {
+  for (const [page, entrypoint] of [
+    ["options", "../vimium/preferences.js"],
+    ["command_listing", "command_listing.js"],
+    ["doc_search_completion", "doc_search_completion.js"],
+  ]) {
+    const html = await Bun.file(`public/pages/${page}.html`).text();
+    const scripts = [...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(
+      (match) => match[1],
+    );
+    expect(scripts[0]).toBe("../vimium/firefox-api.js");
+    expect(scripts).toContain(entrypoint);
+  }
 });
 
 test("Vimium background tolerates Duxreader runtime messages", async () => {
