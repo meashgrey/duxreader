@@ -20,9 +20,16 @@ import {
 import { materialRoles } from "../../lib/material";
 import type { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 import type { MdSwitch } from "@material/web/switch/switch.js";
+import { useUIFont } from "../../lib/use-ui-font";
+import { installedUIFonts } from "../../lib/ui-font";
 import "./style.css";
 
 function App() {
+  const [font, selectFont] = useUIFont();
+  const [availableFonts, setAvailableFonts] = React.useState<string[]>([]);
+  React.useEffect(() => {
+    setAvailableFonts(installedUIFonts());
+  }, []);
   const [enabled, setEnabled] = React.useState(true);
   const [status, setStatus] = React.useState("connecting");
   const [error, setError] = React.useState("");
@@ -392,6 +399,25 @@ function App() {
           </details>
         </section>
       )}
+      <label className="font-setting">
+        <span>Font</span>
+        <select
+          value={font}
+          onChange={(event) => {
+            void selectFont(event.target.value);
+          }}
+        >
+          <option value="system">System UI</option>
+          {font !== "system" && !availableFonts.includes(font) && (
+            <option value={font}>{font} (unavailable)</option>
+          )}
+          {availableFonts.map((name) => (
+            <option key={name} value={name}>
+              {name}
+            </option>
+          ))}
+        </select>
+      </label>
       <footer>
         <span>Auto sync</span>
         <span aria-live="polite">

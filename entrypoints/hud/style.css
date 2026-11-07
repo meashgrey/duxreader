@@ -1,0 +1,61 @@
+body {
+  overflow: hidden;
+}
+
+.hud {
+  position: fixed;
+  right: 8px;
+  bottom: 8px;
+  left: 8px;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  background: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-body-large-size);
+  line-height: var(--md-sys-typescale-body-large-line-height);
+}
+
+.hud.hidden {
+  visibility: hidden;
+}
+
+.hud-find-input {
+  flex: 1;
+  min-width: 0;
+  height: 28px;
+  padding: 2px 8px;
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  outline: none;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.hud-find-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: var(--md-sys-color-on-surface-variant);
+}
+
+.hud-find-input:focus {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: -2px;
+}
+
+.hud-match-count {
+  flex: none;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-medium-size);
+  line-height: var(--md-sys-typescale-body-medium-line-height);
+}
+
+.hud-text {
+  white-space: pre-wrap;
+}

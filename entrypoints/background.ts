@@ -11,13 +11,23 @@ import {
   THEME_KEY,
   type SourceMode,
 } from "../lib/theme";
+import "../lib/vimium/firefox-api";
 import {
   fromBrowserTheme,
   type BrowserTheme,
   type BrowserThemeAPI,
 } from "../lib/browser-theme";
 
+// Vimium is vendored as a bundled background module. Tests execute this file
+// without a browser extension runtime, so only load it in a real extension.
+function loadVimium() {
+  const api = globalThis as { chrome?: { runtime?: { id?: string } } };
+  if (!api.chrome?.runtime?.id) return;
+  void import("../lib/vimium/background.js");
+}
+
 export default defineBackground(() => {
+  loadVimium();
   const readStylesheet = createStylesheetReader();
   let port: ReturnType<typeof browser.runtime.connectNative> | undefined;
   let source = "";

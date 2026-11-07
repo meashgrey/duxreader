@@ -4,6 +4,7 @@ import type { Theme } from "../../lib/theme";
 import type { StylesheetReader } from "./network.mts";
 import { getPreservedInlineSelectors } from "./semantic-colors.mts";
 import { parseColor } from "../../lib/color-roles";
+import { vimiumContentTheme } from "../../lib/vimium/content-theme";
 import { DEFAULT_THEME } from "upstream:defaults.ts";
 import {
   createOrUpdateDynamicThemeInternal,
@@ -47,7 +48,9 @@ export function configure(theme: Theme, readCSS?: StylesheetReader) {
         "[data-duxreader-preserve]",
         "[data-duxreader-preserve] *",
       ],
-      css: [mappedCSS, theme.css].filter(Boolean).join("\n"),
+      css: [mappedCSS, vimiumContentTheme(theme), theme.css]
+        .filter(Boolean)
+        .join("\n"),
     },
     window !== window.top,
   );

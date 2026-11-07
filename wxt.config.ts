@@ -27,12 +27,59 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: "Duxreader",
     description: "Bring your desktop palette to the web.",
-    host_permissions: ["http://*/*", "https://*/*"],
+    host_permissions: ["<all_urls>"],
+    // Vimium's background and content scripts use these browser APIs. The
+    // favicon permission is Chrome-only; Firefox adds clipboard permissions.
     permissions: [
       "storage",
       "nativeMessaging",
       "alarms",
-      ...(browser === "firefox" ? ["theme" as const] : []),
+      "tabs",
+      "bookmarks",
+      "history",
+      "sessions",
+      "notifications",
+      "scripting",
+      "webNavigation",
+      "search",
+      ...(browser === "firefox"
+        ? ["theme" as const, "clipboardRead" as const, "clipboardWrite" as const]
+        : ["favicon" as const]),
+    ],
+    options_ui: {
+      page: "pages/options.html",
+      browser_style: false,
+      open_in_tab: true,
+    },
+    content_scripts: [
+      {
+        matches: ["<all_urls>"],
+        js: ["vimium/content.js"],
+        css: ["content_scripts/vimium.css"],
+        run_at: "document_start",
+        all_frames: true,
+        match_about_blank: true,
+      },
+      {
+        matches: ["file:///", "file:///*/"],
+        css: ["content_scripts/file_urls.css"],
+        run_at: "document_start",
+        all_frames: true,
+      },
+    ],
+    web_accessible_resources: [
+      {
+        resources: [
+          "vomnibar.html",
+          "hud.html",
+          "help.html",
+          "pages/*",
+          "content_scripts/vimium.css",
+          "resources/tlds.txt",
+          "_favicon/*",
+        ],
+        matches: ["<all_urls>"],
+      },
     ],
     browser_specific_settings: {
       gecko: {

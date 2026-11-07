@@ -2,3 +2,9 @@
 vendor/
 lib/engine/kernel.js
 lib/engine/proxy.js
+lib/vimium/background.js
+public/vimium/
+public/pages/
+public/icons/
+public/content_scripts/
+public/resources/

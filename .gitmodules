@@ -1,3 +1,6 @@
 [submodule "vendor/darkreader"]
 	path = vendor/darkreader
 	url = https://github.com/darkreader/darkreader.git
+[submodule "vendor/vimium"]
+	path = vendor/vimium
+	url = https://github.com/philc/vimium
