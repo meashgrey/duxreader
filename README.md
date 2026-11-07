@@ -33,6 +33,7 @@ Reload the extension, then select **Choose file**. The native chooser requires a
 ```sh
 bun run check
 bun run test:browser # Requires Firefox
+bun run test:sites # Live websites preserve and color map tests; requires Chromium and network
 bun run benchmark:interaction # Requires a production build and Chromium
 bun run build
 bun run build:firefox

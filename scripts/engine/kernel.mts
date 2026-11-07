@@ -1,5 +1,6 @@
 import type { Theme } from "../../lib/theme";
 import type { StylesheetReader } from "./network.mts";
+import { getPreservedInlineSelectors } from "./semantic-colors.mts";
 import { parseColor } from "../../lib/color-roles";
 import { DEFAULT_THEME } from "upstream:defaults.ts";
 import {
@@ -37,10 +38,7 @@ export function configure(theme: Theme, readCSS?: StylesheetReader) {
       duxPalette: JSON.stringify(palette),
     },
     {
-      ignoreInlineStyle: [
-        "[data-duxreader-preserve]",
-        "[data-duxreader-preserve] *",
-      ],
+      ignoreInlineStyle: getPreservedInlineSelectors(new URL(location.href)),
       ignoreImageAnalysis: [
         "[data-duxreader-preserve]",
         "[data-duxreader-preserve] *",

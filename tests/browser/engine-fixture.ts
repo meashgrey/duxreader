@@ -1,5 +1,6 @@
 import { createPageRenderer } from "../../lib/page-renderer";
 import { installEngineProxy } from "../../lib/engine/proxy-host";
+import { getPreservedInlineSelectors } from "../../scripts/engine/semantic-colors.mts";
 import type { Theme } from "../../lib/theme";
 
 const checks: string[] = [];
@@ -64,6 +65,79 @@ async function run() {
   area.innerHTML =
     '<div class="surface">Surface</div><div class="variable">Variables</div><button class="focus-card">Focus</button><a class="accent">Link</a><div class="alpha">Alpha</div><div data-duxreader-preserve style="background:white;color:black">Preserved inline</div>';
   document.body.append(area);
+  const legend = document.createElement("section");
+  legend.style.backgroundColor = "white";
+  for (const source of ["#f1e05a", "#3178c6", "#dea584"]) {
+    for (const className of [
+      "repo-language-color",
+      "Progress-item",
+      "react-progress",
+    ]) {
+      const swatch = document.createElement("span");
+      swatch.className = className;
+      if (className === "react-progress")
+        swatch.dataset.component = "ProgressBar.Item";
+      swatch.style.backgroundColor = source;
+      legend.append(swatch);
+    }
+  }
+  document.body.append(legend);
+  const languageLink = document.createElement("a");
+  languageLink.href = "/owner/repo/search?l=javascript";
+  languageLink.innerHTML =
+    '<span class="languageDot__arbitraryHash" style="background-color:#f1e05a"></span><span>JavaScript</span>';
+  const siteSelectors = getPreservedInlineSelectors(
+    new URL("https://github.com/owner/repo"),
+  );
+  assert(
+    siteSelectors.some((selector) =>
+      languageLink.firstElementChild!.matches(selector),
+    ),
+    "GitHub React language dots match through their language-search links",
+  );
+  assert(
+    !siteSelectors.some((selector) =>
+      languageLink.lastElementChild!.matches(selector),
+    ),
+    "The GitHub language rule excludes text labels",
+  );
+  assert(
+    !getPreservedInlineSelectors(
+      new URL("https://example.org/owner/repo"),
+    ).some((selector) => languageLink.firstElementChild!.matches(selector)),
+    "GitHub-specific language structure is scoped to GitHub",
+  );
+
+  const searchExample = document.createElement("section");
+  searchExample.innerHTML =
+    '<ul><li><span><div style="background-color:#dea584"></div></span><span aria-label="Rust language">Rust</span></li></ul><a href="/search?q=rust+language%3ARust&amp;type=repositories"><span data-component="ActionList.LeadingVisual"><div style="background-color:#dea584"></div></span><span>Rust filter</span></a>';
+  const searchSelectors = getPreservedInlineSelectors(
+    new URL("https://github.com/search?q=rust&type=repositories"),
+  );
+  const resultDot = searchExample.querySelector("div")!;
+  const filterDot = searchExample.querySelector("a div")!;
+  assert(
+    searchSelectors.some((selector) => resultDot.matches(selector)),
+    "Search result language dots match the route rules",
+  );
+  assert(
+    searchSelectors.some((selector) => filterDot.matches(selector)),
+    "Search language facets match the route rules",
+  );
+  assert(
+    getPreservedInlineSelectors(new URL("https://github.com/owner/repo")).some(
+      (selector) => resultDot.matches(selector),
+    ),
+    "Search swatches remain protected during same-document GitHub navigation",
+  );
+  assert(
+    !searchSelectors.some((selector) =>
+      searchExample
+        .querySelector('[aria-label="Rust language"]')!
+        .matches(selector),
+    ),
+    "Search language labels retain ordinary text theming",
+  );
   const surface = area.querySelector(".surface")!;
   const variable = area.querySelector(".variable")!;
   const focus = area.querySelector<HTMLElement>(".focus-card")!;
@@ -135,6 +209,28 @@ async function run() {
   assert(
     color(shadow.querySelector("p")!, "color") === rgb(theme.colors.foreground),
     "Shadow styles use the desktop palette",
+  );
+  for (const swatch of legend.children) {
+    const element = swatch as HTMLElement;
+    assert(
+      color(element) === element.style.backgroundColor,
+      "Language and progress swatches retain their original data colors",
+    );
+    assert(
+      !element.hasAttribute("data-darkreader-inline-bgcolor"),
+      "Semantic swatches do not receive inline color overrides",
+    );
+  }
+  assert(
+    color(legend) === rgb(theme.colors.background),
+    "Legend containers still follow the desktop theme",
+  );
+  const dynamicSwatch = legend.firstElementChild as HTMLElement;
+  dynamicSwatch.style.backgroundColor = "#ff0000";
+  await new Promise((resolve) => setTimeout(resolve, 100));
+  assert(
+    color(dynamicSwatch) === "rgb(255, 0, 0)",
+    "Data color updates retain source colors",
   );
   const beforeFocus = generatedCSS();
   focus.focus();
@@ -248,6 +344,10 @@ async function run() {
   assert(
     color(panel, "color") === rgb(light.colors.foreground),
     "Light mode uses the supplied palette",
+  );
+  assert(
+    color(dynamicSwatch) === "rgb(255, 0, 0)",
+    "Palette changes preserve semantic data colors",
   );
   renderer.apply(light, false);
   assert(

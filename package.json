@@ -29,7 +29,8 @@
     "install:bridge": "bun scripts/install-bridge.mts",
     "check": "bun run typecheck && bun run test && bun run test:bridge && bun run test:bridge:integration && bun run build && bun run build:firefox",
     "postinstall": "bun run engine:build && wxt prepare",
-    "engine:build": "bun scripts/build-engine.mts"
+    "engine:build": "bun scripts/build-engine.mts",
+    "test:sites": "bun scripts/test-sites.mts"
   },
   "dependencies": {
     "@lit/react": "1.0.8",
