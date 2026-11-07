@@ -7,6 +7,10 @@ result
 __pycache__/
 *.pyc
 target/
+# Generated bundles rebuilt by `bun run assets:build`.
+/lib/engine/kernel.js
+/lib/engine/proxy.js
+/lib/vimium/background.js
 # Generated from vendor/vimium by `bun run vimium:build`.
 public/vimium/
 public/pages/

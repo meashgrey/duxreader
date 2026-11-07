@@ -1,0 +1,8 @@
+# Bundles regenerated from pinned upstream sources and local adapters.
+/lib/engine/kernel.js linguist-generated=true
+/lib/engine/proxy.js linguist-generated=true
+/lib/vimium/background.js linguist-generated=true
+
+# Upstream dependencies and copied license files.
+/vendor/** linguist-vendored=true
+/public/third-party/** linguist-vendored=true
