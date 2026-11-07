@@ -15,18 +15,18 @@ const plugin: Bun.BunPlugin = {
     build.onResolve({ filter: /^@plus\// }, ({ path }) => ({
       path:
         path === "@plus/utils/theme"
-          ? resolve("scripts/engine/community-theme.js")
+          ? resolve("scripts/engine/community-theme.mts")
           : resolve(source, "stubs", `${path.slice(6)}.ts`),
     }));
     build.onResolve({ filter: /^\.\/modify-colors$/ }, () => ({
-      path: resolve("scripts/engine/color-policy.js"),
+      path: resolve("scripts/engine/color-policy.mts"),
     }));
     build.onResolve({ filter: /^\.\/network$/ }, ({ importer }) =>
       importer.includes("dynamic-theme")
-        ? { path: resolve("scripts/engine/network.js") }
+        ? { path: resolve("scripts/engine/network.mts") }
         : undefined,
     );
-    build.onLoad({ filter: /\.ts$/ }, async ({ path }) => {
+    build.onLoad({ filter: /\.(?:ts|mts)$/ }, async ({ path }) => {
       if (path.startsWith(`${source}/`)) imported.add(path);
       let contents = await readFile(path, "utf8");
       // Use the dedicated MAIN-world transport on both browser families while
@@ -65,7 +65,7 @@ const plugin: Bun.BunPlugin = {
   },
 };
 const result = await Bun.build({
-  entrypoints: ["scripts/engine/kernel.js", "scripts/engine/proxy.js"],
+  entrypoints: ["scripts/engine/kernel.mts", "scripts/engine/proxy.mts"],
   outdir: "lib/engine",
   target: "browser",
   format: "esm",

@@ -1,11 +1,13 @@
+import type { Theme } from "../../lib/theme";
+import type { StylesheetReader } from "./network.mts";
 import { parseColor } from "../../lib/color-roles";
 import { DEFAULT_THEME } from "upstream:defaults.ts";
 import {
   createOrUpdateDynamicThemeInternal,
   removeDynamicTheme,
 } from "upstream:inject/dynamic-theme/index.ts";
-import { setStylesheetReader } from "./network";
-export function configure(theme, readCSS) {
+import { setStylesheetReader } from "./network.mts";
+export function configure(theme: Theme, readCSS?: StylesheetReader) {
   setStylesheetReader(readCSS);
   const colors = theme.colors;
   // Establish the page's native background once, before injection. This is

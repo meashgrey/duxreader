@@ -1,6 +1,8 @@
 // Community-build extension points. Paid features are compiled out.
-export function extendThemeCacheKeys() {}
-export function getBackgroundPoles() {
+import type { EngineTheme } from "./types.mts";
+
+export function extendThemeCacheKeys(_keys: (keyof EngineTheme)[]): void {}
+export function getBackgroundPoles(..._args: unknown[]): never {
   throw new Error("PLUS is disabled");
 }
 export const getTextPoles = getBackgroundPoles;
