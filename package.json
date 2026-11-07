@@ -34,7 +34,8 @@
     "assets:build": "bun run engine:build && bun run vimium:build",
     "test:sites": "bun scripts/test-sites.mts",
     "test:vimium": "bun scripts/test-vimium.mts",
-    "test:preferences": "bun scripts/test-preferences.mts"
+    "test:preferences": "bun scripts/test-preferences.mts",
+    "release:pack": "bun run zip && bun run zip:firefox && bun scripts/package-release.mts"
   },
   "dependencies": {
     "@lit/react": "1.0.8",

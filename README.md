@@ -11,6 +11,10 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 |  ![GitHub profile in purple](assets/github-profile-purple.png)  |  ![GitHub profile in pink](assets/github-profile-pink.png)  |
 | ![Vimium Vomnibar in purple](assets/vimium-vomnibar-purple.png) | ![Vimium Vomnibar in pink](assets/vimium-vomnibar-pink.png) |
 
+## Install
+
+Download [0.1.0 test packages](https://github.com/meashgrey/duxreader/releases/tag/v0.1.0) for Firefox and Chromium/Edge. See [installation instructions](docs/INSTALL.md). Firefox's unsigned test package requires temporary loading.
+
 ## Development
 
 ```sh

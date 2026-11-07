@@ -14,6 +14,12 @@ test("registration paths follow each browser convention", () => {
   expect(
     registrationDirectory("chrome", "linux", "/users/example", "/config"),
   ).toBe("/config/google-chrome/NativeMessagingHosts");
+  expect(
+    registrationDirectory("chromium", "linux", "/users/example", "/config"),
+  ).toBe("/config/chromium/NativeMessagingHosts");
+  expect(
+    registrationDirectory("edge", "linux", "/users/example", "/config"),
+  ).toBe("/config/microsoft-edge/NativeMessagingHosts");
   expect(() =>
     registrationDirectory("unknown", "linux", "/users/example"),
   ).toThrow();

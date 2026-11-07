@@ -2,6 +2,42 @@ import { defineConfig } from "wxt";
 
 export default defineConfig({
   modules: ["@wxt-dev/module-react"],
+  zip: {
+    // Source archives must not scan Rust build outputs or local browser traces.
+    dotSources: true,
+    includeSources: [
+      "entrypoints/**",
+      "components/**",
+      "lib/**",
+      "scripts/**",
+      "examples/**",
+      "bridge/**",
+      "vendor/**",
+      "public/duxlogo*",
+      "public/third-party/**",
+      "package.json",
+      "bun.lock",
+      "bunfig.toml",
+      "tsconfig.json",
+      "wxt.config.ts",
+      "Cargo.toml",
+      "Cargo.lock",
+      "flake.nix",
+      "flake.lock",
+      ".gitmodules",
+      "README.md",
+      "docs/INSTALL.md",
+      "docs/BUILDING.md",
+    ],
+    excludeSources: [
+      "**/.git",
+      "**/.git/**",
+      "**/node_modules/**",
+      "lib/engine/kernel.js",
+      "lib/engine/proxy.js",
+      "lib/vimium/background.js",
+    ],
+  },
   vite: () => ({
     // Bundle deep component imports ahead of popup navigation during development.
     // Otherwise their internal ESM graph is fetched through the dev server.

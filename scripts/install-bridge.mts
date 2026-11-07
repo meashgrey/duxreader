@@ -15,9 +15,13 @@ export function registrationDirectory(
   if (browser === "firefox")
     return join(home, ".mozilla/native-messaging-hosts");
   const directory = (
-    { chrome: "google-chrome", chromium: "chromium" } as Record<string, string>
+    {
+      chrome: "google-chrome",
+      chromium: "chromium",
+      edge: "microsoft-edge",
+    } as Record<string, string>
   )[browser];
-  if (!directory) throw new Error("Choose firefox, chrome, or chromium.");
+  if (!directory) throw new Error("Choose firefox, chrome, chromium, or edge.");
   return join(
     configHome || join(home, ".config"),
     directory,
