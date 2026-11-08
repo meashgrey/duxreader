@@ -105,6 +105,41 @@ const background = await Bun.build({
             return { contents, loader: "js" };
           },
         );
+        build.onLoad(
+          { filter: /completion[\\/]completers\.js$/ },
+          async ({ path }) => {
+            if (
+              resolve(path) !==
+              resolve(root, "background_scripts/completion/completers.js")
+            )
+              return undefined;
+            let source = await readFile(path, "utf8");
+            const cap = "const maxResults = 10;";
+            if (source.split(cap).length !== 2)
+              throw new Error("Vimium search result cap changed upstream");
+            // Bound rendering work for large history queries while allowing
+            // matches past the upstream ten-result shortlist to be reached.
+            source = source.replace(cap, "const maxResults = 100;");
+            const seen =
+              "    const seenUrls = new Set();\n    const dedupedSuggestions = [];";
+            const limit =
+              "if (dedupedSuggestions.length === maxResults) break;";
+            if (
+              source.split(seen).length !== 2 ||
+              source.split(limit).length !== 2
+            )
+              throw new Error("Vimium completion limit changed upstream");
+            source = source.replace(
+              seen,
+              `${seen}\n    const resultLimit =\n      this.completers.length === 1 && this.completers[0] instanceof TabCompleter\n        ? Number.MAX_SAFE_INTEGER\n        : maxResults;`,
+            );
+            source = source.replace(
+              limit,
+              "if (dedupedSuggestions.length === resultLimit) break;",
+            );
+            return { contents: source, loader: "js" };
+          },
+        );
         build.onLoad({ filter: /lib[\\/]utils\.js$/ }, async ({ path }) => {
           if (resolve(path) !== resolve(root, "lib/utils.js")) return undefined;
           const source = await readFile(path, "utf8");
@@ -175,9 +210,11 @@ await Bun.write(
 );
 await buildIcons();
 await mkdir("public/content_scripts", { recursive: true });
-await cp(
-  resolve(root, "content_scripts/vimium.css"),
+await Bun.write(
   "public/content_scripts/vimium.css",
+  (await readFile(resolve(root, "content_scripts/vimium.css"), "utf8")) +
+    "\n" +
+    (await readFile("lib/vimium/content-layout.css", "utf8")),
 );
 await cp(
   resolve(root, "content_scripts/file_urls.css"),

@@ -175,6 +175,12 @@ export class VomnibarModel {
   async onKeyEvent(event: React.KeyboardEvent<HTMLInputElement>) {
     const action = this.actionFromKeyEvent(event);
     if (!action) return;
+    // Empty-query Tab awaits completions. Cancel native focus traversal before
+    // that await; cancelling it after the reply is too late to retain focus.
+    if (action === "tab") {
+      event.stopPropagation();
+      event.preventDefault();
+    }
     if (action === "dismiss") {
       this.hide();
     } else if (action === "tab" || action === "down") {
@@ -187,15 +193,12 @@ export class VomnibarModel {
         this.seenTabToOpenCompletionList = true;
         await this.update();
       } else if (this.completions.length > 0) {
-        this.selection += 1;
-        if (this.selection === this.completions.length)
-          this.selection = this.initialSelectionValue;
+        this.selection = (this.selection + 1) % this.completions.length;
         this.updateSelection();
       }
-    } else if (action === "up") {
+    } else if (action === "up" && this.completions.length > 0) {
       this.selection -= 1;
-      if (this.selection < this.initialSelectionValue)
-        this.selection = this.completions.length - 1;
+      if (this.selection < 0) this.selection = this.completions.length - 1;
       this.updateSelection();
     } else if (action === "enter") {
       await this.handleEnterKey(event);

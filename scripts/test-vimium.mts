@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
-import { chromium } from "@playwright/test";
+import { chromium, expect } from "@playwright/test";
 import { luminance, parseColor } from "../lib/color-roles";
 
 const extension = resolve(".output/chrome-mv3");
@@ -69,6 +69,11 @@ try {
         theme: { mode: "dark", css: "", colors },
       });
       await api.bookmarks.create({ title: "Local target", url });
+      for (let index = 0; index < 20; index++)
+        await api.bookmarks.create({
+          title: `Scroll target ${index}`,
+          url: `${url}#scroll-${index}`,
+        });
     },
     { url: `${server.url.origin}/target`, colors },
   );
@@ -172,6 +177,182 @@ try {
     await page.waitForTimeout(100);
   }
   await page.waitForTimeout(300);
+
+  // Long result lists scroll as the keyboard selection moves beyond the fold.
+  await page.setViewportSize({ width: 1280, height: 420 });
+  await clickPage();
+  await page.keyboard.press("o");
+  const scrollVomnibar = await (async () => {
+    for (let i = 0; i < 60; i++) {
+      const frame = page
+        .frames()
+        .find((item) => item.url().includes("/vomnibar.html"));
+      if (frame) return frame;
+      await page.waitForTimeout(100);
+    }
+    throw new Error("Vomnibar frame did not open for scrolling");
+  })();
+  await expect(scrollVomnibar.locator("input")).toBeFocused();
+  const collapsedSearch = await scrollVomnibar.locator("input").boundingBox();
+  assert(collapsedSearch, "The collapsed search field must be visible");
+  await scrollVomnibar.locator("input").fill("Scroll target");
+  await scrollVomnibar.locator("li").first().waitFor({ timeout: 15000 });
+  assert(
+    (await scrollVomnibar.locator("li").count()) > 10,
+    "Omni searches must expose more than the upstream ten-result shortlist",
+  );
+  for (const height of [900, 420]) {
+    await page.setViewportSize({ width: 1280, height });
+    await expect
+      .poll(async () => {
+        const panel = await scrollVomnibar.locator(".vomnibar").boundingBox();
+        return (
+          !!panel &&
+          Math.abs(panel.y + panel.height / 2 - height / 2) <= 2 &&
+          panel.height <= Math.min(560, height * 0.7) + 1
+        );
+      })
+      .toBe(true);
+    if (height === 900)
+      await page.screenshot({ path: resolve(output, "vomnibar-centered.png") });
+  }
+  const expandedSearch = await scrollVomnibar.locator("input").boundingBox();
+  assert(
+    expandedSearch && Math.abs(expandedSearch.y - collapsedSearch.y) <= 1,
+    "Expanding results must not move the search field",
+  );
+  for (let index = 0; index < 9; index++) {
+    await page.keyboard.press("Tab");
+    await page.waitForTimeout(40);
+  }
+  const measureSelection = () => {
+    const list = document.querySelector<HTMLElement>("#vomnibar-results")!;
+    const selected = document.querySelector<HTMLElement>("li.selected")!;
+    const listRect = list.getBoundingClientRect();
+    const selectedRect = selected.getBoundingClientRect();
+    return {
+      scrollTop: list.scrollTop,
+      visible:
+        selectedRect.top >= listRect.top - 1 &&
+        selectedRect.bottom <= listRect.bottom + 1,
+    };
+  };
+  const scrollState = await scrollVomnibar.evaluate(measureSelection);
+  assert(scrollState.scrollTop > 0, "The result list must scroll");
+  assert(scrollState.visible, "The selected result must remain visible");
+  await page.screenshot({ path: resolve(output, "vomnibar-scroll.png") });
+  const resultCount = await scrollVomnibar.locator("li").count();
+  const startId = await scrollVomnibar
+    .locator("li.selected")
+    .getAttribute("id");
+  const startIndex = Number(startId!.split("-").at(-1));
+  for (let step = 0; step < resultCount; step++) {
+    await page.keyboard.press("Tab");
+    const selected = scrollVomnibar.locator("li.selected");
+    await expect(selected).toHaveCount(1);
+    await expect(selected).toHaveAttribute(
+      "id",
+      `vomnibar-option-${(startIndex + step + 1) % resultCount}`,
+    );
+    await expect
+      .poll(
+        async () => (await scrollVomnibar.evaluate(measureSelection)).visible,
+      )
+      .toBe(true);
+  }
+  for (let index = 0; index < 7; index++) {
+    await page.keyboard.press("Shift+Tab");
+    await expect
+      .poll(
+        async () => (await scrollVomnibar.evaluate(measureSelection)).visible,
+      )
+      .toBe(true);
+  }
+  assert(
+    (await scrollVomnibar.evaluate(measureSelection)).scrollTop <
+      scrollState.scrollTop,
+    "Reverse selection must scroll toward the top",
+  );
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Shift+Tab");
+  await expect
+    .poll(async () => (await scrollVomnibar.evaluate(measureSelection)).visible)
+    .toBe(true);
+  await page.setViewportSize({ width: 1280, height: 340 });
+  await expect
+    .poll(async () => (await scrollVomnibar.evaluate(measureSelection)).visible)
+    .toBe(true);
+
+  // A slow empty-query completion reply must not allow native Tab traversal.
+  await scrollVomnibar.evaluate(() => {
+    const api = (globalThis as any).chrome;
+    const send = api.runtime.sendMessage.bind(api.runtime);
+    api.runtime.sendMessage = async (payload: { handler?: string }) => {
+      if (payload.handler === "filterCompletions")
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      return send(payload);
+    };
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (event.key === "Tab")
+          setTimeout(() => {
+            (globalThis as any).tabDefaultPrevented = event.defaultPrevented;
+          }, 0);
+      },
+      true,
+    );
+  });
+  await scrollVomnibar.locator("input").fill("");
+  await page.keyboard.press("Tab");
+  await expect
+    .poll(() =>
+      scrollVomnibar.evaluate(() => (globalThis as any).tabDefaultPrevented),
+    )
+    .toBe(true);
+  await expect(scrollVomnibar.locator("input")).toBeFocused();
+
+  await page.keyboard.press("Escape");
+  await page.waitForTimeout(600);
+  await page.setViewportSize({ width: 1280, height: 900 });
+
+  // The tab switcher must scroll its full set of candidates as well as omni results.
+  const tabIds = await worker.evaluate(async (origin) => {
+    const api = (globalThis as any).chrome;
+    return Promise.all(
+      Array.from({ length: 14 }, async (_, index) => {
+        const tab = await api.tabs.create({
+          url: `${origin}/target?scroll-tab=${index}`,
+          active: false,
+        });
+        return tab.id as number;
+      }),
+    );
+  }, server.url.origin);
+  await page.setViewportSize({ width: 1280, height: 420 });
+  await page.bringToFront();
+  await clickPage();
+  await page.keyboard.press("T");
+  await expect(scrollVomnibar.locator("input")).toBeFocused();
+  await expect
+    .poll(() => scrollVomnibar.locator("li").count())
+    .toBeGreaterThan(10);
+  for (let index = 0; index < 12; index++) await page.keyboard.press("Tab");
+  await expect
+    .poll(async () => (await scrollVomnibar.evaluate(measureSelection)).visible)
+    .toBe(true);
+  assert(
+    (await scrollVomnibar.evaluate(measureSelection)).scrollTop > 0,
+    "Tab switcher must scroll to candidates past the initial viewport",
+  );
+  await page.screenshot({ path: resolve(output, "vomnibar-tabs-scroll.png") });
+  await page.keyboard.press("Escape");
+  await worker.evaluate(async (ids) => {
+    await (globalThis as any).chrome.tabs.remove(ids);
+  }, tabIds);
+  await page.waitForTimeout(300);
+  await page.setViewportSize({ width: 1280, height: 900 });
 
   // Help dialog is React/Material and follows palette changes.
   await clickPage();

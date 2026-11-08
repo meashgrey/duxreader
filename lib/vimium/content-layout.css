@@ -1,0 +1,6 @@
+/* Center the React panel against the complete page viewport, rather than the
+   upstream frame's viewport with its fixed 70px top offset. */
+iframe.vomnibar-frame {
+  top: 0;
+  height: 100%;
+}

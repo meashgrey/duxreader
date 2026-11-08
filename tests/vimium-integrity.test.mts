@@ -51,6 +51,9 @@ test("Vimium background tolerates Duxreader runtime messages", async () => {
   expect(background).not.toContain("../icons/action_");
   expect(background).toContain("icons/action_enabled_16.png");
   expect(background).toContain("chrome.action ?? chrome.browserAction");
+  expect(background).toContain("resultLimit");
+  expect(background).toContain("maxResults = 100");
+  expect(background).toContain("Number.MAX_SAFE_INTEGER");
 });
 
 test("an uninitialized Vimium dependency gives an actionable error", async () => {
