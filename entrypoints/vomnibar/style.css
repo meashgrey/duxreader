@@ -60,8 +60,15 @@
 }
 
 .vomnibar li.selected {
-  background: var(--md-sys-color-primary-container);
+  /* Legacy four-color themes map primary-container to the same surface as the
+     list, so always tint the selected row with the accent as well. */
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary) 20%,
+    var(--md-sys-color-primary-container)
+  );
   color: var(--md-sys-color-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--md-sys-color-primary);
 }
 
 .vomnibar li {

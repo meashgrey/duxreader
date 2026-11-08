@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { chromium } from "@playwright/test";
+import { luminance, parseColor } from "../lib/color-roles";
 
 const extension = resolve(".output/chrome-mv3");
 assert(
@@ -128,17 +129,34 @@ try {
   await page.keyboard.press("ArrowDown");
   const selection = vomnibar.locator("li.selected");
   await selection.waitFor();
-  const vomnibarColors = await vomnibar.evaluate(() => ({
-    primary: getComputedStyle(document.documentElement)
-      .getPropertyValue("--md-sys-color-primary")
-      .trim(),
-    selected: getComputedStyle(document.querySelector("li.selected")!)
-      .backgroundColor,
-    body: getComputedStyle(document.body).backgroundColor,
-  }));
+  const vomnibarColors = await vomnibar.evaluate(() => {
+    const selected = document.querySelector("li.selected")!;
+    return {
+      primary: getComputedStyle(document.documentElement)
+        .getPropertyValue("--md-sys-color-primary")
+        .trim(),
+      selected: getComputedStyle(selected).backgroundColor,
+      selectedText: getComputedStyle(selected).color,
+      list: getComputedStyle(document.querySelector(".vomnibar")!)
+        .backgroundColor,
+      body: getComputedStyle(document.body).backgroundColor,
+    };
+  });
   assert.equal(vomnibarColors.primary, colors.accent);
-  assert.equal(vomnibarColors.selected, rgb(colors.surface));
   assert.equal(vomnibarColors.body, "rgba(0, 0, 0, 0)");
+  const selectedColor = parseColor(vomnibarColors.selected)!;
+  const listColor = parseColor(vomnibarColors.list)!;
+  const selectedText = parseColor(vomnibarColors.selectedText)!;
+  const contrast = (a: number, b: number) =>
+    (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  assert(
+    contrast(luminance(selectedColor), luminance(listColor)) > 1.15,
+    "The selected Vomnibar row must contrast with the list surface",
+  );
+  assert(
+    contrast(luminance(selectedColor), luminance(selectedText)) >= 4.5,
+    "Selected Vomnibar text must remain readable",
+  );
   await page.screenshot({ path: resolve(output, "vomnibar.png") });
   await page.keyboard.press("Escape");
   for (let i = 0; i < 60; i++) {
