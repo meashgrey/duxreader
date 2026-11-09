@@ -166,6 +166,80 @@ h2 {
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-sys-shape-corner-medium);
 }
+.site-card {
+  margin-top: var(--dux-space-2);
+  padding: var(--dux-space-2) var(--dux-space-3);
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-surface-container);
+}
+.site-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dux-space-2);
+}
+.site-copy {
+  min-width: 0;
+}
+.site-copy p {
+  margin-top: 2px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  overflow-wrap: anywhere;
+}
+.site-note {
+  margin-top: var(--dux-space-1);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+}
+.excluded-list {
+  margin-top: var(--dux-space-1);
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+.excluded-list summary {
+  min-height: 40px;
+}
+.excluded-list ul {
+  max-height: 128px;
+  margin: 0 0 var(--dux-space-1);
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.excluded-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--dux-space-1);
+  padding: 4px 0;
+  color: var(--md-sys-color-on-surface);
+  font-size: var(--md-sys-typescale-body-small-size);
+  line-height: var(--md-sys-typescale-body-small-line-height);
+  overflow-wrap: anywhere;
+}
+.remove-site {
+  flex: none;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  font: inherit;
+}
+.remove-site:hover {
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary) 12%,
+    transparent
+  );
+}
+.remove-site:focus-visible {
+  outline: 3px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
 .source-section {
   margin-top: var(--dux-space-3);
 }

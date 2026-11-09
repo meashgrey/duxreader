@@ -18,6 +18,12 @@ import {
   Switch,
 } from "../../components/material";
 import { materialRoles } from "../../lib/material";
+import {
+  EXCLUDED_SITES_KEY,
+  readExcludedSites,
+  setSiteExcluded,
+  siteForUrl,
+} from "../../lib/site-exclusions";
 import type { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 import type { MdSwitch } from "@material/web/switch/switch.js";
 import { useUIFont } from "../../lib/use-ui-font";
@@ -44,6 +50,8 @@ function App() {
   const [formError, setFormError] = React.useState("");
   const [pickerStatus, setPickerStatus] = React.useState("idle");
   const [pickerError, setPickerError] = React.useState("");
+  const [site, setSite] = React.useState<string | null>(null);
+  const [excludedSites, setExcludedSites] = React.useState<string[]>([]);
   React.useEffect(() => {
     let disposed = false;
     let snapshot: Record<string, unknown> = {};
@@ -61,6 +69,7 @@ function App() {
       "lastApplied",
       "pickerStatus",
       "pickerError",
+      EXCLUDED_SITES_KEY,
     ];
     const update = () => {
       const data = snapshot;
@@ -73,6 +82,7 @@ function App() {
       setPickerError(
         typeof data.pickerError === "string" ? data.pickerError : "",
       );
+      setExcludedSites(readExcludedSites(data[EXCLUDED_SITES_KEY]));
       setEnabled(data[ENABLED_KEY] !== false);
       setStatus(
         typeof data.bridgeStatus === "string"
@@ -125,7 +135,20 @@ function App() {
       browser.storage.onChanged.removeListener(onChanged);
     };
   }, []);
-  // Keep in-progress edits when unrelated theme or connection updates arrive.
+  React.useEffect(() => {
+    let disposed = false;
+    void browser.tabs
+      .query({ active: true, currentWindow: true })
+      .then(([tab]) => {
+        if (!disposed) setSite(siteForUrl(tab?.url) ?? null);
+      })
+      .catch(() => {
+        if (!disposed) setSite(null);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, []);
   React.useEffect(() => {
     setDraft(source);
   }, [source]);
@@ -191,6 +214,21 @@ function App() {
     try {
       await browser.runtime.sendMessage({ type: "reconnect" });
     } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function updateSiteExclusion(
+    target: string,
+    excluded: boolean,
+  ): Promise<void> {
+    setFormError("");
+    const next = setSiteExcluded(excludedSites, target, excluded);
+    setExcludedSites(next);
+    try {
+      await browser.storage.local.set({ [EXCLUDED_SITES_KEY]: next });
+    } catch (error) {
+      setExcludedSites(excludedSites);
       setFormError(String(error));
     }
   }
@@ -261,6 +299,60 @@ function App() {
             />
           ))}
         </div>
+      </section>
+
+      <section className="site-card" aria-labelledby="site-heading">
+        <div className="site-heading">
+          <div className="site-copy">
+            <h2 id="site-heading">This site</h2>
+            <p title={site ?? undefined}>
+              {site ?? "Not available on this page"}
+            </p>
+          </div>
+          <Switch
+            selected={site ? !excludedSites.includes(site) : false}
+            disabled={!ready || !site}
+            aria-label="Theme this site"
+            onChange={(event) => {
+              if (site)
+                void updateSiteExclusion(
+                  site,
+                  !(event.target as MdSwitch).selected,
+                );
+            }}
+          />
+        </div>
+        <p className="site-note">
+          {!site
+            ? "Site controls are available on http and https pages."
+            : excludedSites.includes(site)
+              ? "This site keeps its original colors."
+              : "This site follows your desktop palette."}
+        </p>
+        {excludedSites.length > 0 && (
+          <details className="excluded-list">
+            <summary>
+              {excludedSites.length} excluded site
+              {excludedSites.length === 1 ? "" : "s"}
+            </summary>
+            <ul>
+              {excludedSites.map((excludedSite) => (
+                <li key={excludedSite}>
+                  <span>{excludedSite}</span>
+                  <button
+                    type="button"
+                    className="remove-site"
+                    onClick={() => {
+                      void updateSiteExclusion(excludedSite, false);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
       </section>
 
       <section className="source-section" aria-labelledby="source-heading">
