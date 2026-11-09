@@ -1,3 +1,4 @@
+// Rule authoring guide: ./README.md
 import github from "./github/index.mts";
 import type { SiteRules } from "./types.mts";
 

@@ -35,6 +35,7 @@ semantic detection; stylesheet-only colors need additional framework rules.
 
 Site rules live in `sites/<site>/`: the site index declares hostnames and groups
 page-specific modules such as `github/repository.mts` and `github/search.mts`.
+See [sites/README.md](sites/README.md) for the rule-authoring guide.
 Rules can also declare optional pathname patterns. The registry matches them once per palette application.
 Keep shared component rules in `semantic-colors.mts`.
 
