@@ -1,4 +1,5 @@
 import type { Theme } from "./theme";
+import type { UserEngineRules } from "./inspector/rules";
 import { configure, remove } from "./engine/kernel.js";
 
 // The dynamic renderer owns per-document upstream state. Keep desktop bridge,
@@ -19,15 +20,19 @@ export function createPageRenderer(
     previous = "";
   }
   return {
-    apply(theme: Theme | undefined, enabled: boolean) {
+    apply(
+      theme: Theme | undefined,
+      enabled: boolean,
+      userRules?: UserEngineRules,
+    ) {
       if (!theme || !enabled) return stop();
-      const key = JSON.stringify(theme);
+      const key = JSON.stringify([theme, userRules]);
       if (active && key === previous) return;
       // Desktop palettes can change roles that upstream's inline cache key
       // does not include. A rare palette update uses upstream teardown before
       // reinitializing; ordinary page interactions retain all core caches.
       if (active) remove();
-      configure(theme, options.readCSS);
+      configure(theme, options.readCSS, userRules);
       previous = key;
       active = true;
     },

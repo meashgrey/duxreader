@@ -62,6 +62,14 @@ for (const path of contentScripts) {
 }
 for (const [upstream, replacement] of pageReplacements)
   content = content.replaceAll(upstream, replacement);
+const runtimeBoundary =
+  'Utils.assert(request.handler != null, "Request is missing handler", request);';
+if (content.split(runtimeBoundary).length !== 2)
+  throw new Error("Vimium content runtime message boundary changed upstream");
+content = content.replace(
+  runtimeBoundary,
+  "if (request.handler == null) return false;",
+);
 await Bun.write("public/vimium/content.js", content);
 
 // Vimium's background assumes its content script is the first manifest entry.

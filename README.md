@@ -4,7 +4,7 @@
   <img src="public/duxlogo.svg" alt="duxlogo" width="100" />
 </p>
 
-Bring your desktop palette to web pages. Built with WXT, React, Material Design 3, and a Rust file-watching bridge. The popup can exclude individual sites by hostname; excluded sites keep their original colors.
+Bring your desktop palette to web pages. Built with WXT, React, Material Design 3, and a Rust file-watching bridge. The popup can exclude individual sites by hostname; excluded sites keep their original colors. An element picker can preserve or map selected page colors and copy the resulting per-site rules for source-level site fixes.
 
 |                             Purple                              |                            Pink                             |
 | :-------------------------------------------------------------: | :---------------------------------------------------------: |

@@ -26,6 +26,14 @@ import {
 } from "../../lib/site-exclusions";
 import type { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 import type { MdSwitch } from "@material/web/switch/switch.js";
+import {
+  readUserRules,
+  removeUserRule,
+  rulesForHost,
+  USER_RULES_KEY,
+  userRuleKey,
+  type UserRule,
+} from "../../lib/inspector/rules";
 import { useUIFont } from "../../lib/use-ui-font";
 import { installedUIFonts } from "../../lib/ui-font";
 import "./style.css";
@@ -52,6 +60,8 @@ function App() {
   const [pickerError, setPickerError] = React.useState("");
   const [site, setSite] = React.useState<string | null>(null);
   const [excludedSites, setExcludedSites] = React.useState<string[]>([]);
+  const [userRules, setUserRules] = React.useState<UserRule[]>([]);
+  const [copied, setCopied] = React.useState(false);
   React.useEffect(() => {
     let disposed = false;
     let snapshot: Record<string, unknown> = {};
@@ -70,6 +80,7 @@ function App() {
       "pickerStatus",
       "pickerError",
       EXCLUDED_SITES_KEY,
+      USER_RULES_KEY,
     ];
     const update = () => {
       const data = snapshot;
@@ -83,6 +94,7 @@ function App() {
         typeof data.pickerError === "string" ? data.pickerError : "",
       );
       setExcludedSites(readExcludedSites(data[EXCLUDED_SITES_KEY]));
+      setUserRules(readUserRules(data[USER_RULES_KEY]));
       setEnabled(data[ENABLED_KEY] !== false);
       setStatus(
         typeof data.bridgeStatus === "string"
@@ -218,6 +230,65 @@ function App() {
     }
   }
 
+  const siteRules = site ? rulesForHost(userRules, site) : [];
+
+  async function startInspector(mode: "preserve" | "map") {
+    setFormError("");
+    try {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (tab?.id == null) throw new Error("No active page to inspect.");
+      await browser.tabs.sendMessage(tab.id, {
+        type: "duxreader:start-picker",
+        mode,
+      });
+      window.close();
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function copyRules() {
+    if (!site || siteRules.length === 0) return;
+    const payload = siteRules.map((rule) =>
+      rule.kind === "map"
+        ? {
+            kind: rule.kind,
+            selector: rule.selector,
+            property: rule.property,
+            target: rule.target,
+          }
+        : {
+            kind: rule.kind,
+            selector: rule.selector,
+            declarations: rule.declarations,
+          },
+    );
+    const text =
+      `// Duxreader user rules for ${site}\n` +
+      JSON.stringify(payload, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function deleteRule(rule: UserRule) {
+    setFormError("");
+    try {
+      await browser.storage.local.set({
+        [USER_RULES_KEY]: removeUserRule(userRules, rule),
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
   async function updateSiteExclusion(
     target: string,
     excluded: boolean,
@@ -329,6 +400,26 @@ function App() {
               ? "This site keeps its original colors."
               : "This site follows your desktop palette."}
         </p>
+        <div className="picker-actions">
+          <OutlinedButton
+            type="button"
+            disabled={!ready || !site}
+            onClick={() => {
+              void startInspector("preserve");
+            }}
+          >
+            Preserve element colors
+          </OutlinedButton>
+          <FilledButton
+            type="button"
+            disabled={!ready || !site}
+            onClick={() => {
+              void startInspector("map");
+            }}
+          >
+            Map element color
+          </FilledButton>
+        </div>
         {excludedSites.length > 0 && (
           <details className="excluded-list">
             <summary>
@@ -354,6 +445,55 @@ function App() {
           </details>
         )}
       </section>
+
+      {site && (
+        <section className="user-rules-card" aria-labelledby="rules-heading">
+          <div className="rules-heading">
+            <div>
+              <h2 id="rules-heading">Custom rules</h2>
+              <p className="site-note">
+                {siteRules.length === 0
+                  ? "No custom rules for this site."
+                  : `${siteRules.length} rule${siteRules.length === 1 ? "" : "s"} for ${site}`}
+              </p>
+            </div>
+            <OutlinedButton
+              type="button"
+              disabled={siteRules.length === 0}
+              onClick={() => {
+                void copyRules();
+              }}
+            >
+              {copied ? "Copied" : "Copy for agent"}
+            </OutlinedButton>
+          </div>
+          {siteRules.length > 0 && (
+            <ul className="user-rule-list">
+              {siteRules.map((rule) => (
+                <li key={userRuleKey(rule)}>
+                  <div>
+                    <code>{rule.selector}</code>
+                    <span>
+                      {rule.kind === "map"
+                        ? `${rule.property} → ${rule.target}`
+                        : "Preserve colors"}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    className="remove-site"
+                    onClick={() => {
+                      void deleteRule(rule);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
 
       <section className="source-section" aria-labelledby="source-heading">
         <h2 id="source-heading" className="section-label">

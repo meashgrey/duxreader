@@ -240,6 +240,70 @@ h2 {
   outline: 3px solid var(--md-sys-color-primary);
   outline-offset: 2px;
 }
+.picker-actions {
+  display: grid;
+  gap: var(--dux-space-1);
+  margin-top: var(--dux-space-2);
+}
+.picker-actions md-outlined-button,
+.picker-actions md-filled-button {
+  display: flex;
+  width: 100%;
+}
+.user-rules-card {
+  margin-top: var(--dux-space-2);
+  padding: var(--dux-space-2) var(--dux-space-3);
+  border-radius: var(--md-sys-shape-corner-large);
+  background: var(--md-sys-color-surface-container);
+}
+.rules-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dux-space-1);
+}
+.rules-heading > div {
+  min-width: 0;
+}
+.rules-heading md-outlined-button {
+  flex: none;
+  --md-outlined-button-container-height: 40px;
+  font-size: var(--md-sys-typescale-body-small-size);
+}
+.user-rule-list {
+  max-height: 176px;
+  margin: var(--dux-space-1) 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.user-rule-list li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--dux-space-1);
+  padding: 8px 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+.user-rule-list li > div {
+  min-width: 0;
+}
+.user-rule-list code {
+  display: block;
+  overflow: hidden;
+  color: var(--md-sys-color-on-surface);
+  font: 11px/16px ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.user-rule-list span {
+  display: block;
+  margin-top: 2px;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size, 12px);
+  line-height: 16px;
+  overflow-wrap: anywhere;
+}
 .source-section {
   margin-top: var(--dux-space-3);
 }

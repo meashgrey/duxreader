@@ -94,7 +94,7 @@ export default defineConfig({
             "clipboardRead" as const,
             "clipboardWrite" as const,
           ]
-        : ["favicon" as const]),
+        : ["favicon" as const, "clipboardWrite" as const]),
     ],
     options_ui: {
       page: "pages/options.html",
