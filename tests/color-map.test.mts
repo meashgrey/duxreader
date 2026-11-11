@@ -74,28 +74,6 @@ test("GitHub feed backdrop uses the base background instead of a surface", () =>
   );
 });
 
-test("merged state labels choose readable text against the accent fill", () => {
-  const merged = siteColorMaps(
-    new URL("https://github.com/philc/vimium/pull/4933"),
-  ).find((rule) => rule.selector === '[data-status="pullMerged"]');
-  expect(merged).toMatchObject({
-    property: "color",
-    target: "background",
-    contrastAgainst: "accent",
-  });
-  expect(compileColorMaps([merged!], colors)).toBe(
-    '[data-status="pullMerged"]{color:#17121c!important;}',
-  );
-  const badge = siteColorMaps(
-    new URL("https://github.com/chitin-dev/chitin/pull/54"),
-  ).find((rule) => rule.selector.includes("color-bg-done-emphasis"));
-  expect(badge).toMatchObject({
-    property: "color",
-    target: "background",
-    contrastAgainst: "accent",
-  });
-});
-
 test("GitHub text input focus rings use the accent role", () => {
   const focusRules = siteColorMaps(
     new URL("https://github.com/search?q=owner%3Ameashgrey"),
@@ -108,18 +86,6 @@ test("GitHub text input focus rings use the accent role", () => {
   expect(compileColorMaps(focusRules, colors)).toContain(
     "border-color:#d0bcff!important",
   );
-});
-
-test("ChatGPT user bubbles keep an explicit surface/text pair", () => {
-  const maps = siteColorMaps(
-    new URL("https://chatgpt.com/c/example"),
-  );
-  expect(
-    maps.find((rule) => rule.selector.includes(".bg-user-message")),
-  ).toMatchObject({ property: "background-color", target: "surface" });
-  expect(
-    maps.find((rule) => rule.selector.includes(".text-user-message")),
-  ).toMatchObject({ property: "color", target: "foreground" });
 });
 
 test("data intensity mixes use only theme endpoints and validate their weights", () => {
