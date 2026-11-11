@@ -1,8 +1,9 @@
 // Rule authoring guide: ./README.md
+import chatgpt from "./chatgpt/index.mts";
 import github from "./github/index.mts";
 import type { SiteRules } from "./types.mts";
 
-const rules: readonly SiteRules[] = [github];
+const rules: readonly SiteRules[] = [chatgpt, github];
 const byHostname = new Map<string, SiteRules[]>();
 for (const rule of rules) {
   for (const hostname of rule.hostnames) {

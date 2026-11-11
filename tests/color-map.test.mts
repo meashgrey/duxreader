@@ -110,6 +110,18 @@ test("GitHub text input focus rings use the accent role", () => {
   );
 });
 
+test("ChatGPT user bubbles keep an explicit surface/text pair", () => {
+  const maps = siteColorMaps(
+    new URL("https://chatgpt.com/c/example"),
+  );
+  expect(
+    maps.find((rule) => rule.selector.includes(".bg-user-message")),
+  ).toMatchObject({ property: "background-color", target: "surface" });
+  expect(
+    maps.find((rule) => rule.selector.includes(".text-user-message")),
+  ).toMatchObject({ property: "color", target: "foreground" });
+});
+
 test("data intensity mixes use only theme endpoints and validate their weights", () => {
   expect(
     compileColorMaps(
