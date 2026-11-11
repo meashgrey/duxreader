@@ -32,7 +32,10 @@ export function mapDesktopColor(
             ? colors.background
             : colors.surface
           : isBlue
-            ? colors.accent
+            ? // Accent is a foreground/control role. Using it for large
+              // colored backgrounds makes white text unreadable whenever the
+              // palette accent is light. Keep colored backdrops on a surface.
+              colors.surface
             : "";
   } else if (role === "border") {
     value = isNeutral ? (material["outline-variant"] ?? colors.surface) : "";
