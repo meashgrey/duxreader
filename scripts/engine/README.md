@@ -66,6 +66,10 @@ per-site JSON reports are written under `.temp/sites`, with an aggregate report.
 These tests require network access and Chromium (`nix develop path:.` on NixOS).
 Live tests remain separate from deterministic CI fixtures.
 
+Site modules can also declare raw `css` overrides for components whose colors are
+computed from element-scoped variables, such as GitHub token labels; these run
+after color maps and before user rules. See `sites/README.md`.
+
 Site modules can also declare `colorMap` entries. Each entry has a CSS selector,
 a color property, and a `target` from `background`, `surface`, `foreground`, or
 `accent`. Raw colors and unsupported targets are rejected. For example:

@@ -4,10 +4,12 @@ import feed from "./feed.mts";
 import forms from "./forms.mts";
 import repository from "./repository.mts";
 import search from "./search.mts";
+import labels from "./labels.mts";
 import type { SiteRules } from "../types.mts";
 
 export default {
   hostnames: ["github.com", "www.github.com"],
   colorMap: [...header, ...profile, ...feed, ...forms],
   preserveInline: [...repository, ...search],
+  css: labels,
 } satisfies SiteRules;

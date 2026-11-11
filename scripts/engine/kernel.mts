@@ -1,5 +1,5 @@
 import { compileColorMaps } from "./color-map.mts";
-import { siteColorMaps } from "./sites/index.mts";
+import { siteColorMaps, siteCSS } from "./sites/index.mts";
 import type { Theme } from "../../lib/theme";
 import type { StylesheetReader } from "./network.mts";
 import { getPreservedInlineSelectors } from "./semantic-colors.mts";
@@ -61,6 +61,7 @@ export function configure(
       ],
       css: [
         mappedCSS,
+        siteCSS(url),
         userRules?.css ?? "",
         vimiumContentTheme(theme),
         theme.css,

@@ -5,4 +5,5 @@ export interface SiteRules {
   readonly paths?: readonly RegExp[];
   readonly preserveInline?: readonly string[];
   readonly colorMap?: readonly ColorMap[];
+  readonly css?: readonly string[];
 }

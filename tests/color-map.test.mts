@@ -3,7 +3,7 @@ import {
   compileColorMaps,
   type ColorMap,
 } from "../scripts/engine/color-map.mts";
-import { siteColorMaps } from "../scripts/engine/sites/index.mts";
+import { siteColorMaps, siteCSS } from "../scripts/engine/sites/index.mts";
 const colors = {
   background: "#17121c",
   surface: "#312838",
@@ -129,4 +129,15 @@ test("highlight text chooses contrast from the supplied palette rather than hard
       colors,
     ),
   ).toThrow();
+});
+
+test("GitHub labels restore their native variable formulas in both color modes", () => {
+  const css = siteCSS(new URL("https://github.com/meashgrey"));
+  expect(css).toContain('span[class*="Token-IssueLabel"]');
+  expect(css).toContain("var(--label-r)");
+  expect(css).toContain('@media (prefers-color-scheme: light)');
+  expect(css).toContain('@media (prefers-color-scheme: dark)');
+  expect(css).toContain('[data-color-mode="dark"]');
+  expect(css).not.toContain("nth-of-type");
+  expect(siteCSS(new URL("https://example.org/meashgrey"))).toBe("");
 });
