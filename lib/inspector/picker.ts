@@ -1,5 +1,6 @@
 import type { Theme } from "../theme";
 import {
+  familySelector,
   resolvePickerTarget,
   type FamilySelection,
 } from "./selector";
@@ -68,6 +69,18 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         background: color-mix(in srgb, ${colors.accent} 14%, transparent);
         border-radius: 4px;
         z-index: 2;
+      }
+      /* Family preview: the same selector would also restyle these elements.
+         Uses the foreground color so the solid accent box always stays
+         distinguishable from the elements it would affect. */
+      .match {
+        position: fixed;
+        pointer-events: none;
+        border: 1px dashed ${colors.foreground};
+        background: color-mix(in srgb, ${colors.foreground} 8%, transparent);
+        border-radius: 4px;
+        opacity: 0.6;
+        z-index: 1;
       }
       .label {
         position: fixed;
@@ -280,20 +293,92 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   let frozen = false;
   let selected: Element | null = null;
   let selection: FamilySelection | null = null;
+  let hovered: Element | null = null;
+  let matchNodes: Array<{ element: Element; node: HTMLElement }> = [];
+  let familySize = 1;
+  let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+  let scrollFrame: number | null = null;
 
-  const updateHighlight = (element: Element) => {
+  // Fixed-position boxes are anchored to the viewport, so every open picker
+  // refreshes them after scrolling instead of letting them drift.
+  const placeHighlight = (element: Element) => {
     const rect = element.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      highlight.classList.add("hidden");
+      label.classList.add("hidden");
+      return false;
+    }
     Object.assign(highlight.style, {
       left: `${rect.left}px`,
       top: `${rect.top}px`,
       width: `${rect.width}px`,
       height: `${rect.height}px`,
     });
-    label.textContent = element.localName + (element.id ? `#${element.id}` : "");
+    const name = element.localName + (element.id ? `#${element.id}` : "");
+    label.textContent =
+      familySize > 1 ? `${name}  ·  ${familySize} matches` : name;
     label.style.left = `${Math.max(8, rect.left)}px`;
-    label.style.top = `${Math.max(8, rect.top - 24)}px`;
+    const labelTop = rect.top - 26;
+    label.style.top = `${labelTop < 8 ? Math.min(rect.bottom + 6, window.innerHeight - 26) : labelTop}px`;
     highlight.classList.remove("hidden");
     label.classList.remove("hidden");
+    return true;
+  };
+
+  const placeMatches = () => {
+    const allowed = !frozen || scopeToggle.checked;
+    for (const { element, node } of matchNodes) {
+      const rect = element.getBoundingClientRect();
+      const visible = allowed && rect.width > 0 && rect.height > 0;
+      node.style.display = visible ? "block" : "none";
+      if (!visible) continue;
+      Object.assign(node.style, {
+        left: `${rect.left}px`,
+        top: `${rect.top}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+      });
+    }
+  };
+
+  const reposition = () => {
+    scrollFrame = null;
+    if (finished) return;
+    if (selected) placeHighlight(selected);
+    else if (hovered) placeHighlight(hovered);
+    placeMatches();
+  };
+
+  const scheduleReposition = () => {
+    if (scrollFrame !== null) return;
+    scrollFrame = requestAnimationFrame(reposition);
+  };
+
+  const clearMatches = () => {
+    for (const { node } of matchNodes) node.remove();
+    matchNodes = [];
+    familySize = 1;
+  };
+
+  // Cap previews: every box is re-measured on scroll, and a page with
+  // thousands of matches would cost more than the overview it provides.
+  const renderMatches = (element: Element, family: FamilySelection) => {
+    clearMatches();
+    familySize = family.matches.length;
+    for (const match of family.matches.slice(0, 120)) {
+      if (match === element) continue;
+      const node = doc.createElement("div");
+      node.className = "match";
+      shadow.append(node);
+      matchNodes.push({ element: match, node });
+    }
+    placeMatches();
+  };
+
+  const showHovered = (element: Element, family: FamilySelection) => {
+    hovered = element;
+    renderMatches(element, family);
+    placeHighlight(element);
   };
 
   const elementAt = (event: MouseEvent) => {
@@ -306,7 +391,20 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   const onMove = (event: MouseEvent) => {
     if (frozen || finished) return;
     const element = elementAt(event);
-    if (element) updateHighlight(element);
+    if (!element || element === hovered) return;
+    hovered = element;
+    // Pointer feedback must stay cheap: paint the raw element now and defer
+    // the family search until the pointer settles.
+    placeHighlight(element);
+    if (hoverTimer !== null) clearTimeout(hoverTimer);
+    hoverTimer = setTimeout(() => {
+      hoverTimer = null;
+      if (frozen || finished || hovered !== element) return;
+      // Resolution and synthesis query the document, so they run once per
+      // resting position rather than on every mousemove.
+      const resolved = resolvePickerTarget(element);
+      showHovered(resolved.element, resolved.selection);
+    }, 70);
   };
 
   const updateScopeText = () => {
@@ -317,15 +415,22 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     mapSelector.textContent = scopeToggle.checked
       ? selection.selector
       : selection.exact;
+    placeMatches();
   };
 
   const showMapPanel = (element: Element, family: FamilySelection) => {
     selected = element;
     selection = family;
     frozen = true;
+    if (hoverTimer !== null) {
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
     scopeRow.classList.toggle("hidden", family.matches.length <= 1);
     scopeToggle.checked = family.matches.length > 1;
     updateScopeText();
+    placeHighlight(element);
+    renderMatches(element, family);
     const background = getComputedStyle(element).backgroundColor;
     propertySelect.value =
       background && background !== "rgba(0, 0, 0, 0)"
@@ -343,6 +448,12 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     selected = element;
     selection = family;
     frozen = true;
+    if (hoverTimer !== null) {
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
+    placeHighlight(element);
+    renderMatches(element, family);
     preserveSelector.textContent = family.selector;
     preserveWarning.textContent = `${family.matches.length} matching elements have ${variants} different color sets. One snapshot would freeze them all to this element's colors. Map them to theme roles instead, or keep their formula in a site rule.`;
     hint.classList.add("hidden");
@@ -362,6 +473,10 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     doc.removeEventListener("click", onClick, true);
     doc.removeEventListener("keydown", onKeyDown, true);
     doc.removeEventListener("mousedown", onMouseDown, true);
+    doc.removeEventListener("scroll", onScroll, true);
+    window.removeEventListener("resize", onScroll);
+    if (hoverTimer !== null) clearTimeout(hoverTimer);
+    if (scrollFrame !== null) cancelAnimationFrame(scrollFrame);
     doc.documentElement.style.cursor = previousCursor;
     doc.documentElement.style.userSelect = previousUserSelect;
     host.remove();
@@ -370,6 +485,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   const finish = (text: string, error = false) => {
     highlight.classList.add("hidden");
     label.classList.add("hidden");
+    clearMatches();
     mapPanel.classList.add("hidden");
     preservePanel.classList.add("hidden");
     showToast(text, error);
@@ -399,6 +515,8 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
           commit: false,
         });
         if (finished) return;
+        // The probe temporarily removed the renderer, so re-measure boxes.
+        scheduleReposition();
         if (probe.variants === 0) {
           finish("This element has no colors to preserve.", true);
           return;
@@ -418,6 +536,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
           );
           return;
         }
+        scheduleReposition();
         showPreservePanel(element, family, probe.variants);
       } catch (error) {
         console.error("Duxreader picker:", error);
@@ -439,7 +558,9 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     event.preventDefault();
     event.stopImmediatePropagation();
     const resolved = resolvePickerTarget(element);
-    updateHighlight(resolved.element);
+    selected = resolved.element;
+    selection = resolved.selection;
+    placeHighlight(resolved.element);
     if (options.mode === "preserve") {
       startPreserve(resolved.element, resolved.selection);
     } else {
@@ -458,6 +579,8 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       cleanup();
     }
   };
+
+  const onScroll = () => scheduleReposition();
 
   scopeToggle.addEventListener("change", updateScopeText);
 
@@ -502,6 +625,8 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   doc.addEventListener("click", onClick, true);
   doc.addEventListener("keydown", onKeyDown, true);
   doc.addEventListener("mousedown", onMouseDown, true);
+  doc.addEventListener("scroll", onScroll, { capture: true, passive: true });
+  window.addEventListener("resize", onScroll);
 
   return cleanup;
 }

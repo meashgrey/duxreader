@@ -163,16 +163,19 @@ function attributeCandidates(element: Element): Candidate[] {
   for (const [name, weight] of Object.entries(dataAttributeWeights)) {
     const value = usableAttributeValue(element.getAttribute(name), 120);
     if (!value) continue;
+    // Generic component names ("Text", "Box", "TokenBase") are as weak as
+    // typography classes, so a wrapper can still be climbed past.
+    const quality = semanticQuality(value);
     candidates.push({
       selector: `[${name}="${escapeAttribute(value)}"]`,
       kind: "semantic",
-      quality: 1,
+      quality,
       weight,
     });
     candidates.push({
       selector: `${tag}[${name}="${escapeAttribute(value)}"]`,
       kind: "semantic",
-      quality: 1,
+      quality,
       weight: weight - 2,
     });
   }
