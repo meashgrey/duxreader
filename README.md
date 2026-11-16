@@ -11,7 +11,9 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
   for source-level site fixes;
 - Generated class names are collapsed to component families, and stable data attributes, route prefixes,
   or structural families are preferred over instance paths. The picker previews how many elements a
-  rule affects, and preserve rules warn when matching elements have different colors.
+  rule affects. Overlapping boxes can be stepped through with the arrow keys before clicking.
+  Preserve rules only snapshot colors shared by the family, and offer per-element preservation when
+  instances legitimately differ.
 
 |                             Purple                              |                            Pink                             |
 | :-------------------------------------------------------------: | :---------------------------------------------------------: |

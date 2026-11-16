@@ -25,7 +25,10 @@ import {
   type UserRuleProperty,
   type UserRuleTarget,
 } from "../lib/inspector/rules";
-import { captureColorDeclarations } from "../lib/inspector/selector";
+import {
+  describeColorFamily,
+  selectorFor,
+} from "../lib/inspector/selector";
 import {
   startPicker,
   type PickerMode,
@@ -82,7 +85,10 @@ export default defineContentScript({
     const host = () => siteForFrame() ?? "";
     let pendingPreserve: {
       element: Element;
-      declarations: string;
+      stable: string;
+      own: string;
+      varying: readonly string[];
+      identityVariants: number;
     } | null = null;
     function sampleElements(matches: readonly Element[]): readonly Element[] {
       const limit = 200;
@@ -90,55 +96,98 @@ export default defineContentScript({
       const step = Math.ceil(matches.length / limit);
       return matches.filter((_, index) => index % step === 0);
     }
+    // Distinct-color families need one native snapshot per element.
+    function measureEach(matches: readonly Element[]) {
+      renderer.dispose();
+      try {
+        return matches.flatMap((match) => {
+          const declarations = describeColorFamily(match, [match]).own;
+          return declarations
+            ? [{ selector: selectorFor(match), declarations }]
+            : [];
+        });
+      } finally {
+        update();
+      }
+    }
+    // Measure native colors with the renderer removed, then always restore it.
+    function measurePreserve(request: PreserveRequest) {
+      renderer.dispose();
+      try {
+        return describeColorFamily(
+          request.element,
+          sampleElements(request.matches),
+        );
+      } finally {
+        update();
+      }
+    }
     async function preserveElement(
       request: PreserveRequest,
     ): Promise<PreserveResult> {
       const target = host();
       if (!target) throw new Error("This page has no site hostname.");
+      const cached =
+        pendingPreserve?.element === request.element ? pendingPreserve : null;
       if (!request.commit) {
-        renderer.dispose();
-        try {
-          const declarations = captureColorDeclarations(request.element);
-          const variants = new Set(
-            sampleElements(request.matches).map((element) =>
-              captureColorDeclarations(element),
-            ),
-          );
-          pendingPreserve = { element: request.element, declarations };
+        if (cached)
           return {
-            variants: declarations ? variants.size : 0,
-            declarations,
+            identityVariants: cached.identityVariants,
+            stable: cached.stable,
+            own: cached.own,
+            varying: cached.varying,
             saved: false,
           };
-        } finally {
-          update();
-        }
+        const family = measurePreserve(request);
+        pendingPreserve = { element: request.element, ...family };
+        return {
+          identityVariants: family.identityVariants,
+          stable: family.stable,
+          own: family.own,
+          varying: family.varying,
+          saved: false,
+        };
       }
-      let declarations =
-        pendingPreserve?.element === request.element
-          ? pendingPreserve.declarations
-          : "";
+      const family = cached ?? measurePreserve(request);
       pendingPreserve = null;
-      if (!declarations) {
-        renderer.dispose();
-        try {
-          declarations = captureColorDeclarations(request.element);
-        } finally {
-          update();
-        }
-      }
-      if (!declarations)
-        throw new Error("This element has no colors to preserve.");
       const state = await browser.storage.local.get(USER_RULES_KEY);
-      const next = addUserRule(readUserRules(state[USER_RULES_KEY]), {
-        kind: "preserve",
-        host: target,
-        selector: request.selector,
-        declarations,
-        createdAt: Date.now(),
-      });
+      let next = readUserRules(state[USER_RULES_KEY]);
+      if (request.variant === "each") {
+        // Distinct colors cannot share one snapshot, so every instance gets
+        // its own rule keyed by the exact selector that reaches only it.
+        const captured = measureEach(request.matches);
+        if (captured.length === 0)
+          throw new Error("These elements have no colors to preserve.");
+        for (const [index, entry] of captured.entries()) {
+          next = addUserRule(next, {
+            kind: "preserve",
+            host: target,
+            selector: entry.selector,
+            declarations: entry.declarations,
+            createdAt: Date.now() + index,
+          });
+        }
+      } else {
+        const declarations =
+          request.variant === "own" ? family.own : family.stable;
+        if (!declarations)
+          throw new Error("This element has no colors to preserve.");
+        next = addUserRule(next, {
+          kind: "preserve",
+          host: target,
+          selector: request.selector,
+          declarations,
+          createdAt: Date.now(),
+        });
+      }
       await browser.storage.local.set({ [USER_RULES_KEY]: next });
-      return { variants: 1, declarations, saved: true };
+      return {
+        identityVariants: family.identityVariants,
+        stable: family.stable,
+        own: family.own,
+        varying: family.varying,
+        saved: true,
+      };
     }
     async function mapElement(
       selector: string,

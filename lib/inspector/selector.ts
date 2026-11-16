@@ -553,15 +553,108 @@ export function selectorFor(element: Element): string {
   return parts.join(" > ");
 }
 
-export function captureColorDeclarations(element: Element): string {
+export type ColorValues = Map<string, string>;
+
+/** Identity colors decide whether two instances are "the same color". */
+export const identityColorProperties: readonly string[] = [
+  "color",
+  "background-color",
+  "background-image",
+  "fill",
+  "stroke",
+];
+
+export function captureColorValues(element: Element): ColorValues {
   const style = getComputedStyle(element);
-  return colorProperties
-    .map((property) => {
-      const value = style.getPropertyValue(property);
-      if (!value || (property === "background-image" && value === "none"))
-        return "";
-      return `${property}:${value}!important;`;
-    })
-    .filter(Boolean)
-    .join("");
+  const values: ColorValues = new Map();
+  for (const property of colorProperties) {
+    const value = style.getPropertyValue(property);
+    if (!value || (property === "background-image" && value === "none"))
+      continue;
+    values.set(property, value);
+  }
+  return values;
+}
+
+export function declarationsFromValues(values: ReadonlyMap<string, string>) {
+  let css = "";
+  for (const [property, value] of values)
+    css += `${property}:${value}!important;`;
+  return css;
+}
+
+export function captureColorDeclarations(element: Element): string {
+  return declarationsFromValues(captureColorValues(element));
+}
+
+export interface FamilyDeclarations {
+  /** Properties that are identical across every sampled instance. */
+  readonly stable: string;
+  /** Repeating properties that differ between instances. */
+  readonly varying: readonly string[];
+  /** Distinct identity-color combinations across the sampled instances. */
+  readonly identityVariants: number;
+  /** Declarations for the picked element itself. */
+  readonly own: string;
+}
+
+/**
+ * Splits a color snapshot into the part that describes the whole component
+ * family and the part that only belongs to one instance. Structural tints such
+ * as a divider border on the first row vary per row; they must not be frozen
+ * onto every sibling.
+ */
+export function describeColorFamily(
+  element: Element,
+  matches: readonly Element[],
+): FamilyDeclarations {
+  const ownValues = captureColorValues(element);
+  const sampled = matches.length > 0 ? matches : [element];
+  const samples = sampled.map((match) => captureColorValues(match));
+  const variants = new Set<string>();
+  for (const values of samples) {
+    variants.add(
+      identityColorProperties
+        .map((property) => values.get(property) ?? "")
+        .join("|"),
+    );
+  }
+  const stable: ColorValues = new Map();
+  const differing = new Set<string>();
+  for (const [property, value] of ownValues) {
+    let shared = true;
+    for (const values of samples) {
+      if (values.get(property) !== value) {
+        shared = false;
+        break;
+      }
+    }
+    if (shared) stable.set(property, value);
+    else differing.add(property);
+  }
+  // Borders move as a unit: pinning three sides of a divider while the fourth
+  // stays themed looks broken, so drop them all when any side differs.
+  const borderColors = [...ownValues.keys()].filter((property) =>
+    /^border-(?:top|right|bottom|left)-color$/.test(property),
+  );
+  if (borderColors.some((property) => differing.has(property))) {
+    for (const property of borderColors) {
+      stable.delete(property);
+      differing.add(property);
+    }
+  }
+  const varying = [
+    ...(borderColors.some((property) => differing.has(property))
+      ? ["border colors"]
+      : []),
+    ...[...differing].filter(
+      (property) => !/^border-(?:top|right|bottom|left)-color$/.test(property),
+    ),
+  ];
+  return {
+    stable: declarationsFromValues(stable),
+    varying,
+    identityVariants: variants.size,
+    own: declarationsFromValues(ownValues),
+  };
 }

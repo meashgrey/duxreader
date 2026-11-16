@@ -61,6 +61,18 @@ try {
     resolve("tests/browser/picker-fixture.ts"),
     "__pickerResult",
   );
+  await runFixture(
+    page,
+    "Inspector preserve",
+    resolve("tests/browser/preserve-fixture.ts"),
+    "__preserveResult",
+  );
+  await runFixture(
+    page,
+    "Inspector layers",
+    resolve("tests/browser/layers-fixture.ts"),
+    "__layersResult",
+  );
 } finally {
   await browser.close();
 }

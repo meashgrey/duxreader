@@ -8,18 +8,36 @@ import type { UserRuleProperty, UserRuleTarget } from "./rules";
 
 export type PickerMode = "preserve" | "map";
 
+export type PreserveVariant = "stable" | "own" | "each";
+
+/** Families with distinct colors get one rule per element, up to this cap. */
+export const PRESERVE_EACH_LIMIT = 50;
+
 export interface PreserveRequest {
   element: Element;
   selector: string;
   matches: readonly Element[];
+  /**
+   * "stable" keeps only declarations shared by the whole family, leaving
+   * per-instance differences (dividers, first-row rules) to the theme.
+   * "own" snapshots this element alone.
+   * "each" snapshots every match separately, for families whose colors
+   * legitimately differ per instance.
+   */
+  variant: PreserveVariant;
   /** Measure native colors first; only the commit call writes storage. */
   commit: boolean;
 }
 
 export interface PreserveResult {
-  /** Distinct native color sets across the matched elements. */
-  variants: number;
-  declarations: string;
+  /** Distinct text/background/fill/stroke combinations in the family. */
+  identityVariants: number;
+  /** Declarations shared by every sampled instance. */
+  stable: string;
+  /** Declarations for the picked element only. */
+  own: string;
+  /** Repeating properties that differ between instances. */
+  varying: readonly string[];
   saved: boolean;
 }
 
@@ -225,7 +243,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       options.mode === "preserve"
         ? "Click an element to preserve its colors"
         : "Click an element to map its color"
-    } · Esc to cancel</div>
+    }<span class="hint-layers"></span> · Esc to cancel</div>
     <div class="highlight hidden"></div>
     <div class="label hidden"></div>
     <div class="panel map hidden">
@@ -261,6 +279,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       <h2>Preserve element colors</h2>
       <p class="selector"></p>
       <p class="warning"></p>
+      <button class="action preserve-each hidden"></button>
       <button class="action preserve-one">Only this element</button>
       <button class="cancel preserve-cancel">Cancel</button>
     </div>
@@ -285,8 +304,11 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   const scopeText = mapPanel.querySelector<HTMLElement>(".scope-text")!;
   const preserveOne =
     preservePanel.querySelector<HTMLButtonElement>(".preserve-one")!;
+  const preserveEach =
+    preservePanel.querySelector<HTMLButtonElement>(".preserve-each")!;
   const propertySelect = shadow.querySelector<HTMLSelectElement>("#property")!;
   const hint = shadow.querySelector<HTMLElement>(".hint")!;
+  const hintLayers = shadow.querySelector<HTMLElement>(".hint-layers")!;
   const toast = shadow.querySelector<HTMLElement>(".toast")!;
 
   let finished = false;
@@ -294,6 +316,15 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   let selected: Element | null = null;
   let selection: FamilySelection | null = null;
   let hovered: Element | null = null;
+  // Overlapping boxes (nested cards, adjacent cells sharing a border) stack
+  // several candidates under one point; the picker keeps the whole stack so
+  // the user can step through it.
+  let layers: Element[] = [];
+  let layerIndex = 0;
+  let layerSignature = "";
+  // Stepping with the arrow keys is an explicit choice: it must survive the
+  // heuristic that otherwise climbs from typography wrappers to components.
+  let layerPinned = false;
   let matchNodes: Array<{ element: Element; node: HTMLElement }> = [];
   let familySize = 1;
   let hoverTimer: ReturnType<typeof setTimeout> | null = null;
@@ -315,8 +346,13 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       height: `${rect.height}px`,
     });
     const name = element.localName + (element.id ? `#${element.id}` : "");
-    label.textContent =
-      familySize > 1 ? `${name}  ·  ${familySize} matches` : name;
+    const layer =
+      layers.length > 1 ? `  ${layerIndex + 1}/${layers.length}` : "";
+    const matches =
+      element === hovered && familySize > 1
+        ? `  ·  ${familySize} matches`
+        : "";
+    label.textContent = `${name}${layer}${matches}`;
     label.style.left = `${Math.max(8, rect.left)}px`;
     const labelTop = rect.top - 26;
     label.style.top = `${labelTop < 8 ? Math.min(rect.bottom + 6, window.innerHeight - 26) : labelTop}px`;
@@ -381,17 +417,73 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     placeHighlight(element);
   };
 
-  const elementAt = (event: MouseEvent) => {
-    const element = doc.elementFromPoint(event.clientX, event.clientY);
-    if (!element || element === host || element.closest("[data-duxreader-picker]"))
-      return null;
-    return element;
+  // Deepest element first, like DevTools. Skip the picker itself and the
+  // document chrome, and cap the depth so the list stays navigable.
+  const layerLimit = 8;
+  const layersAt = (event: MouseEvent) => {
+    const stack: Element[] = [];
+    for (const node of doc.elementsFromPoint(event.clientX, event.clientY)) {
+      if (!(node instanceof Element)) continue;
+      if (node === host || node.closest("[data-duxreader-picker]")) continue;
+      if (node === doc.documentElement || node === doc.body) continue;
+      stack.push(node);
+      if (stack.length >= layerLimit) break;
+    }
+    return stack;
+  };
+
+  const updateHintLayers = () => {
+    hintLayers.textContent =
+      layers.length > 1
+        ? `  ·  ${layerIndex + 1}/${layers.length} · ↑ ↓ to switch element`
+        : "";
+  };
+
+  // Keep the chosen layer while the pointer stays inside it; otherwise fall
+  // back to the topmost element under the cursor.
+  // Returns the chosen element plus whether the stack itself changed, so
+  // hovering inside one element can still refresh the layer indicator.
+  const syncLayers = (stack: Element[]) => {
+    const previous = layers[layerIndex] ?? null;
+    const kept = previous ? stack.indexOf(previous) : -1;
+    layers = stack;
+    if (kept >= 0) layerIndex = kept;
+    else {
+      layerIndex = 0;
+      layerPinned = false;
+    }
+    updateHintLayers();
+    const signature = `${stack.length}:${layerIndex}`;
+    const changed = signature !== layerSignature;
+    layerSignature = signature;
+    return { element: layers[layerIndex] ?? null, changed };
+  };
+
+  const resolveHover = (element: Element) => {
+    // Resolution and synthesis query the document, so they run once per
+    // resting position rather than on every mousemove. A pinned layer is used
+    // exactly as picked so the wrapper the user stepped to is the one saved.
+    const resolved = layerPinned
+      ? { element, selection: familySelector(element) }
+      : resolvePickerTarget(element);
+    hovered = resolved.element;
+    if (hoverTimer !== null) {
+      clearTimeout(hoverTimer);
+      hoverTimer = null;
+    }
+    showHovered(resolved.element, resolved.selection);
   };
 
   const onMove = (event: MouseEvent) => {
     if (frozen || finished) return;
-    const element = elementAt(event);
-    if (!element || element === hovered) return;
+    const synced = syncLayers(layersAt(event));
+    const element = synced.element;
+    if (!element) return;
+    if (element === hovered) {
+      // Same element, different stack (or layer): keep the label honest.
+      if (synced.changed) placeHighlight(element);
+      return;
+    }
     hovered = element;
     // Pointer feedback must stay cheap: paint the raw element now and defer
     // the family search until the pointer settles.
@@ -400,10 +492,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     hoverTimer = setTimeout(() => {
       hoverTimer = null;
       if (frozen || finished || hovered !== element) return;
-      // Resolution and synthesis query the document, so they run once per
-      // resting position rather than on every mousemove.
-      const resolved = resolvePickerTarget(element);
-      showHovered(resolved.element, resolved.selection);
+      resolveHover(element);
     }, 70);
   };
 
@@ -443,7 +532,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   const showPreservePanel = (
     element: Element,
     family: FamilySelection,
-    variants: number,
+    probe: PreserveResult,
   ) => {
     selected = element;
     selection = family;
@@ -455,7 +544,18 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     placeHighlight(element);
     renderMatches(element, family);
     preserveSelector.textContent = family.selector;
-    preserveWarning.textContent = `${family.matches.length} matching elements have ${variants} different color sets. One snapshot would freeze them all to this element's colors. Map them to theme roles instead, or keep their formula in a site rule.`;
+    const count = family.matches.length;
+    const differences = probe.varying.length
+      ? ` Different: ${probe.varying.slice(0, 3).join(", ")}${probe.varying.length > 3 ? ", …" : ""}.`
+      : "";
+    const canPreserveEach = count > 1 && count <= PRESERVE_EACH_LIMIT;
+    preserveWarning.textContent =
+      `${count} matching elements have ${probe.identityVariants} different color sets, so one shared snapshot would freeze them all to this element's colors.${differences} ` +
+      (canPreserveEach
+        ? "Preserve them one by one, or map their colors to theme roles if they come from a variable."
+        : `Preserve this element only, or map their colors to theme roles. (Saving every element is capped at ${PRESERVE_EACH_LIMIT}.)`);
+    preserveEach.classList.toggle("hidden", !canPreserveEach);
+    preserveEach.textContent = `Preserve each of ${count} elements`;
     hint.classList.add("hidden");
     preservePanel.classList.remove("hidden");
   };
@@ -512,20 +612,25 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
           element,
           selector: family.selector,
           matches: family.matches,
+          variant: "stable",
           commit: false,
         });
         if (finished) return;
         // The probe temporarily removed the renderer, so re-measure boxes.
         scheduleReposition();
-        if (probe.variants === 0) {
+        if (!probe.own) {
           finish("This element has no colors to preserve.", true);
           return;
         }
-        if (probe.variants <= 1 || family.matches.length <= 1) {
+        // Siblings that share text/background/fill/stroke need no decision: a
+        // single snapshot describes them all. Per-instance decorations such as
+        // table dividers are left out of the snapshot and stay themed.
+        if (probe.identityVariants <= 1 && probe.stable) {
           const saved = await options.onPreserve({
             element,
             selector: family.selector,
             matches: family.matches,
+            variant: "stable",
             commit: true,
           });
           if (finished) return;
@@ -536,8 +641,20 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
           );
           return;
         }
+        if (family.matches.length <= 1) {
+          await options.onPreserve({
+            element,
+            selector: family.exact,
+            matches: [element],
+            variant: "own",
+            commit: true,
+          });
+          if (finished) return;
+          finish("Element colors preserved");
+          return;
+        }
         scheduleReposition();
-        showPreservePanel(element, family, probe.variants);
+        showPreservePanel(element, family, probe);
       } catch (error) {
         console.error("Duxreader picker:", error);
         finish(String(error), true);
@@ -553,11 +670,13 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       event.stopImmediatePropagation();
       return;
     }
-    const element = elementAt(event);
+    const element = syncLayers(layersAt(event)).element;
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    const resolved = resolvePickerTarget(element);
+    const resolved = layerPinned
+      ? { element, selection: familySelector(element) }
+      : resolvePickerTarget(element);
     selected = resolved.element;
     selection = resolved.selection;
     placeHighlight(resolved.element);
@@ -577,7 +696,29 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     if (event.key === "Escape") {
       event.preventDefault();
       cleanup();
+      return;
     }
+    if (frozen || finished || layers.length <= 1) return;
+    // Up walks outward to the containing box, down returns to the inner one —
+    // the same direction DevTools uses for its element stack.
+    let step = 0;
+    if (event.key === "ArrowUp") step = 1;
+    else if (event.key === "ArrowDown") step = -1;
+    if (step === 0) return;
+    const next = Math.min(
+      layers.length - 1,
+      Math.max(0, layerIndex + step),
+    );
+    if (next === layerIndex) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    layerIndex = next;
+    layerPinned = true;
+    updateHintLayers();
+    const element = layers[layerIndex];
+    if (!element) return;
+    placeHighlight(element);
+    resolveHover(element);
   };
 
   const onScroll = () => scheduleReposition();
@@ -603,6 +744,21 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       });
     });
 
+  preserveEach.addEventListener("click", () => {
+    const element = selected;
+    const family = selection;
+    if (!element || !family) return;
+    void run(async () => {
+      await options.onPreserve({
+        element,
+        selector: family.selector,
+        matches: family.matches,
+        variant: "each",
+        commit: true,
+      });
+    }, `Saved ${family.matches.length} per-element rules`);
+  });
+
   preserveOne.addEventListener("click", () => {
     const element = selected;
     const family = selection;
@@ -612,6 +768,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         element,
         selector: family.exact,
         matches: [element],
+        variant: "own",
         commit: true,
       });
     }, "Element colors preserved");

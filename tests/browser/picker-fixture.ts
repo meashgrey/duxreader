@@ -59,7 +59,13 @@ async function run() {
   startPicker(document, {
     mode: "map",
     colors,
-    onPreserve: () => ({ variants: 1, declarations: "", saved: false }),
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
     onMap: () => {},
   });
   await frame();
