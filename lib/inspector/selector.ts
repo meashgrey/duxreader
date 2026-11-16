@@ -276,6 +276,7 @@ function classCandidates(element: Element): Candidate[] {
 
 function stableAnchor(element: Element): string | null {
   const doc = element.ownerDocument;
+  const scope = scopeRootOf(element);
   let node = element.parentElement;
   let depth = 0;
   while (node && node !== doc.documentElement && depth++ < 8) {
@@ -302,7 +303,7 @@ function stableAnchor(element: Element): string | null {
         token === prefix
           ? `.${escapeClass(prefix)}`
           : `[class*="${escapeAttribute(prefix)}"]`;
-      if (doc.querySelectorAll(selector).length <= 12) return selector;
+      if (scope.querySelectorAll(selector).length <= 12) return selector;
     }
     node = node.parentElement;
   }
@@ -390,7 +391,7 @@ export interface FamilySelection {
  * matches.
  */
 export function familySelector(element: Element): FamilySelection {
-  const doc = element.ownerDocument;
+  const scope = scopeRootOf(element);
   const exact = selectorFor(element);
   const seen = new Set<string>();
   const families: Array<{
@@ -403,12 +404,18 @@ export function familySelector(element: Element): FamilySelection {
   const targetTag = element.localName;
   const targetPrefixes = prefixSet(element);
   const targetNature = natureOf(element);
+  // Candidate selectors are resolved inside the element's own tree, so a
+  // shadow match is re-qualified with its host chain before storage.
+  const finish = (selection: FamilySelection): FamilySelection => ({
+    ...selection,
+    selector: withHostChain(element, selection.selector),
+  });
   for (const candidate of selectorCandidates(element)) {
     if (seen.has(candidate.selector)) continue;
     seen.add(candidate.selector);
     let matches: Element[];
     try {
-      matches = [...doc.querySelectorAll(candidate.selector)].filter(
+      matches = [...scope.querySelectorAll(candidate.selector)].filter(
         (node) => !node.closest("[data-duxreader-picker]"),
       );
     } catch {
@@ -417,21 +424,21 @@ export function familySelector(element: Element): FamilySelection {
     if (!matches.includes(element)) continue;
     if (matches.length > 5000) continue;
     if (candidate.kind === "attribute" && candidate.authoritative)
-      return {
+      return finish({
         selector: candidate.selector,
         exact,
         kind: candidate.kind,
         quality: 1,
         matches,
-      };
+      });
     if (candidate.kind === "id")
-      return {
+      return finish({
         selector: candidate.selector,
         exact,
         kind: candidate.kind,
         quality: 1,
         matches,
-      };
+      });
     const score = Math.min(
       ...matches.map((match) =>
         similarity(match, targetTag, targetPrefixes, targetNature),
@@ -460,22 +467,22 @@ export function familySelector(element: Element): FamilySelection {
       return right.matches.length - left.matches.length;
     });
     const best = families[0]!;
-    return {
+    return finish({
       selector: best.candidate.selector,
       exact,
       kind: best.candidate.kind,
       quality: best.candidate.quality ?? 0,
       matches: best.matches,
-    };
+    });
   }
   if (single)
-    return {
+    return finish({
       selector: single.selector,
       exact,
       kind: single.kind,
       quality: single.quality ?? 0,
       matches: singles,
-    };
+    });
   return {
     selector: exact,
     exact,
@@ -521,12 +528,62 @@ export function resolvePickerTarget(element: Element): PickerTarget {
   return { element: target, selection };
 }
 
+/** The tree root that scopes a selector: a shadow root, or the document. */
+export function scopeRootOf(element: Element): ParentNode & {
+  querySelectorAll(selectors: string): NodeListOf<Element>;
+} {
+  const root = element.getRootNode();
+  if (root instanceof ShadowRoot) return root;
+  return element.ownerDocument;
+}
+
+/** True when a selector crosses a shadow boundary and needs its host prefix. */
+export function shadowHostChain(element: Element): Element[] {
+  const hosts: Element[] = [];
+  let node: Element | null = element;
+  while (node) {
+    const root: Node = node.getRootNode();
+    if (!(root instanceof ShadowRoot)) break;
+    const host: Element = root.host;
+    hosts.unshift(host);
+    node = host;
+  }
+  return hosts;
+}
+
+/**
+ * Prefixes a selector that was resolved inside a shadow root with the host
+ * chain, so it can be stored and matched from the document again.
+ */
+export function withHostChain(element: Element, selector: string): string {
+  const hosts = shadowHostChain(element);
+  if (hosts.length === 0) return selector;
+  const outer = hosts.map((host) => selectorWithinScope(host)).join(" >>> ");
+  return `${outer} >>> ${selector}`;
+}
+
 export function selectorFor(element: Element): string {
   const doc = element.ownerDocument;
   if (element === doc.documentElement) return "html";
   if (element === doc.body) return "body";
+  const hosts = shadowHostChain(element);
+  if (hosts.length > 0) {
+    const inner = selectorWithinScope(element);
+    const outer = hosts
+      .map((host) => selectorWithinScope(host))
+      .join(" >>> ");
+    return `${outer} >>> ${inner}`;
+  }
+  return selectorWithinScope(element);
+}
+
+function selectorWithinScope(element: Element): string {
+  const doc = element.ownerDocument;
+  const scope = scopeRootOf(element);
+  if (element === doc.documentElement) return "html";
+  if (element === doc.body) return "body";
   const id = stableId(element);
-  if (id && doc.querySelectorAll(id).length === 1) return id;
+  if (id && scope.querySelectorAll(id).length === 1) return id;
 
   const parts: string[] = [];
   let node: Element | null = element;
@@ -547,7 +604,7 @@ export function selectorFor(element: Element): string {
     }
     parts.unshift(part);
     const selector = parts.join(" > ");
-    if (doc.querySelectorAll(selector).length === 1) return selector;
+    if (scope.querySelectorAll(selector).length === 1) return selector;
     node = parent;
   }
   return parts.join(" > ");
@@ -565,7 +622,10 @@ export const identityColorProperties: readonly string[] = [
 ];
 
 export function captureColorValues(element: Element): ColorValues {
-  const style = getComputedStyle(element);
+  // Elements inside shadow roots or other documents must be measured with the
+  // window that owns them; the picker's global lookup only knows its own.
+  const view = element.ownerDocument.defaultView ?? window;
+  const style = view.getComputedStyle(element);
   const values: ColorValues = new Map();
   for (const property of colorProperties) {
     const value = style.getPropertyValue(property);

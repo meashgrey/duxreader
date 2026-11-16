@@ -1,5 +1,6 @@
 import type { ColorMap } from "../../scripts/engine/color-map.mts";
 import { normalizeSite } from "../site-exclusions";
+import { splitShadowSelector } from "./shadow-selector";
 
 export const USER_RULES_KEY = "userSiteRules";
 
@@ -34,6 +35,8 @@ export interface UserEngineRules {
   colorMaps: readonly ColorMap[];
   preserveInline: readonly string[];
   css: string;
+  /** Rules whose selector crosses a shadow boundary. */
+  shadowRules?: readonly UserRule[];
 }
 
 const targets = new Set<UserRuleTarget>([
@@ -140,20 +143,25 @@ export function toEngineRules(
   host: string,
 ): UserEngineRules {
   const local = rulesForHost(rules, host);
+  // Shadow-scoped rules cannot be expressed as document CSS or as a normal
+  // color map; applyShadowRules injects them into the owning shadow root.
+  const scoped = local.filter((rule) => splitShadowSelector(rule.selector));
+  const light = local.filter((rule) => !splitShadowSelector(rule.selector));
   return {
-    colorMaps: local
+    colorMaps: light
       .filter((rule): rule is UserMapRule => rule.kind === "map")
       .map((rule) => ({
         selector: rule.selector,
         property: rule.property,
         target: rule.target,
       })),
-    preserveInline: local
+    preserveInline: light
       .filter((rule): rule is UserPreserveRule => rule.kind === "preserve")
       .map((rule) => rule.selector),
-    css: local
+    css: light
       .filter((rule): rule is UserPreserveRule => rule.kind === "preserve")
       .map((rule) => `${rule.selector}{${rule.declarations}}`)
       .join("\n"),
+    ...(scoped.length > 0 ? { shadowRules: scoped } : {}),
   };
 }

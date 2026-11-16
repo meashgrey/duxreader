@@ -430,16 +430,41 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   // Deepest element first, like DevTools. Skip the picker itself and the
   // document chrome, and cap the depth so the list stays navigable.
   const layerLimit = 8;
+
+  // document.elementsFromPoint stops at a shadow host: the real, coloured node
+  // lives inside the shadow root and is invisible to the document hit test.
+  // Descend through open roots so shadow parts (Material, Lit, Primer) can be
+  // picked just like light-DOM elements.
+  const descendShadow = (x: number, y: number, start: Element | null) => {
+    const path: Element[] = [];
+    let current = start;
+    let depth = 0;
+    while (current?.shadowRoot && depth++ < layerLimit) {
+      const inner = current.shadowRoot.elementFromPoint(x, y);
+      if (!inner || inner === current) break;
+      path.push(inner);
+      current = inner;
+    }
+    return path;
+  };
+
   const layersAt = (event: MouseEvent) => {
     const stack: Element[] = [];
+    const visit = (node: Element) => {
+      if (node === host || node.closest("[data-duxreader-picker]")) return;
+      if (node.getRootNode() === shadow) return;
+      if (node === doc.documentElement || node === doc.body) return;
+      stack.push(node);
+    };
     for (const node of doc.elementsFromPoint(event.clientX, event.clientY)) {
       if (!(node instanceof Element)) continue;
-      if (node === host || node.closest("[data-duxreader-picker]")) continue;
-      if (node === doc.documentElement || node === doc.body) continue;
-      stack.push(node);
+      // Shadow content goes first: it is visually on top of its host.
+      const inner = descendShadow(event.clientX, event.clientY, node);
+      for (const element of inner) visit(element);
+      visit(node);
       if (stack.length >= layerLimit) break;
     }
-    return stack;
+    return stack.slice(0, layerLimit);
   };
 
   const updateHintLayers = () => {

@@ -25,6 +25,7 @@ import {
   type UserRuleProperty,
   type UserRuleTarget,
 } from "../lib/inspector/rules";
+import { applyShadowRules } from "../lib/inspector/shadow-rules";
 import {
   describeColorFamily,
   selectorFor,
@@ -60,6 +61,9 @@ export default defineContentScript({
     // crosshair and refuses page clicks everywhere, but only one frame should
     // report an exit, otherwise the frames would cancel each other forever.
     let pickerActive = false;
+    // Shadow-scoped rules cannot ride on document CSS, so they are injected
+    // into the owning shadow root and refreshed with the palette.
+    let disposeShadowRules: (() => void) | null = null;
     async function apply() {
       const current = ++revision;
       const state = await browser.storage.local.get([
@@ -75,11 +79,16 @@ export default defineContentScript({
         !isSiteExcluded(state[EXCLUDED_SITES_KEY], siteForFrame());
       const userRules = readUserRules(state[USER_RULES_KEY]);
       currentTheme = theme;
-      renderer.apply(
-        theme,
-        enabled,
-        toEngineRules(userRules, siteForFrame() ?? ""),
-      );
+      const engineRules = toEngineRules(userRules, siteForFrame() ?? "");
+      renderer.apply(theme, enabled, engineRules);
+      disposeShadowRules?.();
+      disposeShadowRules = null;
+      if (enabled && theme && engineRules.shadowRules?.length)
+        disposeShadowRules = applyShadowRules(
+          engineRules.shadowRules,
+          siteForFrame() ?? "",
+          theme.colors,
+        );
     }
     const update = () => {
       void apply().catch((error) =>
@@ -264,6 +273,8 @@ export default defineContentScript({
       cancelPicker?.();
       browser.storage.onChanged.removeListener(onChanged);
       browser.runtime.onMessage.removeListener(onMessage);
+      disposeShadowRules?.();
+      disposeShadowRules = null;
       renderer.dispose();
     });
     update();

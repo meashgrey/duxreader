@@ -73,6 +73,12 @@ try {
     resolve("tests/browser/layers-fixture.ts"),
     "__layersResult",
   );
+  await runFixture(
+    page,
+    "Inspector shadow rules",
+    resolve("tests/browser/shadow-fixture.ts"),
+    "__shadowResult",
+  );
 } finally {
   await browser.close();
 }
