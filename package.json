@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit",
     "test": "bun test tests --path-ignore-patterns 'vendor/**'",
     "test:browser": "bun scripts/test-engine-browser.mts",
+    "test:inspector": "bun scripts/test-inspector.mts",
     "benchmark": "bun scripts/benchmark-renderer.mts",
     "benchmark:idle": "bun scripts/benchmark-idle.mts",
     "benchmark:interaction": "bun scripts/benchmark-interaction.mts",

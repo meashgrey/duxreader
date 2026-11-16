@@ -26,7 +26,12 @@ import {
   type UserRuleTarget,
 } from "../lib/inspector/rules";
 import { captureColorDeclarations } from "../lib/inspector/selector";
-import { startPicker, type PickerMode } from "../lib/inspector/picker";
+import {
+  startPicker,
+  type PickerMode,
+  type PreserveRequest,
+  type PreserveResult,
+} from "../lib/inspector/picker";
 
 export default defineContentScript({
   matches: ["http://*/*", "https://*/*"],
@@ -75,24 +80,65 @@ export default defineContentScript({
       );
     };
     const host = () => siteForFrame() ?? "";
-    async function preserveElement(element: Element, selector: string) {
+    let pendingPreserve: {
+      element: Element;
+      declarations: string;
+    } | null = null;
+    function sampleElements(matches: readonly Element[]): readonly Element[] {
+      const limit = 200;
+      if (matches.length <= limit) return matches;
+      const step = Math.ceil(matches.length / limit);
+      return matches.filter((_, index) => index % step === 0);
+    }
+    async function preserveElement(
+      request: PreserveRequest,
+    ): Promise<PreserveResult> {
       const target = host();
       if (!target) throw new Error("This page has no site hostname.");
-      renderer.dispose();
-      try {
-        const declarations = captureColorDeclarations(element);
-        const state = await browser.storage.local.get(USER_RULES_KEY);
-        const next = addUserRule(readUserRules(state[USER_RULES_KEY]), {
-          kind: "preserve",
-          host: target,
-          selector,
-          declarations,
-          createdAt: Date.now(),
-        });
-        await browser.storage.local.set({ [USER_RULES_KEY]: next });
-      } finally {
-        update();
+      if (!request.commit) {
+        renderer.dispose();
+        try {
+          const declarations = captureColorDeclarations(request.element);
+          const variants = new Set(
+            sampleElements(request.matches).map((element) =>
+              captureColorDeclarations(element),
+            ),
+          );
+          pendingPreserve = { element: request.element, declarations };
+          return {
+            variants: declarations ? variants.size : 0,
+            declarations,
+            saved: false,
+          };
+        } finally {
+          update();
+        }
       }
+      let declarations =
+        pendingPreserve?.element === request.element
+          ? pendingPreserve.declarations
+          : "";
+      pendingPreserve = null;
+      if (!declarations) {
+        renderer.dispose();
+        try {
+          declarations = captureColorDeclarations(request.element);
+        } finally {
+          update();
+        }
+      }
+      if (!declarations)
+        throw new Error("This element has no colors to preserve.");
+      const state = await browser.storage.local.get(USER_RULES_KEY);
+      const next = addUserRule(readUserRules(state[USER_RULES_KEY]), {
+        kind: "preserve",
+        host: target,
+        selector: request.selector,
+        declarations,
+        createdAt: Date.now(),
+      });
+      await browser.storage.local.set({ [USER_RULES_KEY]: next });
+      return { variants: 1, declarations, saved: true };
     }
     async function mapElement(
       selector: string,
@@ -118,6 +164,7 @@ export default defineContentScript({
       if (message?.type !== "duxreader:start-picker") return;
       const mode: PickerMode = message.mode === "map" ? "map" : "preserve";
       cancelPicker?.();
+      pendingPreserve = null;
       cancelPicker = startPicker(document, {
         mode,
         colors: currentTheme?.colors ?? defaultTheme.colors,

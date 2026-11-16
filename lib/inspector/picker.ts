@@ -1,11 +1,31 @@
 import type { Theme } from "../theme";
-import { selectorFor } from "./selector";
+import {
+  resolvePickerTarget,
+  type FamilySelection,
+} from "./selector";
 import type { UserRuleProperty, UserRuleTarget } from "./rules";
 
 export type PickerMode = "preserve" | "map";
 
+export interface PreserveRequest {
+  element: Element;
+  selector: string;
+  matches: readonly Element[];
+  /** Measure native colors first; only the commit call writes storage. */
+  commit: boolean;
+}
+
+export interface PreserveResult {
+  /** Distinct native color sets across the matched elements. */
+  variants: number;
+  declarations: string;
+  saved: boolean;
+}
+
 export interface PickerCallbacks {
-  onPreserve(element: Element, selector: string): Promise<void> | void;
+  onPreserve(
+    request: PreserveRequest,
+  ): Promise<PreserveResult> | PreserveResult;
   onMap(
     selector: string,
     property: UserRuleProperty,
@@ -25,6 +45,9 @@ const propertyLabels: Record<UserRuleProperty, string> = {
   fill: "Fill",
   stroke: "Stroke",
 };
+
+const elementCount = (count: number) =>
+  count === 1 ? "this element" : `${count} matching elements`;
 
 export function startPicker(doc: Document, options: PickerOptions): () => void {
   const { colors } = options;
@@ -89,11 +112,28 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         opacity: 0.75;
         overflow-wrap: anywhere;
       }
+      .panel p.warning {
+        color: ${colors.accent};
+        opacity: 1;
+      }
       .panel label {
         display: block;
         margin-bottom: 4px;
         font-size: 12px;
         opacity: 0.8;
+      }
+      .scope-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        font-size: 12px;
+        opacity: 0.85;
+      }
+      .scope-row input {
+        margin: 0;
+        accent-color: ${colors.accent};
       }
       select {
         width: 100%;
@@ -111,7 +151,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         grid-template-columns: 1fr 1fr;
         gap: 8px;
       }
-      .swatch, .cancel {
+      .swatch, .cancel, .action {
         min-height: 40px;
         border: 1px solid ${colors.accent};
         border-radius: 10px;
@@ -134,10 +174,10 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         border-radius: 999px;
         border: 1px solid ${colors.foreground};
       }
-      .swatch:hover, .cancel:hover {
+      .swatch:hover, .cancel:hover, .action:hover {
         background: color-mix(in srgb, ${colors.accent} 18%, ${colors.background});
       }
-      .cancel {
+      .cancel, .action {
         width: 100%;
         margin-top: 8px;
       }
@@ -175,9 +215,13 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     } · Esc to cancel</div>
     <div class="highlight hidden"></div>
     <div class="label hidden"></div>
-    <div class="panel hidden">
+    <div class="panel map hidden">
       <h2>Map element color</h2>
       <p class="selector"></p>
+      <label class="scope-row hidden">
+        <input type="checkbox" class="scope-toggle" checked>
+        <span class="scope-text"></span>
+      </label>
       <label for="property">Property</label>
       <select id="property">
         ${(Object.keys(propertyLabels) as UserRuleProperty[])
@@ -200,6 +244,13 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       </div>
       <button class="cancel">Cancel</button>
     </div>
+    <div class="panel preserve hidden">
+      <h2>Preserve element colors</h2>
+      <p class="selector"></p>
+      <p class="warning"></p>
+      <button class="action preserve-one">Only this element</button>
+      <button class="cancel preserve-cancel">Cancel</button>
+    </div>
     <div class="toast hidden"></div>
   `;
   doc.documentElement.append(host);
@@ -210,15 +261,25 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
 
   const highlight = shadow.querySelector<HTMLElement>(".highlight")!;
   const label = shadow.querySelector<HTMLElement>(".label")!;
-  const panel = shadow.querySelector<HTMLElement>(".panel")!;
-  const hint = shadow.querySelector<HTMLElement>(".hint")!;
-  const selectorText = shadow.querySelector<HTMLElement>(".selector")!;
+  const mapPanel = shadow.querySelector<HTMLElement>(".panel.map")!;
+  const preservePanel = shadow.querySelector<HTMLElement>(".panel.preserve")!;
+  const mapSelector = mapPanel.querySelector<HTMLElement>(".selector")!;
+  const preserveSelector = preservePanel.querySelector<HTMLElement>(".selector")!;
+  const preserveWarning = preservePanel.querySelector<HTMLElement>(".warning")!;
+  const scopeRow = mapPanel.querySelector<HTMLElement>(".scope-row")!;
+  const scopeToggle =
+    mapPanel.querySelector<HTMLInputElement>(".scope-toggle")!;
+  const scopeText = mapPanel.querySelector<HTMLElement>(".scope-text")!;
+  const preserveOne =
+    preservePanel.querySelector<HTMLButtonElement>(".preserve-one")!;
   const propertySelect = shadow.querySelector<HTMLSelectElement>("#property")!;
+  const hint = shadow.querySelector<HTMLElement>(".hint")!;
   const toast = shadow.querySelector<HTMLElement>(".toast")!;
 
   let finished = false;
   let frozen = false;
   let selected: Element | null = null;
+  let selection: FamilySelection | null = null;
 
   const updateHighlight = (element: Element) => {
     const rect = element.getBoundingClientRect();
@@ -248,17 +309,44 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     if (element) updateHighlight(element);
   };
 
-  const showPanel = (element: Element, selector: string) => {
+  const updateScopeText = () => {
+    if (!selection) return;
+    scopeText.textContent = scopeToggle.checked
+      ? `Apply to all ${elementCount(selection.matches.length)}`
+      : "Apply to this element only";
+    mapSelector.textContent = scopeToggle.checked
+      ? selection.selector
+      : selection.exact;
+  };
+
+  const showMapPanel = (element: Element, family: FamilySelection) => {
     selected = element;
+    selection = family;
     frozen = true;
-    selectorText.textContent = selector;
+    scopeRow.classList.toggle("hidden", family.matches.length <= 1);
+    scopeToggle.checked = family.matches.length > 1;
+    updateScopeText();
     const background = getComputedStyle(element).backgroundColor;
     propertySelect.value =
       background && background !== "rgba(0, 0, 0, 0)"
         ? "background-color"
         : "color";
     hint.classList.add("hidden");
-    panel.classList.remove("hidden");
+    mapPanel.classList.remove("hidden");
+  };
+
+  const showPreservePanel = (
+    element: Element,
+    family: FamilySelection,
+    variants: number,
+  ) => {
+    selected = element;
+    selection = family;
+    frozen = true;
+    preserveSelector.textContent = family.selector;
+    preserveWarning.textContent = `${family.matches.length} matching elements have ${variants} different color sets. One snapshot would freeze them all to this element's colors. Map them to theme roles instead, or keep their formula in a site rule.`;
+    hint.classList.add("hidden");
+    preservePanel.classList.remove("hidden");
   };
 
   const showToast = (text: string, error = false) => {
@@ -282,7 +370,8 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   const finish = (text: string, error = false) => {
     highlight.classList.add("hidden");
     label.classList.add("hidden");
-    panel.classList.add("hidden");
+    mapPanel.classList.add("hidden");
+    preservePanel.classList.add("hidden");
     showToast(text, error);
     setTimeout(cleanup, error ? 1800 : 700);
   };
@@ -293,11 +382,48 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   ) => {
     try {
       await action();
-      finish(success);
+      if (!finished) finish(success);
     } catch (error) {
       console.error("Duxreader picker:", error);
       finish(String(error), true);
     }
+  };
+
+  const startPreserve = (element: Element, family: FamilySelection) => {
+    void (async () => {
+      try {
+        const probe = await options.onPreserve({
+          element,
+          selector: family.selector,
+          matches: family.matches,
+          commit: false,
+        });
+        if (finished) return;
+        if (probe.variants === 0) {
+          finish("This element has no colors to preserve.", true);
+          return;
+        }
+        if (probe.variants <= 1 || family.matches.length <= 1) {
+          const saved = await options.onPreserve({
+            element,
+            selector: family.selector,
+            matches: family.matches,
+            commit: true,
+          });
+          if (finished) return;
+          finish(
+            `Colors preserved for ${elementCount(
+              saved.saved ? family.matches.length : 1,
+            )}`,
+          );
+          return;
+        }
+        showPreservePanel(element, family, probe.variants);
+      } catch (error) {
+        console.error("Duxreader picker:", error);
+        finish(String(error), true);
+      }
+    })();
   };
 
   const onClick = (event: MouseEvent) => {
@@ -312,15 +438,12 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     if (!element) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    const selector = selectorFor(element);
+    const resolved = resolvePickerTarget(element);
+    updateHighlight(resolved.element);
     if (options.mode === "preserve") {
-      void run(
-        () => options.onPreserve(element, selector),
-        "Element colors preserved",
-      );
+      startPreserve(resolved.element, resolved.selection);
     } else {
-      updateHighlight(element);
-      showPanel(element, selector);
+      showMapPanel(resolved.element, resolved.selection);
     }
   };
 
@@ -336,25 +459,44 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     }
   };
 
+  scopeToggle.addEventListener("change", updateScopeText);
+
   shadow
     .querySelectorAll<HTMLButtonElement>(".swatch")
     .forEach((button) => {
       button.addEventListener("click", () => {
-        const element = selected;
-        if (!element || button.disabled) return;
+        if (!selection || button.disabled) return;
+        const selector = scopeToggle.checked
+          ? selection.selector
+          : selection.exact;
+        const count = scopeToggle.checked ? selection.matches.length : 1;
         void run(async () => {
           await options.onMap(
-            selectorFor(element),
+            selector,
             propertySelect.value as UserRuleProperty,
             button.dataset.target as UserRuleTarget,
           );
-        }, "Mapping rule saved");
+        }, `Mapping saved for ${elementCount(count)}`);
       });
     });
-  shadow.querySelector<HTMLButtonElement>(".cancel")?.addEventListener(
-    "click",
-    cleanup,
-  );
+
+  preserveOne.addEventListener("click", () => {
+    const element = selected;
+    const family = selection;
+    if (!element || !family) return;
+    void run(async () => {
+      await options.onPreserve({
+        element,
+        selector: family.exact,
+        matches: [element],
+        commit: true,
+      });
+    }, "Element colors preserved");
+  });
+
+  shadow
+    .querySelectorAll<HTMLButtonElement>(".cancel")
+    .forEach((button) => button.addEventListener("click", cleanup));
 
   doc.addEventListener("mousemove", onMove, true);
   doc.addEventListener("click", onClick, true);
