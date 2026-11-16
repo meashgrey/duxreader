@@ -55,6 +55,16 @@ export interface PickerCallbacks {
 export interface PickerOptions extends PickerCallbacks {
   mode: PickerMode;
   colors: Theme["colors"];
+  /**
+   * Sub-frames leave the instructional bar to the top frame, so a page with
+   * nested frames does not stack identical hints.
+   */
+  showHint?: boolean;
+  /**
+   * Called whenever this picker stops on its own (save, error, or Esc) so the
+   * host can close the sibling pickers running in other frames.
+   */
+  onExit?: () => void;
 }
 
 const propertyLabels: Record<UserRuleProperty, string> = {
@@ -239,7 +249,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
       }
       .hidden { display: none; }
     </style>
-    <div class="hint">${
+    <div class="hint${options.showHint === false ? " hidden" : ""}">${
       options.mode === "preserve"
         ? "Click an element to preserve its colors"
         : "Click an element to map its color"
@@ -580,6 +590,7 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     doc.documentElement.style.cursor = previousCursor;
     doc.documentElement.style.userSelect = previousUserSelect;
     host.remove();
+    options.onExit?.();
   };
 
   const finish = (text: string, error = false) => {

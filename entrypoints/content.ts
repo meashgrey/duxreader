@@ -56,6 +56,10 @@ export default defineContentScript({
     let revision = 0;
     let currentTheme: Theme | undefined;
     let cancelPicker: (() => void) | null = null;
+    // Every frame runs its own picker. The frame that started one keeps the
+    // crosshair and refuses page clicks everywhere, but only one frame should
+    // report an exit, otherwise the frames would cancel each other forever.
+    let pickerActive = false;
     async function apply() {
       const current = ++revision;
       const state = await browser.storage.local.get([
@@ -210,15 +214,34 @@ export default defineContentScript({
     const onMessage: Parameters<
       typeof browser.runtime.onMessage.addListener
     >[0] = (message) => {
+      if (message?.type === "duxreader:stop-picker") {
+        if (!pickerActive) return;
+        pickerActive = false;
+        const cancel = cancelPicker;
+        cancelPicker = null;
+        cancel?.();
+        return Promise.resolve({ ok: true });
+      }
       if (message?.type !== "duxreader:start-picker") return;
       const mode: PickerMode = message.mode === "map" ? "map" : "preserve";
       cancelPicker?.();
       pendingPreserve = null;
+      pickerActive = true;
       cancelPicker = startPicker(document, {
         mode,
         colors: currentTheme?.colors ?? defaultTheme.colors,
+        showHint: window === window.top,
         onPreserve: preserveElement,
         onMap: mapElement,
+        onExit: () => {
+          if (!pickerActive) return;
+          pickerActive = false;
+          cancelPicker = null;
+          // Tell the sibling frames to drop their own pickers.
+          void browser.runtime
+            .sendMessage({ type: "duxreader:stop-picker" })
+            .catch(() => undefined);
+        },
       });
       return Promise.resolve({ ok: true });
     };

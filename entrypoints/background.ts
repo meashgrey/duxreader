@@ -227,6 +227,16 @@ export default defineBackground(() => {
   // Restrict control messages to extension pages, never website content scripts.
   browser.runtime.onMessage.addListener((message, sender) => {
     if (sender.id !== browser.runtime.id) return;
+    // Content scripts cannot message sibling frames directly, so a frame that
+    // finished picking asks the background to close the pickers in its peers.
+    if (message?.type === "duxreader:stop-picker") {
+      const tabId = sender.tab?.id;
+      if (tabId == null) return;
+      void browser.tabs
+        .sendMessage(tabId, { type: "duxreader:stop-picker" })
+        .catch(() => undefined);
+      return;
+    }
     if (message?.type === READ_STYLESHEET) {
       if (!sender.tab || !sender.url || !/^https?:\/\//.test(sender.url))
         return;
