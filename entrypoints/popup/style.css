@@ -296,6 +296,66 @@ h2 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.user-rule-list .rule-summary {
+  display: block;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--md-sys-color-on-surface-variant);
+  font: inherit;
+  font-size: var(--md-sys-typescale-body-small-size, 12px);
+  line-height: 16px;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.user-rule-list .rule-summary:not(:disabled) {
+  color: var(--md-sys-color-primary);
+  cursor: pointer;
+}
+.user-rule-list .rule-summary:not(:disabled):hover {
+  text-decoration: underline;
+}
+.user-rule-list .rule-summary:not(:disabled):focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+.user-rule-list .rule-target {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 4px 6px;
+  border: 1px solid var(--md-sys-color-primary);
+  border-radius: var(--md-sys-shape-corner-small);
+  background: var(--md-sys-color-surface);
+  color: var(--md-sys-color-on-surface);
+  font: inherit;
+  font-size: var(--md-sys-typescale-body-small-size, 12px);
+}
+.rule-undo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: var(--dux-space-1) 0 0;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: var(--md-sys-typescale-body-small-size, 12px);
+}
+.rule-undo button {
+  padding: 2px 8px;
+  border: 0;
+  border-radius: var(--md-sys-shape-corner-full);
+  background: transparent;
+  color: var(--md-sys-color-primary);
+  font: inherit;
+  cursor: pointer;
+}
+.rule-undo button:hover {
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary) 12%,
+    transparent
+  );
+}
 .user-rule-list span {
   display: block;
   margin-top: 2px;

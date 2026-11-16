@@ -138,6 +138,31 @@ export function removeUserRule(
   return rules.filter((rule) => userRuleKey(rule) !== key);
 }
 
+/**
+ * Replaces a stored rule with an edited copy, keeping its position. If the edit
+ * collides with another stored rule, the edited copy wins and the duplicate is
+ * dropped so the same selector is never applied twice.
+ */
+export function replaceUserRule(
+  rules: readonly UserRule[],
+  original: UserRule,
+  updated: UserRule,
+): UserRule[] {
+  const originalKey = userRuleKey(original);
+  const updatedKey = userRuleKey(updated);
+  const next: UserRule[] = [];
+  for (const rule of rules) {
+    const key = userRuleKey(rule);
+    if (key === originalKey) {
+      next.push(updated);
+      continue;
+    }
+    if (key === updatedKey) continue;
+    next.push(rule);
+  }
+  return next;
+}
+
 export function toEngineRules(
   rules: readonly UserRule[],
   host: string,

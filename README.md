@@ -12,9 +12,10 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 - Generated class names are collapsed to component families, and stable data attributes, route prefixes,
   or structural families are preferred over instance paths. The picker previews how many elements a
   rule affects. Overlapping boxes can be stepped through with the arrow keys before clicking, and
-  elements inside open shadow roots can be picked like ordinary DOM nodes. Preserve rules only
-  snapshot colors shared by the family, and offer per-element preservation when instances
-  legitimately differ.
+  elements inside open shadow roots can be picked like ordinary DOM nodes. Saved rules can be
+  re-targeted to another theme role, removed with a short undo window, and copied for source-level
+  fixes. Preserve rules only snapshot colors shared by the family, and offer per-element
+  preservation when instances legitimately differ.
 
 |                             Purple                              |                            Pink                             |
 | :-------------------------------------------------------------: | :---------------------------------------------------------: |

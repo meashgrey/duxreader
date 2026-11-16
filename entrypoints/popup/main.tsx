@@ -27,12 +27,15 @@ import {
 import type { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 import type { MdSwitch } from "@material/web/switch/switch.js";
 import {
+  addUserRule,
   readUserRules,
   removeUserRule,
+  replaceUserRule,
   rulesForHost,
   USER_RULES_KEY,
   userRuleKey,
   type UserRule,
+  type UserRuleTarget,
 } from "../../lib/inspector/rules";
 import { useUIFont } from "../../lib/use-ui-font";
 import { installedUIFonts } from "../../lib/ui-font";
@@ -62,6 +65,12 @@ function App() {
   const [excludedSites, setExcludedSites] = React.useState<string[]>([]);
   const [userRules, setUserRules] = React.useState<UserRule[]>([]);
   const [copied, setCopied] = React.useState(false);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  // Deleting is one click, so keep a short undo window instead of a confirm.
+  const [undo, setUndo] = React.useState<{
+    rule: UserRule;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
   React.useEffect(() => {
     let disposed = false;
     let snapshot: Record<string, unknown> = {};
@@ -280,9 +289,41 @@ function App() {
 
   async function deleteRule(rule: UserRule) {
     setFormError("");
+    setEditing(null);
+    const next = removeUserRule(userRules, rule);
+    try {
+      await browser.storage.local.set({ [USER_RULES_KEY]: next });
+      setUndo((current) => {
+        if (current) clearTimeout(current.timer);
+        const timer = setTimeout(() => setUndo(null), 6000);
+        return { rule, timer };
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function undoDelete() {
+    if (!undo) return;
+    clearTimeout(undo.timer);
+    const rule = undo.rule;
+    setUndo(null);
     try {
       await browser.storage.local.set({
-        [USER_RULES_KEY]: removeUserRule(userRules, rule),
+        [USER_RULES_KEY]: addUserRule(userRules, rule),
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function updateRule(rule: UserRule, target: UserRuleTarget) {
+    if (rule.kind !== "map") return;
+    setEditing(null);
+    if (rule.target === target) return;
+    try {
+      await browser.storage.local.set({
+        [USER_RULES_KEY]: replaceUserRule(userRules, rule, { ...rule, target }),
       });
     } catch (error) {
       setFormError(String(error));
@@ -469,28 +510,84 @@ function App() {
           </div>
           {siteRules.length > 0 && (
             <ul className="user-rule-list">
-              {siteRules.map((rule) => (
-                <li key={userRuleKey(rule)}>
-                  <div>
-                    <code>{rule.selector}</code>
-                    <span>
-                      {rule.kind === "map"
-                        ? `${rule.property} → ${rule.target}`
-                        : "Preserve colors"}
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    className="remove-site"
-                    onClick={() => {
-                      void deleteRule(rule);
-                    }}
-                  >
-                    Remove
-                  </button>
-                </li>
-              ))}
+              {siteRules.map((rule) => {
+                const key = userRuleKey(rule);
+                const isEditing = editing === key && rule.kind === "map";
+                return (
+                  <li key={key}>
+                    <div>
+                      <code>{rule.selector}</code>
+                      {isEditing ? (
+                        <select
+                          className="rule-target"
+                          aria-label={
+                            rule.kind === "map"
+                              ? "Theme role"
+                              : undefined
+                          }
+                          defaultValue={
+                            rule.kind === "map" ? rule.target : undefined
+                          }
+                          onChange={(event) => {
+                            if (rule.kind === "map")
+                              void updateRule(
+                                rule,
+                                event.target.value as UserRuleTarget,
+                              );
+                          }}
+                        >
+                          {(
+                            [
+                              ["background", "Background"],
+                              ["surface", "Surface"],
+                              ["foreground", "Foreground"],
+                              ["accent", "Accent"],
+                            ] as const
+                          ).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rule-summary"
+                          disabled={rule.kind !== "map"}
+                          title={
+                            rule.kind === "map"
+                              ? "Change the theme role"
+                              : "Preserve rules keep their captured colors"
+                          }
+                          onClick={() => setEditing(key)}
+                        >
+                          {rule.kind === "map"
+                            ? `${rule.property} → ${rule.target}`
+                            : "Preserve colors"}
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="remove-site"
+                      onClick={() => {
+                        void deleteRule(rule);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
+          )}
+          {undo && (
+            <p className="rule-undo" role="status">
+              Rule removed.
+              <button type="button" onClick={() => void undoDelete()}>
+                Undo
+              </button>
+            </p>
           )}
         </section>
       )}
