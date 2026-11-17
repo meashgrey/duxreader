@@ -10,13 +10,14 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 - An element picker can preserve or map selected page colors and copy the resulting per-site rules
   for source-level site fixes;
 - Generated class names are collapsed to component families, and stable data attributes, route prefixes,
-  or structural families are preferred over instance paths. The picker previews how many elements a
-  rule affects. Overlapping boxes can be stepped through with the arrow keys before clicking, and
-  elements inside open shadow roots can be picked like ordinary DOM nodes. Saved rules can be
-  re-targeted to another theme role, removed with a short undo window, and copied for source-level
-  fixes. `Alt+Shift+E` starts a preserve pick and `Alt+Shift+M` a map pick without opening the
-  popup. Preferences lists every rule grouped by site and can export or import them as JSON.
-  Preserve rules only snapshot colors shared by the family, and offer per-element preservation when
+  or structural families are preferred over instance paths;
+- The picker previews how many elements a rule affects. Overlapping boxes can be stepped through with
+  the **arrow keys** before clicking, and elements inside open shadow roots can be picked like
+  ordinary DOM nodes;
+- Saved rules can be re-targeted to another theme role, removed with a short undo window, and
+  copied for source-level fixes. `Alt+Shift+E` starts a preserve pick and `Alt+Shift+M` a map
+  pick without opening the popup. Preferences lists every rule grouped by site and can export
+  or import them as JSON;
   instances legitimately differ.
 
 |                             Purple                              |                            Pink                             |
