@@ -474,16 +474,21 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
         : "";
   };
 
-  // Keep the chosen layer while the pointer stays inside it; otherwise fall
-  // back to the topmost element under the cursor.
   // Returns the chosen element plus whether the stack itself changed, so
   // hovering inside one element can still refresh the layer indicator.
+  //
+  // Only an explicit arrow-key choice is sticky. Ordinary hovering must always
+  // restart at the topmost element under the cursor: an ancestor that is still
+  // in the stack (the cursor is visually inside it) would otherwise keep
+  // winning after the pointer moves onto a small child, making descendants
+  // impossible to reach for the rest of the pick.
   const syncLayers = (stack: Element[]) => {
     const previous = layers[layerIndex] ?? null;
     const kept = previous ? stack.indexOf(previous) : -1;
     layers = stack;
-    if (kept >= 0) layerIndex = kept;
-    else {
+    if (layerPinned && kept >= 0) {
+      layerIndex = kept;
+    } else {
       layerIndex = 0;
       layerPinned = false;
     }

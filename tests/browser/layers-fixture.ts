@@ -81,7 +81,7 @@ async function run() {
   `;
 
   const saved: Array<{ selector: string; target?: string }> = [];
-  startPicker(document, {
+  const startPickerCleanup = startPicker(document, {
     mode: "map",
     colors,
     onPreserve: () => ({
@@ -190,6 +190,63 @@ async function run() {
     `the panel targets the stepped layer (got ${JSON.stringify(selector)})`,
   );
   assert(saved.length === 0, "map mode still waits for a theme role");
+  // 6. Hovering a large ancestor first must never block its descendants.
+  // The ancestor stays in the stack while the cursor is visually inside it, so
+  // a sticky layer choice would make small children unreachable.
+  startPickerCleanup();
+  await frame();
+  const reachable: string[] = [];
+  startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap(selector) {
+      reachable.push(selector);
+    },
+  });
+  await frame();
+
+  const deep = document.querySelector<HTMLElement>("#inner")!;
+  const deepRect = deep.getBoundingClientRect();
+  const outerRect2 = document
+    .querySelector<HTMLElement>("#outer")!
+    .getBoundingClientRect();
+
+  // Sweep outward first so the pointer physically enters the ancestor.
+  await hover(outerRect2.left + 6, outerRect2.top + 6);
+  const ancestorLabel = label();
+  assert(
+    ancestorLabel.includes("#middle") || ancestorLabel.includes("#outer"),
+    `hovering the ancestor selects it first (got ${JSON.stringify(ancestorLabel)})`,
+  );
+
+  // Then walk into the smallest child at the centre of the nest.
+  await hover(deepRect.left + deepRect.width / 2, deepRect.top + 4);
+  assert(
+    label().includes("#inner"),
+    `a descendant is still reachable after hovering its ancestor (got ${JSON.stringify(label())})`,
+  );
+
+  // And it stays reachable when moving back and forth.
+  await hover(outerRect2.left + 6, outerRect2.top + 6);
+  await hover(deepRect.left + deepRect.width / 2, deepRect.top + 4);
+  assert(
+    label().includes("#inner"),
+    `descendants stay reachable across repeated sweeps (got ${JSON.stringify(label())})`,
+  );
+
+  // Deepest-first ordering must still hold at the deep point.
+  const deepLayers = label();
+  assert(
+    deepLayers.includes("#inner") && deepLayers.includes("1/"),
+    `the innermost element is layer 1 at a nested point (got ${JSON.stringify(deepLayers)})`,
+  );
 }
 
 run()
