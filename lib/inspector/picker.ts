@@ -325,6 +325,12 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
   let frozen = false;
   let selected: Element | null = null;
   let selection: FamilySelection | null = null;
+  // The raw element under the pointer. Comparing against this is what makes a
+  // mousemove a no-op; comparing against the resolved target would re-run the
+  // 70ms resolution on every jiggle and flicker between the inner element and
+  // the ancestor it resolves to.
+  let pointerElement: Element | null = null;
+  // The element actually highlighted, which may be an ancestor of the pointer.
   let hovered: Element | null = null;
   // Overlapping boxes (nested cards, adjacent cells sharing a border) stack
   // several candidates under one point; the picker keeps the whole stack so
@@ -519,19 +525,20 @@ export function startPicker(doc: Document, options: PickerOptions): () => void {
     const synced = syncLayers(layersAt(event));
     const element = synced.element;
     if (!element) return;
-    if (element === hovered) {
-      // Same element, different stack (or layer): keep the label honest.
-      if (synced.changed) placeHighlight(element);
+    // Compare against the element under the pointer, not the resolved target.
+    // Jiggling inside one element must not restart the deferred resolution,
+    // which is what produced a small-box/ancestor-box flicker.
+    if (element === pointerElement) {
+      if (synced.changed) placeHighlight(hovered ?? element);
       return;
     }
-    hovered = element;
-    // Pointer feedback must stay cheap: paint the raw element now and defer
-    // the family search until the pointer settles.
-    placeHighlight(element);
+    pointerElement = element;
     if (hoverTimer !== null) clearTimeout(hoverTimer);
     hoverTimer = setTimeout(() => {
       hoverTimer = null;
-      if (frozen || finished || hovered !== element) return;
+      if (frozen || finished || pointerElement !== element) return;
+      // Paint the resolved target directly; painting the raw element first
+      // made the highlight jump twice for every ancestor-resolving hover.
       resolveHover(element);
     }, 70);
   };

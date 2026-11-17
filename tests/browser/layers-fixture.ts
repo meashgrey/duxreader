@@ -247,6 +247,67 @@ async function run() {
     deepLayers.includes("#inner") && deepLayers.includes("1/"),
     `the innermost element is layer 1 at a nested point (got ${JSON.stringify(deepLayers)})`,
   );
+  // 7. Hovering must settle on one box. An element that resolves to an
+  // ancestor (a wrapper or an interactive parent) used to be compared against
+  // the resolved target, so every 1px jiggle restarted the resolution and the
+  // highlight flickered between the small element and the ancestor.
+  startPickerCleanup();
+  await frame();
+  document.body.innerHTML = `
+    <div id="flicker-scope" style="padding:20px">
+      <span class="badgeWrapper" style="display:inline-block;padding:4px"><span class="css-1a2b3c" style="display:inline-block;padding:6px">badge</span></span>
+    </div>
+  `;
+  startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap: () => {},
+  });
+  await frame();
+
+  const weak = document.querySelector<HTMLElement>(".css-1a2b3c")!;
+  const weakRect = weak.getBoundingClientRect();
+  await hover(weakRect.left + weakRect.width / 2, weakRect.top + weakRect.height / 2);
+
+  // Sample the painted box while jiggling the pointer inside the element.
+  const sizes: string[] = [];
+  const highlightBox = () => {
+    const node = shadow().querySelector<HTMLElement>(".highlight");
+    if (!node || node.classList.contains("hidden")) return "hidden";
+    const rect = node.getBoundingClientRect();
+    return `${Math.round(rect.width)}x${Math.round(rect.height)}`;
+  };
+  for (let index = 0; index < 10; index++) {
+    document.dispatchEvent(
+      new MouseEvent("mousemove", {
+        clientX: weakRect.left + weakRect.width / 2 + (index % 2),
+        clientY: weakRect.top + weakRect.height / 2,
+        bubbles: true,
+      }),
+    );
+    await wait(20);
+    sizes.push(highlightBox());
+    await wait(90);
+    sizes.push(highlightBox());
+  }
+  const stable = [...new Set(sizes.filter((size) => size !== "hidden"))];
+  assert(
+    stable.length === 1,
+    `hovering settles on a single box instead of flickering (saw ${JSON.stringify(stable)})`,
+  );
+
+  // It must also actually resolve to the wrapper, not just hold still.
+  assert(
+    label().includes("badgeWrapper") || label().includes("span"),
+    `the resolved target is reported in the label (got ${JSON.stringify(label())})`,
+  );
 }
 
 run()
