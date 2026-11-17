@@ -625,3 +625,59 @@ body.preferences {
   height: 100%;
   object-fit: contain;
 }
+
+.rules-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.custom-rules-group {
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  padding: 12px 24px;
+}
+.custom-rules-group summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  font-weight: 500;
+}
+.custom-rules-group summary small {
+  color: var(--md-sys-color-on-surface-variant);
+  font-weight: 400;
+}
+.custom-rules-group ul {
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.custom-rules-group li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+.custom-rules-group li > div {
+  min-width: 0;
+}
+.custom-rules-group code {
+  display: block;
+  overflow: hidden;
+  font: 12px/18px ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.custom-rules-group li span {
+  display: block;
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.custom-rules-group .tonal-button {
+  min-height: 32px;
+  padding: 4px 16px;
+  flex: none;
+}

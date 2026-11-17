@@ -14,8 +14,9 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
   rule affects. Overlapping boxes can be stepped through with the arrow keys before clicking, and
   elements inside open shadow roots can be picked like ordinary DOM nodes. Saved rules can be
   re-targeted to another theme role, removed with a short undo window, and copied for source-level
-  fixes. Preserve rules only snapshot colors shared by the family, and offer per-element
-  preservation when instances legitimately differ.
+  fixes. Preferences lists every rule grouped by site and can export or import them as JSON.
+  Preserve rules only snapshot colors shared by the family, and offer per-element preservation when
+  instances legitimately differ.
 
 |                             Purple                              |                            Pink                             |
 | :-------------------------------------------------------------: | :---------------------------------------------------------: |
