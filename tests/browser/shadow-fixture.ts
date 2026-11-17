@@ -138,10 +138,29 @@ function run() {
     "example.com",
     colors,
   );
-  const mapStyle = firstRoot.querySelector("[data-duxreader-shadow-rule]")!;
+  const mapStyle = firstRoot.querySelector<HTMLStyleElement>(
+    "[data-duxreader-shadow-rule]",
+  )!;
+  // The stored selector uses a " >>> " host chain, which is not valid CSS. The
+  // injected sheet must contain only the inner selector, and the browser must
+  // accept the rule instead of dropping it.
+  const mapText = mapStyle.textContent!;
   assert(
-    mapStyle.textContent!.includes(".badge{color:#a8c8ff!important;}"),
+    !mapText.includes(">>>"),
+    `shadow map rules must not leak the host-chain separator (got ${JSON.stringify(mapText)})`,
+  );
+  assert(
+    mapText.includes(".badge{color:#a8c8ff!important;}"),
     "shadow map rules compile against the palette",
+  );
+  const mapSheet = mapStyle.sheet!;
+  assert(
+    mapSheet.cssRules.length === 1,
+    `the browser accepts the shadow map rule (parsed ${mapSheet.cssRules.length} rules from ${JSON.stringify(mapText)})`,
+  );
+  assert(
+    mapSheet.cssRules[0]!.cssText.includes(".badge"),
+    "the parsed rule targets the inner selector",
   );
   mapDispose();
 

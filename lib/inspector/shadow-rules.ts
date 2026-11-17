@@ -28,14 +28,23 @@ function rootFor(scope: ParentNode, hostSelector: string): ShadowRoot | null {
   return host?.shadowRoot ?? null;
 }
 
-function mapCSS(rule: Extract<UserRule, { kind: "map" }>, colors: Theme["colors"]) {
+// The stored selector carries a " >>> " host chain, which is a Duxreader
+// storage format rather than valid CSS. The sheet is injected into the owning
+// shadow root, so only the inner selector may reach CSS.emit.
+function mapCSS(
+  rule: Extract<UserRule, { kind: "map" }>,
+  inner: string,
+  colors: Theme["colors"],
+) {
   const value = colors[rule.target];
   if (typeof value !== "string") return "";
-  return `${rule.selector}{${rule.property}:${value}!important;}`;
+  return `${inner}{${rule.property}:${value}!important;}`;
 }
 
 function cssFor(rule: UserRule, inner: string, colors: Theme["colors"]) {
-  if (rule.kind === "map") return mapCSS(rule, colors);
+  // Both branches must emit a selector the browser can parse; a rule that
+  // keeps the host chain is silently discarded by the CSS parser.
+  if (rule.kind === "map") return mapCSS(rule, inner, colors);
   return `${inner}{${rule.declarations}}`;
 }
 
