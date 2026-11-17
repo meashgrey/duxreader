@@ -331,6 +331,39 @@ function run() {
   );
   refusedDispose();
 
+  // 5f. Same-tag siblings directly under a shadow root must get distinct
+  // selectors. Their parentElement is null, so a parent-based nth-of-type
+  // never fires and every "exact" selector would collide.
+  const siblingHost = document.createElement("div");
+  siblingHost.id = "sibling-host";
+  document.body.append(siblingHost);
+  const siblingRoot = siblingHost.attachShadow({ mode: "open" });
+  siblingRoot.innerHTML =
+    "<span>first</span><span>second</span><span>third</span>";
+  const siblings = [...siblingRoot.querySelectorAll("span")];
+  const siblingSelectors = siblings.map((node) => selectorFor(node));
+  assert(
+    new Set(siblingSelectors).size === siblings.length,
+    `shadow-root siblings get distinct exact selectors (got ${JSON.stringify(siblingSelectors)})`,
+  );
+  assert(
+    siblingSelectors.every((selector) =>
+      selector.startsWith("#sibling-host >>> "),
+    ),
+    `sibling selectors keep the host chain (got ${JSON.stringify(siblingSelectors)})`,
+  );
+  const middleSibling = siblings[1]!;
+  assert(
+    siblingRoot.querySelectorAll(
+      siblingSelectors[1]!.split(" >>> ").pop()!,
+    ).length === 1,
+    `the middle sibling's inner selector matches one node (got ${JSON.stringify(siblingSelectors[1])})`,
+  );
+  assert(
+    selectorFor(middleSibling) === siblingSelectors[1],
+    "sibling selectors are stable across calls",
+  );
+
   // 6. Rules for another site are ignored.
   const otherDispose = applyShadowRules(
     [rule("div#host-one >>> .badge")],

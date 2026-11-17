@@ -594,9 +594,15 @@ function selectorWithinScope(element: Element): string {
       .slice(0, 2);
     if (classes.length)
       part += `.${classes.map(escapeClass).join(".")}`;
-    const parent: Element | null = node.parentElement;
-    if (parent) {
-      const siblings = [...parent.children].filter(
+    let parent: Element | null = node.parentElement;
+    // Elements directly under a ShadowRoot have no parentElement, yet they can
+    // still have same-tag siblings. Without a position qualifier every such
+    // sibling would produce the same "exact" selector. Fall back to the root's
+    // children when there is no parent element.
+    const container: ParentNode & { children: HTMLCollection } =
+      parent ?? (node.getRootNode() as ParentNode & { children: HTMLCollection });
+    if (container.children) {
+      const siblings = [...container.children].filter(
         (child) => child.localName === node!.localName,
       );
       if (siblings.length > 1)
