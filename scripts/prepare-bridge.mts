@@ -43,7 +43,7 @@ const browsers: Record<
   { allowed_extensions?: string[]; allowed_origins?: string[] }
 > = {
   // Firefox identifies the extension by its manifest ID; Chrome uses its origin.
-  firefox: { allowed_extensions: ["duxreader@duxreader.local"] },
+  firefox: { allowed_extensions: ["duxreader@meashgrey.github.io"] },
 };
 if (values["chrome-id"])
   browsers.chrome = {

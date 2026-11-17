@@ -147,7 +147,9 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         // Must match allowed_extensions in the Firefox native host manifest.
-        id: "duxreader@duxreader.local",
+        // Permanent add-on identity. AMO binds this at first upload and it
+        // cannot change afterwards, so it uses the project owner domain.
+        id: "duxreader@meashgrey.github.io",
         data_collection_permissions: { required: ["none"] },
       },
     },
