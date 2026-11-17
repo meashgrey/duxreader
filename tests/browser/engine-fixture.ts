@@ -229,17 +229,13 @@ async function run() {
   lateRepaint.textContent =
     "html,body{background:#161b22!important;color:#e6edf3!important}";
   document.head.append(lateRepaint);
-  await waitFor(
-    () => color(document.body) === rgb(theme.colors.background),
-  );
+  await waitFor(() => color(document.body) === rgb(theme.colors.background));
   assert(
     color(document.body) === rgb(theme.colors.background),
     "A background painted after injection stays on the background role",
   );
   lateRepaint.remove();
-  await waitFor(
-    () => color(document.body) === rgb(theme.colors.background),
-  );
+  await waitFor(() => color(document.body) === rgb(theme.colors.background));
   assert(
     color(panel, "color") === rgb(theme.colors.foreground),
     "Neutral text matches the desktop exactly",
@@ -384,6 +380,22 @@ async function run() {
     "Year selection does not regenerate mapped CSS",
   );
   const beforeFocus = generatedCSS();
+  const stableOverride = document.querySelector("style.darkreader--override");
+  assert(
+    stableOverride,
+    "The engine installs a persistent override stylesheet",
+  );
+  const metadata = document.createElement("meta");
+  metadata.name = "unrelated-page-state";
+  document.head.append(metadata);
+  document.documentElement.classList.add("unrelated-page-state");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert(
+    document.querySelector("style.darkreader--override") === stableOverride,
+    "Unrelated head and root mutations do not rebuild the theme",
+  );
+  metadata.remove();
+  document.documentElement.classList.remove("unrelated-page-state");
   focus.focus();
   await waitFor(() => color(focus) === rgb(theme.colors.surface));
   assert(

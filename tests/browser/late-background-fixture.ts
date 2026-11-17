@@ -91,6 +91,9 @@ async function run() {
     "the initial white page maps to the background role",
   );
 
+  const override = document.querySelector("style.darkreader--override");
+  assert(override, "the engine installs its override stylesheet");
+
   // The page repaints its own background after injection.
   const repaint = document.createElement("style");
   repaint.textContent =
@@ -109,6 +112,11 @@ async function run() {
     "a late page background stays on the background role",
   );
 
+  assert(
+    document.querySelector("style.darkreader--override") === override,
+    "late page styles do not tear down and recreate the theme",
+  );
+
   // A second repaint must behave the same way.
   const second = document.createElement("style");
   second.textContent = "html,body{background:#0d1117!important}";
@@ -124,6 +132,16 @@ async function run() {
     "repeated page repaints keep the background role",
   );
 
+  const unrelated = document.createElement("meta");
+  unrelated.name = "unrelated-update";
+  document.head.append(unrelated);
+  unrelated.content = "updated";
+  document.documentElement.classList.add("unrelated-state");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert(
+    document.querySelector("style.darkreader--override") === override,
+    "head metadata and root class changes preserve engine state",
+  );
   renderer.dispose();
   // The last page rule wins, so the native background is the second repaint.
   const native = "rgb(13, 17, 23)";
