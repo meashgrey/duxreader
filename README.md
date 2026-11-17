@@ -26,7 +26,7 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 
 ## Install
 
-Download [0.1.0 test packages](https://github.com/meashgrey/duxreader/releases/tag/v0.1.0) for Firefox and Chromium/Edge. See [installation instructions](docs/INSTALL.md). Firefox's unsigned test package requires temporary loading.
+Download [0.1.1 test packages](https://github.com/meashgrey/duxreader/releases/tag/v0.1.1) for Firefox and Chromium/Edge. See [installation instructions](docs/INSTALL.md). Firefox's unsigned test package requires temporary loading.
 
 ## Development
 

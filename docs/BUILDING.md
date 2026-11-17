@@ -3,13 +3,13 @@
 Use Git, Bun 1.4.2 or newer, and the pinned submodules. Build scripts verify Git metadata and reject modified upstream checkouts. Clone the release tag to obtain that metadata; the release source ZIP is provided for source review.
 
 ```sh
-git clone --recurse-submodules --branch v0.1.0 https://github.com/meashgrey/duxreader.git
+git clone --recurse-submodules --branch v0.1.1 https://github.com/meashgrey/duxreader.git
 cd duxreader
 bun install --frozen-lockfile
 bun run release:pack
 ```
 
-Archives, installation instructions and checksums are written to `.output/release/0.1.0/`. Chromium and Edge share the Manifest V3 package; Firefox uses Manifest V2. Icons, the Dark Reader engine and Vimium bundles are generated from their checked-in sources and pinned submodules. No proprietary dependencies are needed.
+Archives, installation instructions and checksums are written to `.output/release/0.1.1/`. Chromium and Edge share the Manifest V3 package; Firefox uses Manifest V2. Icons, the Dark Reader engine and Vimium bundles are generated from their checked-in sources and pinned submodules. No proprietary dependencies are needed.
 
 For the optional Linux native bridge, use `nix develop path:.` and `bun run build:bridge`. Ubuntu builds require `pkg-config` and `libwayland-dev`.
 
