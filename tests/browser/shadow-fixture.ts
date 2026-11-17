@@ -164,6 +164,103 @@ function run() {
   );
   mapDispose();
 
+  // 5b. Two mappings on the same element but different properties must both
+  // survive. They share a selector, which is not a unique rule identity.
+  const multiDispose = applyShadowRules(
+    [
+      {
+        kind: "map",
+        host: "example.com",
+        selector: "div#host-one >>> .badge",
+        property: "color",
+        target: "accent",
+        createdAt: 3,
+      },
+      {
+        kind: "map",
+        host: "example.com",
+        selector: "div#host-one >>> .badge",
+        property: "background-color",
+        target: "surface",
+        createdAt: 4,
+      },
+    ],
+    "example.com",
+    colors,
+  );
+  const multiText = [
+    ...firstRoot.querySelectorAll<HTMLStyleElement>(
+      "[data-duxreader-shadow-rule]",
+    ),
+  ]
+    .map((node) => node.textContent ?? "")
+    .join("\n");
+  assert(
+    multiText.includes("color:#a8c8ff"),
+    `the first property of a shared selector survives (got ${JSON.stringify(multiText)})`,
+  );
+  assert(
+    multiText.includes("background-color:#1d2024"),
+    `the second property of a shared selector survives (got ${JSON.stringify(multiText)})`,
+  );
+  // Shared selectors merge into one CSS rule, so the parsed rule must carry
+  // both declarations rather than one rule per stored entry.
+  const multiParsed = [
+    ...firstRoot.querySelectorAll<HTMLStyleElement>(
+      "[data-duxreader-shadow-rule]",
+    ),
+  ].flatMap((node) => [...(node.sheet?.cssRules ?? [])]);
+  assert(
+    multiParsed.length === 1,
+    `shared selectors merge into one CSS rule (parsed ${multiParsed.length})`,
+  );
+  const merged = multiParsed[0]!.cssText;
+  assert(
+    merged.includes("color") && merged.includes("background-color"),
+    `the merged rule keeps both properties (got ${JSON.stringify(merged)})`,
+  );
+  multiDispose();
+
+  // 5c. A preserve rule and a map rule on the same selector must not clobber
+  // each other either.
+  const mixedDispose = applyShadowRules(
+    [
+      {
+        kind: "map",
+        host: "example.com",
+        selector: "div#host-one >>> .badge",
+        property: "color",
+        target: "accent",
+        createdAt: 5,
+      },
+      {
+        kind: "preserve",
+        host: "example.com",
+        selector: "div#host-one >>> .badge",
+        declarations: "border-color:rgb(9, 9, 9)!important;",
+        createdAt: 6,
+      },
+    ],
+    "example.com",
+    colors,
+  );
+  const mixedText = [
+    ...firstRoot.querySelectorAll<HTMLStyleElement>(
+      "[data-duxreader-shadow-rule]",
+    ),
+  ]
+    .map((node) => node.textContent ?? "")
+    .join("\n");
+  assert(
+    mixedText.includes("color:#a8c8ff"),
+    `a map rule survives next to a preserve rule (got ${JSON.stringify(mixedText)})`,
+  );
+  assert(
+    mixedText.includes("border-color:rgb(9, 9, 9)"),
+    `a preserve rule survives next to a map rule (got ${JSON.stringify(mixedText)})`,
+  );
+  mixedDispose();
+
   // 6. Rules for another site are ignored.
   const otherDispose = applyShadowRules(
     [rule("div#host-one >>> .badge")],

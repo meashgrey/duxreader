@@ -31,21 +31,35 @@ function rootFor(scope: ParentNode, hostSelector: string): ShadowRoot | null {
 // The stored selector carries a " >>> " host chain, which is a Duxreader
 // storage format rather than valid CSS. The sheet is injected into the owning
 // shadow root, so only the inner selector may reach CSS.emit.
-function mapCSS(
+function mapDeclaration(
   rule: Extract<UserRule, { kind: "map" }>,
-  inner: string,
   colors: Theme["colors"],
-) {
+): string {
   const value = colors[rule.target];
   if (typeof value !== "string") return "";
-  return `${inner}{${rule.property}:${value}!important;}`;
+  return `${rule.property}:${value}!important;`;
 }
 
-function cssFor(rule: UserRule, inner: string, colors: Theme["colors"]) {
-  // Both branches must emit a selector the browser can parse; a rule that
-  // keeps the host chain is silently discarded by the CSS parser.
-  if (rule.kind === "map") return mapCSS(rule, inner, colors);
-  return `${inner}{${rule.declarations}}`;
+/**
+ * Several stored rules may share one selector: two mappings on different
+ * properties, or a mapping plus a preserved snapshot. They form one CSS rule,
+ * so their declarations are concatenated instead of overwriting each other.
+ * Preserve rules go last so a captured colour wins over a role mapping, which
+ * matches the order the document engine uses.
+ */
+export function declarationsFor(
+  rules: readonly UserRule[],
+  colors: Theme["colors"],
+): string {
+  const mapped = rules
+    .filter((rule): rule is Extract<UserRule, { kind: "map" }> => rule.kind === "map")
+    .map((rule) => mapDeclaration(rule, colors))
+    .join("");
+  const preserved = rules
+    .filter((rule): rule is Extract<UserRule, { kind: "preserve" }> => rule.kind === "preserve")
+    .map((rule) => rule.declarations)
+    .join("");
+  return `${mapped}${preserved}`;
 }
 
 interface Injection {
@@ -85,18 +99,33 @@ export function applyShadowRules(
   };
 
   const sync = () => {
-    const seen = new Set<string>();
+    // Group by the full rule identity before emitting: a selector alone is not
+    // unique, and one <style> per selector would drop every rule but the last.
+    const groups = new Map<
+      string,
+      { inner: string; root: ShadowRoot; rules: UserRule[] }
+    >();
     for (const { rule, split } of scoped) {
       const root = resolveRoot(split.hosts);
       if (!root) continue;
-      const key = rule.selector;
+      const key = `${rule.selector}\u0000${split.hosts.join(">>>")}`;
+      const group = groups.get(key);
+      if (group) {
+        group.rules.push(rule);
+        continue;
+      }
+      groups.set(key, { inner: split.inner, root, rules: [rule] });
+    }
+
+    const seen = new Set<string>();
+    for (const [key, group] of groups) {
       seen.add(key);
-      const css = cssFor(rule, split.inner, colors);
+      const css = `${group.inner}{${declarationsFor(group.rules, colors)}}`;
       const existing = injections.get(key);
       if (existing) {
-        if (existing.root !== root) {
-          existing.root = root;
-          root.append(existing.style);
+        if (existing.root !== group.root) {
+          existing.root = group.root;
+          group.root.append(existing.style);
         }
         if (existing.style.textContent !== css)
           existing.style.textContent = css;
@@ -106,8 +135,8 @@ export function applyShadowRules(
       style.className = "darkreader";
       style.setAttribute(STYLE_ATTRIBUTE, "");
       style.textContent = css;
-      root.append(style);
-      injections.set(key, { style, root });
+      group.root.append(style);
+      injections.set(key, { style, root: group.root });
     }
     for (const [key, injection] of injections) {
       if (seen.has(key)) continue;
