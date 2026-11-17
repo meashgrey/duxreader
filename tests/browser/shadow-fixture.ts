@@ -1,4 +1,7 @@
-import { applyShadowRules } from "../../lib/inspector/shadow-rules";
+import {
+  applyShadowRules,
+  checkShadowRuleCSS,
+} from "../../lib/inspector/shadow-rules";
 import { splitShadowSelector } from "../../lib/inspector/shadow-selector";
 import { familySelector, selectorFor } from "../../lib/inspector/selector";
 import type { UserRule } from "../../lib/inspector/rules";
@@ -260,6 +263,73 @@ function run() {
     `a preserve rule survives next to a map rule (got ${JSON.stringify(mixedText)})`,
   );
   mixedDispose();
+
+  // 5d. The guard rejects the two shapes that broke silently before.
+  assert(
+    checkShadowRuleCSS(".badge{color:#a8c8ff!important;}", ".badge").ok,
+    "the guard accepts a valid shadow rule",
+  );
+  const leaked = checkShadowRuleCSS(
+    "#host >>> .badge{color:#a8c8ff!important;}",
+    ".badge",
+  );
+  assert(
+    !leaked.ok && /separator/.test(leaked.reason ?? ""),
+    `the guard rejects a leaked host chain (got ${JSON.stringify(leaked.reason)})`,
+  );
+  const innerLeak = checkShadowRuleCSS(
+    "#host >>> .badge{color:red!important;}",
+    "#host >>> .badge",
+  );
+  assert(
+    !innerLeak.ok && /separator/.test(innerLeak.reason ?? ""),
+    "the guard rejects a separator left in the inner selector",
+  );
+  const noDeclarations = checkShadowRuleCSS(".badge{}", ".badge");
+  assert(
+    !noDeclarations.ok && /no declarations/.test(noDeclarations.reason ?? ""),
+    "the guard rejects an empty declaration block",
+  );
+  // A sheet whose only content is a comment parses to zero rules, which the
+  // guard treats as a bug rather than a silent no-op.
+  const commentOnly = checkShadowRuleCSS("/* .badge{} */", ".badge");
+  assert(
+    !commentOnly.ok,
+    "the guard rejects CSS that parses to no rules",
+  );
+
+  // 5e. A rule that fails the guard is refused, not injected.
+  const errorsBefore = errors.length;
+  const originalError = console.error;
+  let logged: unknown[] = [];
+  console.error = (...args: unknown[]) => {
+    logged.push(args.join(" "));
+    originalError(...(args as Parameters<typeof console.error>));
+  };
+  const refusedDispose = applyShadowRules(
+    [
+      {
+        kind: "preserve",
+        host: "example.com",
+        // An inner selector that is not valid CSS cannot be expressed.
+        selector: "div#host-one >>> ..badge",
+        declarations: "color:red!important;",
+        createdAt: 7,
+      },
+    ],
+    "example.com",
+    colors,
+  );
+  console.error = originalError;
+  assert(
+    stylesIn(firstRoot) === 0,
+    "an unusable shadow selector injects nothing",
+  );
+  assert(
+    logged.some((entry) => String(entry).includes("Duxreader: skipped")),
+    "a refused shadow rule is reported",
+  );
+  refusedDispose();
 
   // 6. Rules for another site are ignored.
   const otherDispose = applyShadowRules(

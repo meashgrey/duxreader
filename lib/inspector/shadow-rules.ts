@@ -1,6 +1,6 @@
 import type { Theme } from "../theme";
 import { rulesForHost, type UserRule } from "./rules";
-import { splitShadowSelector } from "./shadow-selector";
+import { SHADOW_SEPARATOR, splitShadowSelector } from "./shadow-selector";
 
 /**
  * User rules may target elements inside open shadow roots. CSS cannot pierce a
@@ -62,6 +62,67 @@ export function declarationsFor(
   return `${mapped}${preserved}`;
 }
 
+export interface ShadowRuleCheck {
+  readonly ok: boolean;
+  readonly reason?: string;
+}
+
+// One reusable sheet keeps the check cheap: it only parses a short rule.
+let scratchSheet: CSSStyleSheet | null | undefined;
+
+function scratch(): CSSStyleSheet | null {
+  if (scratchSheet !== undefined) return scratchSheet;
+  try {
+    scratchSheet = new CSSStyleSheet();
+  } catch {
+    // Engines without constructable stylesheets still get the separator checks.
+    scratchSheet = null;
+  }
+  return scratchSheet;
+}
+
+/**
+ * Guards the boundary between the stored rule model and real CSS. Shadow rules
+ * are stored with a host chain, so it is easy to emit the storage separator or
+ * a declaration the parser silently drops. An invalid rule is refused instead
+ * of injected, and the reason is reported so a regression is loud rather than a
+ * colour that quietly stops updating.
+ */
+export function checkShadowRuleCSS(
+  css: string,
+  inner: string,
+): ShadowRuleCheck {
+  if (!inner.trim()) return { ok: false, reason: "empty inner selector" };
+  if (inner.includes(SHADOW_SEPARATOR))
+    return {
+      ok: false,
+      reason: "the inner selector still contains the host-chain separator",
+    };
+  if (css.includes(SHADOW_SEPARATOR))
+    return {
+      ok: false,
+      reason: "the emitted CSS contains the host-chain separator",
+    };
+  // A declaration block must be present; an empty one is a bug, not a no-op.
+  if (!/\{[^{}]+\}/.test(css))
+    return { ok: false, reason: "the emitted CSS has no declarations" };
+
+  const sheet = scratch();
+  if (!sheet) return { ok: true };
+  try {
+    sheet.replaceSync(css);
+  } catch (error) {
+    return { ok: false, reason: `the CSS parser rejected the rule: ${error}` };
+  }
+  const parsed = sheet.cssRules.length;
+  if (parsed !== 1)
+    return {
+      ok: false,
+      reason: `expected exactly one parsed rule, got ${parsed}`,
+    };
+  return { ok: true };
+}
+
 interface Injection {
   style: HTMLStyleElement;
   root: ShadowRoot;
@@ -121,6 +182,15 @@ export function applyShadowRules(
     for (const [key, group] of groups) {
       seen.add(key);
       const css = `${group.inner}{${declarationsFor(group.rules, colors)}}`;
+      const check = checkShadowRuleCSS(css, group.inner);
+      if (!check.ok) {
+        // Refuse rather than inject: the parser would discard it silently and
+        // the user would only see a colour that cannot be changed.
+        console.error(
+          `Duxreader: skipped an invalid shadow rule for ${JSON.stringify(group.inner)}: ${check.reason}`,
+        );
+        continue;
+      }
       const existing = injections.get(key);
       if (existing) {
         if (existing.root !== group.root) {
