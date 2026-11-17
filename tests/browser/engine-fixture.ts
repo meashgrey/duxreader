@@ -153,6 +153,13 @@ async function run() {
     ).some((selector) => languageLink.firstElementChild!.matches(selector)),
     "GitHub-specific language structure is scoped to GitHub",
   );
+  const unlinkedLanguage = document.createElement("span");
+  unlinkedLanguage.className = "languageDot__arbitraryHash";
+  unlinkedLanguage.style.backgroundColor = "#f1e05a";
+  assert(
+    siteSelectors.some((selector) => unlinkedLanguage.matches(selector)),
+    "GitHub fork language dots are preserved without search links",
+  );
 
   const searchExample = document.createElement("section");
   searchExample.innerHTML =

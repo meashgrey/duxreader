@@ -1,9 +1,12 @@
 .vomnibar {
+  --vomnibar-max-height: min(560px, 70dvh);
   position: fixed;
-  top: 8px;
+  /* Anchor the search field to the centered, expanded panel's top edge.
+     Result-count changes grow downward without moving the input. */
+  top: calc((100dvh - var(--vomnibar-max-height)) / 2);
   left: 8px;
   width: calc(100% - 16px);
-  max-height: calc(100% - 16px);
+  max-height: var(--vomnibar-max-height);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -13,6 +16,7 @@
 }
 
 .vomnibar-search {
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -44,10 +48,13 @@
 }
 
 .vomnibar ul {
+  flex: 1 1 auto;
+  min-height: 0;
   list-style: none;
   margin: 0;
   padding: 8px;
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .vomnibar li {
@@ -60,8 +67,15 @@
 }
 
 .vomnibar li.selected {
-  background: var(--md-sys-color-primary-container);
+  /* Legacy four-color themes map primary-container to the same surface as the
+     list, so always tint the selected row with the accent as well. */
+  background: color-mix(
+    in srgb,
+    var(--md-sys-color-primary) 20%,
+    var(--md-sys-color-primary-container)
+  );
   color: var(--md-sys-color-on-primary-container);
+  box-shadow: inset 3px 0 0 var(--md-sys-color-primary);
 }
 
 .vomnibar li {

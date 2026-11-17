@@ -54,6 +54,9 @@ test("surface and accent changes produce new exact colors", () => {
   expect(mapDesktopColor(parseColor("#2563eb")!, "text", changed)).toEqual(
     parseColor(changed.colors.accent)!,
   );
+  expect(
+    mapDesktopColor(parseColor("#d0bcff")!, "background", changed),
+  ).toEqual(parseColor(changed.colors.surface)!);
 });
 
 test("a native dark page background maps to desktop background without flattening nearby surfaces", () => {

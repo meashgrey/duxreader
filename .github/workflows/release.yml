@@ -57,6 +57,7 @@ jobs:
         run: |
           bunx --bun playwright install --with-deps chromium
           bun run test:browser --browser chromium
+          bun run test:inspector
           bun run test:preferences
           bun run test:vimium
       - name: Sign Firefox package when Mozilla credentials are available

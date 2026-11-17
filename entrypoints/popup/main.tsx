@@ -18,8 +18,25 @@ import {
   Switch,
 } from "../../components/material";
 import { materialRoles } from "../../lib/material";
+import {
+  EXCLUDED_SITES_KEY,
+  readExcludedSites,
+  setSiteExcluded,
+  siteForUrl,
+} from "../../lib/site-exclusions";
 import type { MdOutlinedTextField } from "@material/web/textfield/outlined-text-field.js";
 import type { MdSwitch } from "@material/web/switch/switch.js";
+import {
+  addUserRule,
+  readUserRules,
+  removeUserRule,
+  replaceUserRule,
+  rulesForHost,
+  USER_RULES_KEY,
+  userRuleKey,
+  type UserRule,
+  type UserRuleTarget,
+} from "../../lib/inspector/rules";
 import { useUIFont } from "../../lib/use-ui-font";
 import { installedUIFonts } from "../../lib/ui-font";
 import "./style.css";
@@ -44,6 +61,16 @@ function App() {
   const [formError, setFormError] = React.useState("");
   const [pickerStatus, setPickerStatus] = React.useState("idle");
   const [pickerError, setPickerError] = React.useState("");
+  const [site, setSite] = React.useState<string | null>(null);
+  const [excludedSites, setExcludedSites] = React.useState<string[]>([]);
+  const [userRules, setUserRules] = React.useState<UserRule[]>([]);
+  const [copied, setCopied] = React.useState(false);
+  const [editing, setEditing] = React.useState<string | null>(null);
+  // Deleting is one click, so keep a short undo window instead of a confirm.
+  const [undo, setUndo] = React.useState<{
+    rule: UserRule;
+    timer: ReturnType<typeof setTimeout>;
+  } | null>(null);
   React.useEffect(() => {
     let disposed = false;
     let snapshot: Record<string, unknown> = {};
@@ -61,6 +88,8 @@ function App() {
       "lastApplied",
       "pickerStatus",
       "pickerError",
+      EXCLUDED_SITES_KEY,
+      USER_RULES_KEY,
     ];
     const update = () => {
       const data = snapshot;
@@ -73,6 +102,8 @@ function App() {
       setPickerError(
         typeof data.pickerError === "string" ? data.pickerError : "",
       );
+      setExcludedSites(readExcludedSites(data[EXCLUDED_SITES_KEY]));
+      setUserRules(readUserRules(data[USER_RULES_KEY]));
       setEnabled(data[ENABLED_KEY] !== false);
       setStatus(
         typeof data.bridgeStatus === "string"
@@ -125,7 +156,20 @@ function App() {
       browser.storage.onChanged.removeListener(onChanged);
     };
   }, []);
-  // Keep in-progress edits when unrelated theme or connection updates arrive.
+  React.useEffect(() => {
+    let disposed = false;
+    void browser.tabs
+      .query({ active: true, currentWindow: true })
+      .then(([tab]) => {
+        if (!disposed) setSite(siteForUrl(tab?.url) ?? null);
+      })
+      .catch(() => {
+        if (!disposed) setSite(null);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, []);
   React.useEffect(() => {
     setDraft(source);
   }, [source]);
@@ -191,6 +235,112 @@ function App() {
     try {
       await browser.runtime.sendMessage({ type: "reconnect" });
     } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  const siteRules = site ? rulesForHost(userRules, site) : [];
+
+  async function startInspector(mode: "preserve" | "map") {
+    setFormError("");
+    try {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (tab?.id == null) throw new Error("No active page to inspect.");
+      await browser.tabs.sendMessage(tab.id, {
+        type: "duxreader:start-picker",
+        mode,
+      });
+      window.close();
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function copyRules() {
+    if (!site || siteRules.length === 0) return;
+    const payload = siteRules.map((rule) =>
+      rule.kind === "map"
+        ? {
+            kind: rule.kind,
+            selector: rule.selector,
+            property: rule.property,
+            target: rule.target,
+          }
+        : {
+            kind: rule.kind,
+            selector: rule.selector,
+            declarations: rule.declarations,
+          },
+    );
+    const text =
+      `// Duxreader user rules for ${site}\n` +
+      JSON.stringify(payload, null, 2);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function deleteRule(rule: UserRule) {
+    setFormError("");
+    setEditing(null);
+    const next = removeUserRule(userRules, rule);
+    try {
+      await browser.storage.local.set({ [USER_RULES_KEY]: next });
+      setUndo((current) => {
+        if (current) clearTimeout(current.timer);
+        const timer = setTimeout(() => setUndo(null), 6000);
+        return { rule, timer };
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function undoDelete() {
+    if (!undo) return;
+    clearTimeout(undo.timer);
+    const rule = undo.rule;
+    setUndo(null);
+    try {
+      await browser.storage.local.set({
+        [USER_RULES_KEY]: addUserRule(userRules, rule),
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function updateRule(rule: UserRule, target: UserRuleTarget) {
+    if (rule.kind !== "map") return;
+    setEditing(null);
+    if (rule.target === target) return;
+    try {
+      await browser.storage.local.set({
+        [USER_RULES_KEY]: replaceUserRule(userRules, rule, { ...rule, target }),
+      });
+    } catch (error) {
+      setFormError(String(error));
+    }
+  }
+
+  async function updateSiteExclusion(
+    target: string,
+    excluded: boolean,
+  ): Promise<void> {
+    setFormError("");
+    const next = setSiteExcluded(excludedSites, target, excluded);
+    setExcludedSites(next);
+    try {
+      await browser.storage.local.set({ [EXCLUDED_SITES_KEY]: next });
+    } catch (error) {
+      setExcludedSites(excludedSites);
       setFormError(String(error));
     }
   }
@@ -262,6 +412,185 @@ function App() {
           ))}
         </div>
       </section>
+
+      <section className="site-card" aria-labelledby="site-heading">
+        <div className="site-heading">
+          <div className="site-copy">
+            <h2 id="site-heading">This site</h2>
+            <p title={site ?? undefined}>
+              {site ?? "Not available on this page"}
+            </p>
+          </div>
+          <Switch
+            selected={site ? !excludedSites.includes(site) : false}
+            disabled={!ready || !site}
+            aria-label="Theme this site"
+            onChange={(event) => {
+              if (site)
+                void updateSiteExclusion(
+                  site,
+                  !(event.target as MdSwitch).selected,
+                );
+            }}
+          />
+        </div>
+        <p className="site-note">
+          {!site
+            ? "Site controls are available on http and https pages."
+            : excludedSites.includes(site)
+              ? "This site keeps its original colors."
+              : "This site follows your desktop palette."}
+        </p>
+        <div className="picker-actions">
+          <OutlinedButton
+            type="button"
+            disabled={!ready || !site}
+            onClick={() => {
+              void startInspector("preserve");
+            }}
+          >
+            Preserve element colors
+          </OutlinedButton>
+          <FilledButton
+            type="button"
+            disabled={!ready || !site}
+            onClick={() => {
+              void startInspector("map");
+            }}
+          >
+            Map element color
+          </FilledButton>
+        </div>
+        {excludedSites.length > 0 && (
+          <details className="excluded-list">
+            <summary>
+              {excludedSites.length} excluded site
+              {excludedSites.length === 1 ? "" : "s"}
+            </summary>
+            <ul>
+              {excludedSites.map((excludedSite) => (
+                <li key={excludedSite}>
+                  <span>{excludedSite}</span>
+                  <button
+                    type="button"
+                    className="remove-site"
+                    onClick={() => {
+                      void updateSiteExclusion(excludedSite, false);
+                    }}
+                  >
+                    Remove
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+      </section>
+
+      {site && (
+        <section className="user-rules-card" aria-labelledby="rules-heading">
+          <div className="rules-heading">
+            <div>
+              <h2 id="rules-heading">Custom rules</h2>
+              <p className="site-note">
+                {siteRules.length === 0
+                  ? "No custom rules for this site."
+                  : `${siteRules.length} rule${siteRules.length === 1 ? "" : "s"} for ${site}`}
+              </p>
+            </div>
+            <OutlinedButton
+              type="button"
+              disabled={siteRules.length === 0}
+              onClick={() => {
+                void copyRules();
+              }}
+            >
+              {copied ? "Copied" : "Copy for agent"}
+            </OutlinedButton>
+          </div>
+          {siteRules.length > 0 && (
+            <ul className="user-rule-list">
+              {siteRules.map((rule) => {
+                const key = userRuleKey(rule);
+                const isEditing = editing === key && rule.kind === "map";
+                return (
+                  <li key={key}>
+                    <div>
+                      <code>{rule.selector}</code>
+                      {isEditing ? (
+                        <select
+                          className="rule-target"
+                          aria-label={
+                            rule.kind === "map"
+                              ? "Theme role"
+                              : undefined
+                          }
+                          defaultValue={
+                            rule.kind === "map" ? rule.target : undefined
+                          }
+                          onChange={(event) => {
+                            if (rule.kind === "map")
+                              void updateRule(
+                                rule,
+                                event.target.value as UserRuleTarget,
+                              );
+                          }}
+                        >
+                          {(
+                            [
+                              ["background", "Background"],
+                              ["surface", "Surface"],
+                              ["foreground", "Foreground"],
+                              ["accent", "Accent"],
+                            ] as const
+                          ).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <button
+                          type="button"
+                          className="rule-summary"
+                          disabled={rule.kind !== "map"}
+                          title={
+                            rule.kind === "map"
+                              ? "Change the theme role"
+                              : "Preserve rules keep their captured colors"
+                          }
+                          onClick={() => setEditing(key)}
+                        >
+                          {rule.kind === "map"
+                            ? `${rule.property} → ${rule.target}`
+                            : "Preserve colors"}
+                        </button>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      className="remove-site"
+                      onClick={() => {
+                        void deleteRule(rule);
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+          {undo && (
+            <p className="rule-undo" role="status">
+              Rule removed.
+              <button type="button" onClick={() => void undoDelete()}>
+                Undo
+              </button>
+            </p>
+          )}
+        </section>
+      )}
 
       <section className="source-section" aria-labelledby="source-heading">
         <h2 id="source-heading" className="section-label">

@@ -1,3 +1,4 @@
+// Rule authoring guide: ./README.md
 import github from "./github/index.mts";
 import type { SiteRules } from "./types.mts";
 
@@ -27,4 +28,10 @@ export function siteInlineSelectors(url: URL): readonly string[] {
 
 export function siteColorMaps(url: URL) {
   return matchingRules(url).flatMap((rule) => rule.colorMap ?? []);
+}
+
+export function siteCSS(url: URL): string {
+  return matchingRules(url)
+    .flatMap((rule) => rule.css ?? [])
+    .join("\n");
 }

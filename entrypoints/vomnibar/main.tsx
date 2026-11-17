@@ -29,6 +29,7 @@ function App() {
   if (!modelRef.current) modelRef.current = new VomnibarModel(() => rerender());
   const current = modelRef.current;
   const inputRef = React.useRef<HTMLInputElement>(null);
+  const listRef = React.useRef<HTMLUListElement>(null);
 
   React.useEffect(() => {
     void Settings.onLoaded().then(() => DomUtils.injectUserCss());
@@ -45,6 +46,36 @@ function App() {
       model = null;
     };
   }, [current]);
+
+  // Keep the keyboard selection inside the visible part of long result lists.
+  const revealSelection = React.useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    if (current.selection < 0) {
+      list.scrollTop = 0;
+      return;
+    }
+    const item = list.children.item(current.selection);
+    if (!item) return;
+    const listRect = list.getBoundingClientRect();
+    const itemRect = item.getBoundingClientRect();
+    if (itemRect.bottom > listRect.bottom)
+      list.scrollTop += itemRect.bottom - listRect.bottom + 8;
+    else if (itemRect.top < listRect.top)
+      list.scrollTop -= listRect.top - itemRect.top + 8;
+  }, [current]);
+  React.useLayoutEffect(revealSelection, [
+    revealSelection,
+    current.selection,
+    current.completions,
+  ]);
+  React.useEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const observer = new ResizeObserver(revealSelection);
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, [revealSelection, current.completions]);
 
   return (
     <div
@@ -74,7 +105,12 @@ function App() {
         />
       </div>
       {current.completions.length > 0 && (
-        <ul id="vomnibar-results" role="listbox" aria-label="Vomnibar results">
+        <ul
+          ref={listRef}
+          id="vomnibar-results"
+          role="listbox"
+          aria-label="Vomnibar results"
+        >
           {current.completions.map((completion, index) => (
             <li
               key={index}

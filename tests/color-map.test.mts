@@ -3,7 +3,7 @@ import {
   compileColorMaps,
   type ColorMap,
 } from "../scripts/engine/color-map.mts";
-import { siteColorMaps } from "../scripts/engine/sites/index.mts";
+import { siteColorMaps, siteCSS } from "../scripts/engine/sites/index.mts";
 const colors = {
   background: "#17121c",
   surface: "#312838",
@@ -60,6 +60,34 @@ test("GitHub header mappings are hostname-scoped and select theme background", (
   expect(siteColorMaps(new URL("https://example.org/meashgrey"))).toEqual([]);
 });
 
+test("GitHub feed backdrop uses the base background instead of a surface", () => {
+  const feed = siteColorMaps(new URL("https://github.com/feed")).find(
+    (rule) => rule.selector === ".feed-background",
+  );
+  expect(feed).toEqual({
+    selector: ".feed-background",
+    property: "background-color",
+    target: "background",
+  });
+  expect(compileColorMaps([feed!], colors)).toBe(
+    ".feed-background{background-color:#17121c!important;}",
+  );
+});
+
+test("GitHub text input focus rings use the accent role", () => {
+  const focusRules = siteColorMaps(
+    new URL("https://github.com/search?q=owner%3Ameashgrey"),
+  ).filter((rule) => rule.selector === ".TextInput-wrapper:focus-within");
+  expect(focusRules).toHaveLength(2);
+  expect(focusRules.map((rule) => rule.property)).toEqual([
+    "border-color",
+    "outline-color",
+  ]);
+  expect(compileColorMaps(focusRules, colors)).toContain(
+    "border-color:#d0bcff!important",
+  );
+});
+
 test("data intensity mixes use only theme endpoints and validate their weights", () => {
   expect(
     compileColorMaps(
@@ -101,4 +129,15 @@ test("highlight text chooses contrast from the supplied palette rather than hard
       colors,
     ),
   ).toThrow();
+});
+
+test("GitHub labels restore their native variable formulas in both color modes", () => {
+  const css = siteCSS(new URL("https://github.com/meashgrey"));
+  expect(css).toContain('span[class*="Token-IssueLabel"]');
+  expect(css).toContain("var(--label-r)");
+  expect(css).toContain('@media (prefers-color-scheme: light)');
+  expect(css).toContain('@media (prefers-color-scheme: dark)');
+  expect(css).toContain('[data-color-mode="dark"]');
+  expect(css).not.toContain("nth-of-type");
+  expect(siteCSS(new URL("https://example.org/meashgrey"))).toBe("");
 });

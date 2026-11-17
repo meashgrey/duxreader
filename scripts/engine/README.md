@@ -35,6 +35,7 @@ semantic detection; stylesheet-only colors need additional framework rules.
 
 Site rules live in `sites/<site>/`: the site index declares hostnames and groups
 page-specific modules such as `github/repository.mts` and `github/search.mts`.
+See [sites/README.md](sites/README.md) for the rule-authoring guide.
 Rules can also declare optional pathname patterns. The registry matches them once per palette application.
 Keep shared component rules in `semantic-colors.mts`.
 
@@ -64,6 +65,10 @@ later cases; the command exits unsuccessfully if any case fails. Screenshots and
 per-site JSON reports are written under `.temp/sites`, with an aggregate report.
 These tests require network access and Chromium (`nix develop path:.` on NixOS).
 Live tests remain separate from deterministic CI fixtures.
+
+Site modules can also declare raw `css` overrides for components whose colors are
+computed from element-scoped variables, such as GitHub token labels; these run
+after color maps and before user rules. See `sites/README.md`.
 
 Site modules can also declare `colorMap` entries. Each entry has a CSS selector,
 a color property, and a `target` from `background`, `surface`, `foreground`, or

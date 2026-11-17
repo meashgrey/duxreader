@@ -209,6 +209,27 @@ export default defineBackground(() => {
     }
   }
 
+  // Keyboard shortcuts reach the same picker the popup starts, so a page can be
+  // fixed without opening the toolbar first.
+  const pickerModes: Record<string, "preserve" | "map"> = {
+    "start-preserve-picker": "preserve",
+    "start-map-picker": "map",
+  };
+  browser.commands?.onCommand.addListener((command) => {
+    const mode = pickerModes[command];
+    if (!mode) return;
+    void (async () => {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (tab?.id == null) return;
+      await browser.tabs
+        .sendMessage(tab.id, { type: "duxreader:start-picker", mode })
+        .catch(() => undefined);
+    })();
+  });
+
   browser.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
     if (changes[SOURCE_MODE_KEY]) {
@@ -227,6 +248,16 @@ export default defineBackground(() => {
   // Restrict control messages to extension pages, never website content scripts.
   browser.runtime.onMessage.addListener((message, sender) => {
     if (sender.id !== browser.runtime.id) return;
+    // Content scripts cannot message sibling frames directly, so a frame that
+    // finished picking asks the background to close the pickers in its peers.
+    if (message?.type === "duxreader:stop-picker") {
+      const tabId = sender.tab?.id;
+      if (tabId == null) return;
+      void browser.tabs
+        .sendMessage(tabId, { type: "duxreader:stop-picker" })
+        .catch(() => undefined);
+      return;
+    }
     if (message?.type === READ_STYLESHEET) {
       if (!sender.tab || !sender.url || !/^https?:\/\//.test(sender.url))
         return;

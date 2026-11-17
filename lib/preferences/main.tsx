@@ -8,12 +8,14 @@ import {
   SiteRulesSettings,
   BackupSettings,
 } from "./sections";
+import { CustomRulesSettings } from "./custom-rules";
 
 const sections = [
   ["appearance", "Appearance"],
   ["keyboard", "Keyboard"],
   ["navigation", "Navigation"],
   ["sites", "Site rules"],
+  ["custom-rules", "Custom rules"],
   ["backup", "Backup & restore"],
 ] as const;
 
@@ -130,6 +132,7 @@ function App() {
           <KeyboardSettings />
           <NavigationSettings />
           <SiteRulesSettings />
+          <CustomRulesSettings />
           <BackupSettings />
           <SaveBar />
         </main>

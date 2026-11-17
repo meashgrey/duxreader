@@ -1,0 +1,201 @@
+import { startPicker } from "../../lib/inspector/picker";
+
+declare global {
+  interface Window {
+    __layersResult?: { ok: boolean; checks: string[]; error?: string };
+  }
+}
+
+const checks: string[] = [];
+const errors: string[] = [];
+window.addEventListener("error", (event) =>
+  errors.push(String(event.error ?? event.message)),
+);
+
+function assert(value: unknown, label: string) {
+  if (!value) throw new Error(label);
+  checks.push(label);
+}
+
+const colors = {
+  background: "#111318",
+  surface: "#1d2024",
+  foreground: "#e1e2e9",
+  accent: "#a8c8ff",
+};
+
+const frame = () =>
+  new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+
+const shadow = () =>
+  document.querySelector<HTMLElement>("[data-duxreader-picker]")!.shadowRoot!;
+
+const label = () => shadow().querySelector(".label")!.textContent ?? "";
+const hint = () => shadow().querySelector(".hint")!.textContent ?? "";
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+async function hover(x: number, y: number) {
+  document.dispatchEvent(
+    new MouseEvent("mousemove", { clientX: x, clientY: y, bubbles: true }),
+  );
+  await wait(120);
+  await frame();
+}
+
+async function press(key: string) {
+  document.dispatchEvent(
+    new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+  );
+  await wait(120);
+  await frame();
+}
+
+async function click(x: number, y: number) {
+  document.dispatchEvent(
+    new MouseEvent("click", {
+      clientX: x,
+      clientY: y,
+      bubbles: true,
+      cancelable: true,
+    }),
+  );
+  await wait(160);
+  await frame();
+}
+
+async function run() {
+  document.body.style.cssText = "margin:0;padding:40px;font:16px system-ui";
+  document.body.innerHTML = `
+    <table id="cells" style="border-collapse:collapse"><tr>
+      <td id="left" style="border:1px solid #888;padding:18px">Left</td>
+      <td id="right" style="border:1px solid #888;padding:18px">Right</td>
+    </tr></table>
+    <div id="outer" style="margin-top:30px;border:1px solid #888;padding:18px">
+      Outer
+      <div id="middle" style="border:1px solid #888;padding:16px;margin-top:10px">
+        Middle
+        <div id="inner" style="border:1px solid #888;padding:14px;margin-top:8px">Inner</div>
+      </div>
+    </div>
+  `;
+
+  const saved: Array<{ selector: string; target?: string }> = [];
+  startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap(selector) {
+      saved.push({ selector });
+    },
+  });
+  await frame();
+
+  // 1. Two siblings meeting at a shared border: both are under the cursor.
+  const right = document.querySelector<HTMLElement>("#right")!;
+  const left = document.querySelector<HTMLElement>("#left")!;
+  const rightRect = right.getBoundingClientRect();
+  const sharedX = Math.round(rightRect.left);
+  await hover(sharedX, rightRect.top + 10);
+  assert(
+    label().includes("1/"),
+    `shared borders expose a layer stack (got ${JSON.stringify(label())})`,
+  );
+  assert(
+    hint().includes("to switch element"),
+    "the hint explains how to switch layers",
+  );
+
+  // 2. Arrow keys walk outward, then back inward.
+  const firstLayer = label();
+  await press("ArrowUp");
+  const secondLayer = label();
+  assert(secondLayer !== firstLayer, "ArrowUp moves to another element");
+  assert(
+    secondLayer.includes("2/"),
+    `ArrowUp advances the layer counter (got ${JSON.stringify(secondLayer)})`,
+  );
+  await press("ArrowDown");
+  assert(label() === firstLayer, "ArrowDown returns to the previous layer");
+  await press("ArrowDown");
+  assert(
+    label() === firstLayer,
+    "ArrowDown does not wrap past the innermost element",
+  );
+  assert(
+    secondLayer.includes("#left") || firstLayer.includes("#right"),
+    "sibling cells are both reachable",
+  );
+
+  // 3. Nested cards: the innermost is picked by default, arrows climb outward.
+  const inner = document.querySelector<HTMLElement>("#inner")!;
+  const innerRect = inner.getBoundingClientRect();
+  await hover(innerRect.left + 40, innerRect.top + 1);
+  assert(label().includes("#inner"), "nested hover starts at the inner box");
+  await press("ArrowUp");
+  assert(
+    label().includes("#middle"),
+    `ArrowUp climbs to the parent box (got ${JSON.stringify(label())})`,
+  );
+  await press("ArrowUp");
+  assert(
+    label().includes("#outer"),
+    `ArrowUp keeps climbing (got ${JSON.stringify(label())})`,
+  );
+  await press("ArrowUp");
+  assert(
+    label().includes("#outer"),
+    "ArrowUp stops at the outermost candidate",
+  );
+
+  // 4. A point with only one candidate clears the layer hint again.
+  const outerRect = document
+    .querySelector<HTMLElement>("#outer")!
+    .getBoundingClientRect();
+  await hover(outerRect.left + 6, outerRect.top + 6);
+  assert(
+    !hint().includes("to switch element"),
+    "a single-element point clears the layer hint",
+  );
+  assert(
+    label().includes("#outer"),
+    `the single-element point picks that box (got ${JSON.stringify(label())})`,
+  );
+
+  // 5. Clicking opens the rule for the chosen layer, not the element a plain
+  // click would hit.
+  await hover(innerRect.left + 40, innerRect.top + 1);
+  await press("ArrowUp");
+  await press("ArrowUp");
+  assert(
+    label().includes("#outer"),
+    "the pinned layer is restored before saving",
+  );
+  await click(innerRect.left + 40, innerRect.top + 1);
+  const panel = shadow().querySelector<HTMLElement>(".panel.map")!;
+  assert(
+    !panel.classList.contains("hidden"),
+    "clicking the pinned layer opens the map panel",
+  );
+  const selector =
+    panel.querySelector<HTMLElement>(".selector")!.textContent ?? "";
+  assert(
+    selector === "#outer",
+    `the panel targets the stepped layer (got ${JSON.stringify(selector)})`,
+  );
+  assert(saved.length === 0, "map mode still waits for a theme role");
+}
+
+run()
+  .then(() => {
+    window.__layersResult = { ok: true, checks, error: errors[0] };
+  })
+  .catch((error) => {
+    window.__layersResult = { ok: false, checks, error: String(error) };
+  });

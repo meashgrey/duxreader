@@ -94,12 +94,25 @@ export default defineConfig({
             "clipboardRead" as const,
             "clipboardWrite" as const,
           ]
-        : ["favicon" as const]),
+        : ["favicon" as const, "clipboardWrite" as const]),
     ],
     options_ui: {
       page: "pages/options.html",
       browser_style: false,
       open_in_tab: true,
+    },
+    // Start the element picker without opening the popup first. Chrome silently
+    // ignores some defaults (Alt+Shift+P among them), so keep pairs that were
+    // verified to register in a launched extension.
+    commands: {
+      "start-preserve-picker": {
+        suggested_key: { default: "Alt+Shift+E" },
+        description: "Preserve the colors of an element",
+      },
+      "start-map-picker": {
+        suggested_key: { default: "Alt+Shift+M" },
+        description: "Map an element color to a theme role",
+      },
     },
     content_scripts: [
       {
@@ -134,7 +147,9 @@ export default defineConfig({
     browser_specific_settings: {
       gecko: {
         // Must match allowed_extensions in the Firefox native host manifest.
-        id: "duxreader@duxreader.local",
+        // Permanent add-on identity. AMO binds this at first upload and it
+        // cannot change afterwards, so it uses the project owner domain.
+        id: "duxreader@meashgrey.github.io",
         data_collection_permissions: { required: ["none"] },
       },
     },
