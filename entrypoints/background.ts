@@ -209,6 +209,27 @@ export default defineBackground(() => {
     }
   }
 
+  // Keyboard shortcuts reach the same picker the popup starts, so a page can be
+  // fixed without opening the toolbar first.
+  const pickerModes: Record<string, "preserve" | "map"> = {
+    "start-preserve-picker": "preserve",
+    "start-map-picker": "map",
+  };
+  browser.commands?.onCommand.addListener((command) => {
+    const mode = pickerModes[command];
+    if (!mode) return;
+    void (async () => {
+      const [tab] = await browser.tabs.query({
+        active: true,
+        currentWindow: true,
+      });
+      if (tab?.id == null) return;
+      await browser.tabs
+        .sendMessage(tab.id, { type: "duxreader:start-picker", mode })
+        .catch(() => undefined);
+    })();
+  });
+
   browser.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
     if (changes[SOURCE_MODE_KEY]) {

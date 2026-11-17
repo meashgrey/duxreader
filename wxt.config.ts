@@ -101,6 +101,19 @@ export default defineConfig({
       browser_style: false,
       open_in_tab: true,
     },
+    // Start the element picker without opening the popup first. Chrome silently
+    // ignores some defaults (Alt+Shift+P among them), so keep pairs that were
+    // verified to register in a launched extension.
+    commands: {
+      "start-preserve-picker": {
+        suggested_key: { default: "Alt+Shift+E" },
+        description: "Preserve the colors of an element",
+      },
+      "start-map-picker": {
+        suggested_key: { default: "Alt+Shift+M" },
+        description: "Map an element color to a theme role",
+      },
+    },
     content_scripts: [
       {
         matches: ["<all_urls>"],
