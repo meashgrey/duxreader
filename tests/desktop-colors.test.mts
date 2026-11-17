@@ -68,3 +68,40 @@ test("a native dark page background maps to desktop background without flattenin
     parseColor(palette.colors.surface)!,
   );
 });
+
+// A stale sample is exactly what produced a background that turned into a
+// surface a moment after load: the page repaints its own background, the old
+// sample stops matching, and a neutral background falls through to surface.
+test("a stale page-background sample pushes the main background to surface", () => {
+  const stale = { ...palette, sourceBackground: parseColor("#ffffff")! };
+  // While the page is still white, the sample matches and the role is correct.
+  expect(mapDesktopColor(parseColor("#ffffff")!, "background", stale)).toEqual(
+    parseColor(palette.colors.background)!,
+  );
+  // Once the page paints its own dark background the stale sample misses, and a
+  // near-black neutral lands on surface instead of background.
+  expect(mapDesktopColor(parseColor("#161b22")!, "background", stale)).toEqual(
+    parseColor(palette.colors.surface)!,
+  );
+  // Re-sampling the page background fixes it.
+  const fresh = { ...palette, sourceBackground: parseColor("#161b22")! };
+  expect(mapDesktopColor(parseColor("#161b22")!, "background", fresh)).toEqual(
+    parseColor(palette.colors.background)!,
+  );
+});
+
+test("re-sampled backgrounds keep working across several page repaints", () => {
+  for (const [page, expected] of [
+    ["#161b22", palette.colors.background],
+    ["#0d1117", palette.colors.background],
+    ["#21262d", palette.colors.background],
+  ] as const) {
+    const sampled = {
+      ...palette,
+      sourceBackground: parseColor(page)!,
+    };
+    expect(mapDesktopColor(parseColor(page)!, "background", sampled)).toEqual(
+      parseColor(expected)!,
+    );
+  }
+});

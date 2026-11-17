@@ -222,6 +222,24 @@ async function run() {
     color(document.body) === rgb(theme.colors.background),
     "The page background matches the desktop exactly",
   );
+  // The page's own background can land after injection. A single early sample
+  // would stop matching and push body onto surface, so re-assert after the page
+  // repaints its background.
+  const lateRepaint = document.createElement("style");
+  lateRepaint.textContent =
+    "html,body{background:#161b22!important;color:#e6edf3!important}";
+  document.head.append(lateRepaint);
+  await waitFor(
+    () => color(document.body) === rgb(theme.colors.background),
+  );
+  assert(
+    color(document.body) === rgb(theme.colors.background),
+    "A background painted after injection stays on the background role",
+  );
+  lateRepaint.remove();
+  await waitFor(
+    () => color(document.body) === rgb(theme.colors.background),
+  );
   assert(
     color(panel, "color") === rgb(theme.colors.foreground),
     "Neutral text matches the desktop exactly",
@@ -529,6 +547,11 @@ async function run() {
     color(panel) === "rgb(255, 255, 255)",
     "Repeated enable and dispose restore the page",
   );
+  // The page's own background may land after injection. Without re-sampling,
+  // the stale sourceBackground stops matching and the body falls back to the
+  // surface role a moment after load.
+  renderer.dispose();
+
   release();
   assert(errors.length === 0, "No uncaught renderer errors occurred");
   return { ok: true, checks };
