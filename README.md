@@ -28,7 +28,7 @@ Bring your desktop palette to web pages. Built with WXT, React, Material Design 
 
 ## 📦 Install
 
-Download [0.1.1 test packages](https://github.com/meashgrey/duxreader/releases/tag/v0.1.1) for Firefox and Chromium/Edge. See [installation instructions](docs/INSTALL.md). Firefox's unsigned test package requires temporary loading.
+Download the [0.1.1 test packages](https://github.com/meashgrey/duxreader/releases/tag/v0.1.1) for Chromium and Edge. See [installation instructions](docs/INSTALL.md).
 
 ## 🛠️ Development
 
@@ -39,7 +39,7 @@ bun install --frozen-lockfile
 bun run dev
 ```
 
-For Chrome/Chromium, use `bun run dev`. For Firefox, use `bun run dev:firefox`, open `about:debugging`, and load `.output/firefox-mv2-dev/manifest.json` as a temporary add-on. Pin Duxreader to the toolbar.
+Use `bun run dev` and pin Duxreader to the toolbar.
 
 ## 🌈 Theme sources
 

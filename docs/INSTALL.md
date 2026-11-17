@@ -11,20 +11,9 @@ Download the test packages from the [0.1.1 release](https://github.com/meashgrey
 
 Keep the folder in place. Install updates by extracting the new package there and choosing **Reload** on the extensions page. These packages are not Chrome Web Store or Edge Add-ons listings.
 
-## Firefox
-
-The initial test release is unsigned:
-
-1. Download and extract `duxreader-0.1.1-firefox-unsigned.zip`.
-2. Open `about:debugging#/runtime/this-firefox`.
-3. Choose **Load Temporary Add-on** and select the extracted `manifest.json`.
-4. Pin Duxreader to the toolbar.
-
-Firefox removes temporary add-ons when it closes. A ZIP renamed to `.xpi` does not bypass signing. If the release includes `duxreader-0.1.1-firefox-signed.xpi`, install that file through **Install Add-on From File** in `about:addons` for persistent installation.
-
 ## Colors
 
-On Firefox, choose **Browser theme** to follow Pywalfox without installing the Duxreader bridge.
+Choose **Browser theme** to follow Pywalfox without installing the Duxreader bridge.
 
 For theme-file mode, install the Rust bridge from source on Linux:
 
