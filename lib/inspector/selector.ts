@@ -505,6 +505,32 @@ const interactiveSelector =
  * ancestor that names a real component, so the rule targets the component
  * instead of a typography primitive shared by unrelated UI.
  */
+// How much of an ancestor's box the hovered element must cover before the
+// ancestor counts as a wrapper rather than a container. A label token wraps its
+// text almost exactly; a card body dwarfs one small badge inside it.
+const WRAPPER_COVERAGE = 0.5;
+
+function area(rect: DOMRect) {
+  return Math.max(0, rect.width) * Math.max(0, rect.height);
+}
+
+/**
+ * Whether an ancestor merely wraps the picked element. Climbing to a real
+ * container would silently widen the selection: hovering a small badge inside
+ * a card must not target the whole card. Interactivity is exempt because a
+ * click on a button's inner markup belongs to the button.
+ */
+function isWrapperOf(ancestor: Element, element: Element) {
+  const inner = element.getBoundingClientRect();
+  const outer = ancestor.getBoundingClientRect();
+  const innerArea = area(inner);
+  const outerArea = area(outer);
+  if (innerArea <= 0 || outerArea <= 0) return false;
+  // A wrapper adds little area; a container adds a lot.
+  if (innerArea / outerArea < WRAPPER_COVERAGE) return false;
+  return true;
+}
+
 export function resolvePickerTarget(element: Element): PickerTarget {
   let target = element;
   let selection = familySelector(element);
@@ -512,13 +538,10 @@ export function resolvePickerTarget(element: Element): PickerTarget {
   let node = element.parentElement;
   let depth = 0;
   while (node && depth++ < 4) {
+    const interactive = node.matches(interactiveSelector);
     const candidate = familySelector(node);
-    if (candidate.quality > 0 && candidate.kind === "class") {
-      target = node;
-      selection = candidate;
-      break;
-    }
-    if (node.matches(interactiveSelector)) {
+    if ((candidate.quality > 0 && candidate.kind === "class") || interactive) {
+      if (!interactive && !isWrapperOf(node, element)) break;
       target = node;
       selection = candidate;
       break;

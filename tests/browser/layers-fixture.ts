@@ -81,7 +81,7 @@ async function run() {
   `;
 
   const saved: Array<{ selector: string; target?: string }> = [];
-  startPicker(document, {
+  let cleanupPicker = startPicker(document, {
     mode: "map",
     colors,
     onPreserve: () => ({
@@ -190,6 +190,171 @@ async function run() {
     `the panel targets the stepped layer (got ${JSON.stringify(selector)})`,
   );
   assert(saved.length === 0, "map mode still waits for a theme role");
+  // 6. Hovering a large ancestor first must never block its descendants.
+  // The ancestor stays in the stack while the cursor is visually inside it, so
+  // a sticky layer choice would make small children unreachable.
+  cleanupPicker();
+  await frame();
+  const reachable: string[] = [];
+  cleanupPicker = startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap(selector) {
+      reachable.push(selector);
+    },
+  });
+  await frame();
+
+  const deep = document.querySelector<HTMLElement>("#inner")!;
+  const deepRect = deep.getBoundingClientRect();
+  const outerRect2 = document
+    .querySelector<HTMLElement>("#outer")!
+    .getBoundingClientRect();
+
+  // Sweep outward first so the pointer physically enters the ancestor.
+  await hover(outerRect2.left + 6, outerRect2.top + 6);
+  const ancestorLabel = label();
+  assert(
+    ancestorLabel.includes("#middle") || ancestorLabel.includes("#outer"),
+    `hovering the ancestor selects it first (got ${JSON.stringify(ancestorLabel)})`,
+  );
+
+  // Then walk into the smallest child at the centre of the nest.
+  await hover(deepRect.left + deepRect.width / 2, deepRect.top + 4);
+  assert(
+    label().includes("#inner"),
+    `a descendant is still reachable after hovering its ancestor (got ${JSON.stringify(label())})`,
+  );
+
+  // And it stays reachable when moving back and forth.
+  await hover(outerRect2.left + 6, outerRect2.top + 6);
+  await hover(deepRect.left + deepRect.width / 2, deepRect.top + 4);
+  assert(
+    label().includes("#inner"),
+    `descendants stay reachable across repeated sweeps (got ${JSON.stringify(label())})`,
+  );
+
+  // Deepest-first ordering must still hold at the deep point.
+  const deepLayers = label();
+  assert(
+    deepLayers.includes("#inner") && deepLayers.includes("1/"),
+    `the innermost element is layer 1 at a nested point (got ${JSON.stringify(deepLayers)})`,
+  );
+  // 7. Hovering must settle on one box. An element that resolves to an
+  // ancestor (a wrapper or an interactive parent) used to be compared against
+  // the resolved target, so every 1px jiggle restarted the resolution and the
+  // highlight flickered between the small element and the ancestor.
+  cleanupPicker();
+  await frame();
+  document.body.innerHTML = `
+    <div id="flicker-scope" style="padding:20px">
+      <span class="badgeWrapper" style="display:inline-block;padding:4px"><span class="css-1a2b3c" style="display:inline-block;padding:6px">badge</span></span>
+    </div>
+  `;
+  cleanupPicker = startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap: () => {},
+  });
+  await frame();
+
+  const weak = document.querySelector<HTMLElement>(".css-1a2b3c")!;
+  const weakRect = weak.getBoundingClientRect();
+  await hover(
+    weakRect.left + weakRect.width / 2,
+    weakRect.top + weakRect.height / 2,
+  );
+
+  // Sample the painted box while jiggling the pointer inside the element.
+  const sizes: string[] = [];
+  const highlightBox = () => {
+    const node = shadow().querySelector<HTMLElement>(".highlight");
+    if (!node || node.classList.contains("hidden")) return "hidden";
+    const rect = node.getBoundingClientRect();
+    return `${Math.round(rect.width)}x${Math.round(rect.height)}`;
+  };
+  for (let index = 0; index < 10; index++) {
+    document.dispatchEvent(
+      new MouseEvent("mousemove", {
+        clientX: weakRect.left + weakRect.width / 2 + (index % 2),
+        clientY: weakRect.top + weakRect.height / 2,
+        bubbles: true,
+      }),
+    );
+    await wait(20);
+    sizes.push(highlightBox());
+    await wait(90);
+    sizes.push(highlightBox());
+  }
+  const stable = [...new Set(sizes.filter((size) => size !== "hidden"))];
+  assert(
+    stable.length === 1,
+    `hovering settles on a single box instead of flickering (saw ${JSON.stringify(stable)})`,
+  );
+
+  // Labels display only tag/id; verify the stored selector against the DOM.
+  await click(
+    weakRect.left + weakRect.width / 2,
+    weakRect.top + weakRect.height / 2,
+  );
+  const wrapperSelector = shadow().querySelector(
+    ".panel.map .selector",
+  )!.textContent!;
+  assert(
+    document.querySelector(wrapperSelector) ===
+      document.querySelector(".badgeWrapper"),
+    "the saved wrapper selector identifies the wrapper, not its inner span",
+  );
+
+  cleanupPicker();
+  document.body.innerHTML =
+    '<button class="iconControl" style="width:240px;height:100px"><span class="css-1a2b3c" style="display:inline-block;width:12px;height:12px">x</span></button>';
+  cleanupPicker = startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap: () => {},
+  });
+  const icon = document.querySelector<HTMLElement>(".css-1a2b3c")!;
+  const iconRect = icon.getBoundingClientRect();
+  const x = iconRect.left + iconRect.width / 2,
+    y = iconRect.top + iconRect.height / 2;
+  await hover(x, y);
+  assert(
+    label().startsWith("button "),
+    "weak icons resolve to their interactive control by default",
+  );
+  await press("ArrowUp");
+  await press("ArrowDown");
+  await click(x, y);
+  const iconSelector = shadow().querySelector(
+    ".panel.map .selector",
+  )!.textContent!;
+  assert(
+    document.querySelector(iconSelector) === icon,
+    "explicit layer selection can still map the small icon itself",
+  );
+  cleanupPicker();
 }
 
 run()

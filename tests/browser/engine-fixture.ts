@@ -222,6 +222,20 @@ async function run() {
     color(document.body) === rgb(theme.colors.background),
     "The page background matches the desktop exactly",
   );
+  // The page's own background can land after injection. A single early sample
+  // would stop matching and push body onto surface, so re-assert after the page
+  // repaints its background.
+  const lateRepaint = document.createElement("style");
+  lateRepaint.textContent =
+    "html,body{background:#161b22!important;color:#e6edf3!important}";
+  document.head.append(lateRepaint);
+  await waitFor(() => color(document.body) === rgb(theme.colors.background));
+  assert(
+    color(document.body) === rgb(theme.colors.background),
+    "A background painted after injection stays on the background role",
+  );
+  lateRepaint.remove();
+  await waitFor(() => color(document.body) === rgb(theme.colors.background));
   assert(
     color(panel, "color") === rgb(theme.colors.foreground),
     "Neutral text matches the desktop exactly",
@@ -366,6 +380,22 @@ async function run() {
     "Year selection does not regenerate mapped CSS",
   );
   const beforeFocus = generatedCSS();
+  const stableOverride = document.querySelector("style.darkreader--override");
+  assert(
+    stableOverride,
+    "The engine installs a persistent override stylesheet",
+  );
+  const metadata = document.createElement("meta");
+  metadata.name = "unrelated-page-state";
+  document.head.append(metadata);
+  document.documentElement.classList.add("unrelated-page-state");
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  assert(
+    document.querySelector("style.darkreader--override") === stableOverride,
+    "Unrelated head and root mutations do not rebuild the theme",
+  );
+  metadata.remove();
+  document.documentElement.classList.remove("unrelated-page-state");
   focus.focus();
   await waitFor(() => color(focus) === rgb(theme.colors.surface));
   assert(
@@ -529,6 +559,11 @@ async function run() {
     color(panel) === "rgb(255, 255, 255)",
     "Repeated enable and dispose restore the page",
   );
+  // The page's own background may land after injection. Without re-sampling,
+  // the stale sourceBackground stops matching and the body falls back to the
+  // surface role a moment after load.
+  renderer.dispose();
+
   release();
   assert(errors.length === 0, "No uncaught renderer errors occurred");
   return { ok: true, checks };

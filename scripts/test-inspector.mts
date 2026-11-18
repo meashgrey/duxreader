@@ -79,6 +79,12 @@ try {
     resolve("tests/browser/shadow-fixture.ts"),
     "__shadowResult",
   );
+  await runFixture(
+    page,
+    "Engine late background",
+    resolve("tests/browser/late-background-fixture.ts"),
+    "__lateBackgroundResult",
+  );
 } finally {
   await browser.close();
 }

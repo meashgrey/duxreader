@@ -1,4 +1,4 @@
-import { compileColorMaps } from "./color-map.mts";
+import { compileCanvasBackground, compileColorMaps } from "./color-map.mts";
 import { siteColorMaps, siteCSS } from "./sites/index.mts";
 import type { Theme } from "../../lib/theme";
 import type { StylesheetReader } from "./network.mts";
@@ -20,10 +20,8 @@ export function configure(
   setStylesheetReader(readCSS);
   const colors = theme.colors;
   const url = new URL(location.href);
-  const mappedCSS = compileColorMaps(
-    [...siteColorMaps(url), ...(userRules?.colorMaps ?? [])],
-    colors,
-  );
+  const maps = [...siteColorMaps(url), ...(userRules?.colorMaps ?? [])];
+  const mappedCSS = compileColorMaps(maps, colors);
   // Establish the page's native background once, before injection. This is
   // palette input only; interaction processing stays entirely in upstream CSS.
   let sourceBackground = parseColor(
@@ -60,6 +58,10 @@ export function configure(
         "[data-duxreader-preserve] *",
       ],
       css: [
+        // The page canvas always uses the desktop background, including late
+        // SPA stylesheets. Native CSS matching keeps this current without
+        // sampling themed colors or tearing down upstream caches.
+        compileCanvasBackground(maps, colors),
         mappedCSS,
         siteCSS(url),
         userRules?.css ?? "",

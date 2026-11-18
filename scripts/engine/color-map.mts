@@ -31,6 +31,30 @@ export interface ColorMap {
   readonly contrastAgainst?: ThemeColorTarget;
 }
 
+// An explicit background mapping owns its matching canvas element. Keep the
+// fallback out of that cascade instead of competing with mapping specificity.
+// :where() keeps exclusions neutral and handles state changes in native CSS.
+export function compileCanvasBackground(
+  maps: readonly ColorMap[],
+  colors: Theme["colors"],
+): string {
+  const selectors = maps
+    .filter((map) => map.property === "background-color")
+    .map((map) => map.selector)
+    .join(", ");
+  const exclude = selectors ? `:not(:where(${selectors}))` : "";
+  return compileColorMaps(
+    [
+      {
+        selector: `:root${exclude}, :root body${exclude}`,
+        property: "background-color",
+        target: "background",
+      },
+    ],
+    colors,
+  );
+}
+
 // Emit ordinary CSS once per theme application. The browser handles matching,
 // new nodes, and interaction states without sampling computed colors on input.
 export function compileColorMaps(
