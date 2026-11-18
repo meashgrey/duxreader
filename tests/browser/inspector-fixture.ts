@@ -92,6 +92,24 @@ function run() {
     "resolved clicks keep the component selector",
   );
 
+  const control = document.createElement("button");
+  control.className = "testIconControl";
+  control.style.cssText = "width:240px;height:100px";
+  control.innerHTML =
+    '<span class="css-1a2b3c" style="display:inline-block;width:12px;height:12px">x</span>';
+  document.body.append(control);
+  const icon = control.firstElementChild!;
+  assert(
+    resolvePickerTarget(icon).element === control,
+    "small weak icons resolve to interactive controls regardless of area",
+  );
+  icon.id = "meaningful-icon";
+  assert(
+    resolvePickerTarget(icon).element === icon,
+    "a child with its own meaningful identity remains directly selectable",
+  );
+  control.remove();
+
   const item = document.querySelector("li")!;
   const items = familySelector(item);
   assert(items.kind === "class", "list items use a class family");
@@ -114,7 +132,9 @@ function run() {
     "test ids outrank generated classes",
   );
 
-  const row = familySelector(document.querySelector('[data-testid="row-1234"]')!);
+  const row = familySelector(
+    document.querySelector('[data-testid="row-1234"]')!,
+  );
   assert(
     !row.selector.includes("row-1234"),
     "instance-specific test ids are ignored",
@@ -142,9 +162,12 @@ function run() {
     heading.selector === "h3 > a" && !heading.selector.includes("nth-of-type"),
     "classless heading links use a structural family",
   );
-  assert(heading.matches.length === 4, "structural families span product cards");
+  assert(
+    heading.matches.length === 4,
+    "structural families span product cards",
+  );
 
-  const docs = familySelector(document.querySelector('#docs a')!);
+  const docs = familySelector(document.querySelector("#docs a")!);
   assert(
     docs.selector === 'a[href^="/docs/"]',
     "href prefixes group sibling routes",

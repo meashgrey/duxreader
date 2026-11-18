@@ -81,7 +81,7 @@ async function run() {
   `;
 
   const saved: Array<{ selector: string; target?: string }> = [];
-  const startPickerCleanup = startPicker(document, {
+  let cleanupPicker = startPicker(document, {
     mode: "map",
     colors,
     onPreserve: () => ({
@@ -193,10 +193,10 @@ async function run() {
   // 6. Hovering a large ancestor first must never block its descendants.
   // The ancestor stays in the stack while the cursor is visually inside it, so
   // a sticky layer choice would make small children unreachable.
-  startPickerCleanup();
+  cleanupPicker();
   await frame();
   const reachable: string[] = [];
-  startPicker(document, {
+  cleanupPicker = startPicker(document, {
     mode: "map",
     colors,
     onPreserve: () => ({
@@ -251,14 +251,14 @@ async function run() {
   // ancestor (a wrapper or an interactive parent) used to be compared against
   // the resolved target, so every 1px jiggle restarted the resolution and the
   // highlight flickered between the small element and the ancestor.
-  startPickerCleanup();
+  cleanupPicker();
   await frame();
   document.body.innerHTML = `
     <div id="flicker-scope" style="padding:20px">
       <span class="badgeWrapper" style="display:inline-block;padding:4px"><span class="css-1a2b3c" style="display:inline-block;padding:6px">badge</span></span>
     </div>
   `;
-  startPicker(document, {
+  cleanupPicker = startPicker(document, {
     mode: "map",
     colors,
     onPreserve: () => ({
@@ -274,7 +274,10 @@ async function run() {
 
   const weak = document.querySelector<HTMLElement>(".css-1a2b3c")!;
   const weakRect = weak.getBoundingClientRect();
-  await hover(weakRect.left + weakRect.width / 2, weakRect.top + weakRect.height / 2);
+  await hover(
+    weakRect.left + weakRect.width / 2,
+    weakRect.top + weakRect.height / 2,
+  );
 
   // Sample the painted box while jiggling the pointer inside the element.
   const sizes: string[] = [];
@@ -303,11 +306,55 @@ async function run() {
     `hovering settles on a single box instead of flickering (saw ${JSON.stringify(stable)})`,
   );
 
-  // It must also actually resolve to the wrapper, not just hold still.
-  assert(
-    label().includes("badgeWrapper") || label().includes("span"),
-    `the resolved target is reported in the label (got ${JSON.stringify(label())})`,
+  // Labels display only tag/id; verify the stored selector against the DOM.
+  await click(
+    weakRect.left + weakRect.width / 2,
+    weakRect.top + weakRect.height / 2,
   );
+  const wrapperSelector = shadow().querySelector(
+    ".panel.map .selector",
+  )!.textContent!;
+  assert(
+    document.querySelector(wrapperSelector) ===
+      document.querySelector(".badgeWrapper"),
+    "the saved wrapper selector identifies the wrapper, not its inner span",
+  );
+
+  cleanupPicker();
+  document.body.innerHTML =
+    '<button class="iconControl" style="width:240px;height:100px"><span class="css-1a2b3c" style="display:inline-block;width:12px;height:12px">x</span></button>';
+  cleanupPicker = startPicker(document, {
+    mode: "map",
+    colors,
+    onPreserve: () => ({
+      identityVariants: 1,
+      stable: "",
+      own: "",
+      varying: [],
+      saved: false,
+    }),
+    onMap: () => {},
+  });
+  const icon = document.querySelector<HTMLElement>(".css-1a2b3c")!;
+  const iconRect = icon.getBoundingClientRect();
+  const x = iconRect.left + iconRect.width / 2,
+    y = iconRect.top + iconRect.height / 2;
+  await hover(x, y);
+  assert(
+    label().startsWith("button "),
+    "weak icons resolve to their interactive control by default",
+  );
+  await press("ArrowUp");
+  await press("ArrowDown");
+  await click(x, y);
+  const iconSelector = shadow().querySelector(
+    ".panel.map .selector",
+  )!.textContent!;
+  assert(
+    document.querySelector(iconSelector) === icon,
+    "explicit layer selection can still map the small icon itself",
+  );
+  cleanupPicker();
 }
 
 run()

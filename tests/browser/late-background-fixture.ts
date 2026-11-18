@@ -43,7 +43,9 @@ async function waitFor(predicate: () => boolean, timeout = 6000) {
   const deadline = performance.now() + timeout;
   while (!predicate()) {
     if (performance.now() > deadline)
-      throw new Error("Timed out waiting for the engine");
+      throw new Error(
+        `Timed out waiting for the engine: body ${bodyColor()}, root ${getComputedStyle(document.documentElement).backgroundColor}, classes ${document.body.className}/${document.documentElement.className}`,
+      );
     await new Promise((resolve) => setTimeout(resolve, 25));
   }
 }
@@ -150,6 +152,51 @@ async function run() {
     bodyColor() === native,
     `disposing restores the page's own background (got ${bodyColor()})`,
   );
+  repaint.remove();
+  second.remove();
+  document.body.style.removeProperty("background");
+  const baseStyle = document.createElement("style");
+  baseStyle.textContent = "body{background:white}";
+  document.head.append(baseStyle);
+  const explicitMap = {
+    property: "background-color" as const,
+    target: "surface" as const,
+  };
+  renderer.apply(theme, true, {
+    colorMaps: [{ ...explicitMap, selector: "body" }],
+    preserveInline: [],
+    css: "",
+  });
+  await waitFor(() => bodyColor() === rgb(theme.colors.surface));
+  assert(
+    bodyColor() === rgb(theme.colors.surface),
+    "explicit body mappings override the canvas fallback",
+  );
+  renderer.apply(theme, true, {
+    colorMaps: [
+      {
+        ...explicitMap,
+        selector: "body.explicit-canvas, body[data-explicit-canvas]",
+      },
+    ],
+    preserveInline: [],
+    css: "",
+  });
+  await waitFor(() => bodyColor() === rgb(theme.colors.background));
+  const mappedOverride = document.querySelector("style.darkreader--override");
+  document.body.classList.add("explicit-canvas");
+  await waitFor(() => bodyColor() === rgb(theme.colors.surface));
+  assert(
+    true,
+    "matching body mappings take precedence even with state selectors",
+  );
+  document.body.classList.remove("explicit-canvas");
+  await waitFor(() => bodyColor() === rgb(theme.colors.background));
+  assert(
+    document.querySelector("style.darkreader--override") === mappedOverride,
+    "state-dependent canvas mappings use native CSS without rebuilding the theme",
+  );
+  renderer.dispose();
   release();
   assert(errors.length === 0, "no uncaught engine errors occurred");
 }

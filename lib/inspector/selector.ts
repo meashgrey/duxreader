@@ -520,12 +520,12 @@ function area(rect: DOMRect) {
  * a card must not target the whole card. Interactivity is exempt because a
  * click on a button's inner markup belongs to the button.
  */
-function isWrapperOf(ancestor: Element, element: Element, interactive: boolean) {
+function isWrapperOf(ancestor: Element, element: Element) {
   const inner = element.getBoundingClientRect();
   const outer = ancestor.getBoundingClientRect();
   const innerArea = area(inner);
   const outerArea = area(outer);
-  if (innerArea <= 0 || outerArea <= 0) return interactive;
+  if (innerArea <= 0 || outerArea <= 0) return false;
   // A wrapper adds little area; a container adds a lot.
   if (innerArea / outerArea < WRAPPER_COVERAGE) return false;
   return true;
@@ -541,7 +541,7 @@ export function resolvePickerTarget(element: Element): PickerTarget {
     const interactive = node.matches(interactiveSelector);
     const candidate = familySelector(node);
     if ((candidate.quality > 0 && candidate.kind === "class") || interactive) {
-      if (!isWrapperOf(node, element, interactive)) break;
+      if (!interactive && !isWrapperOf(node, element)) break;
       target = node;
       selection = candidate;
       break;
